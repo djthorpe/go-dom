@@ -3,38 +3,31 @@
 GO=go
 GOFLAGS = -ldflags "-s -w $(GOLDFLAGS)" 
 BUILDDIR = build
+TAGS = w
+WASM = $(wildcard cmd/wasm/*)
+GOROOT = $(shell go env GOROOT)
 
-# Commands to build
-COMMANDS = $(wildcard ./cmd/*)
+# All targets
+all: test mkdir $(WASM)
+	@cp ${GOROOT}/misc/wasm/wasm_exec.js ${BUILDDIR}
 
 # Rules for building
-.PHONY: commands $(COMMANDS)
-commands: builddir $(COMMANDS)
-
-$(COMMANDS): 
-	@PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" $(GO) build -o ${BUILDDIR}/$@ -tags "$(TAGS)" ${GOFLAGS} ./$@
+.PHONY: $(WASM)
+$(WASM): 
+	@echo "Building $(BUILDDIR)/$(shell basename $@).html"
+	@GOOS=js GOARCH=wasm $(GO) build -o ${BUILDDIR}/$@.wasm -tags "$(TAGS)" ${GOFLAGS} ./$@
+	@sed 's|json.wasm|$@.wasm|' etc/wasm.html > ${BUILDDIR}/$(shell basename $@).html
 
 .PHONY: test
 test:
-	@PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" $(GO) test -tags "$(TAGS)" ./pkg/...
+	$(GO) test -tags "$(TAGS)" ./pkg/...
 
-# The next example rule adds tag into compile given existence of pkg-config for cgo
-# using mmal as the example
-.PHONY: lib
-lib:
-	$(eval EXISTS = $(shell PKG_CONFIG_PATH="$(PKG_CONFIG_PATH)" pkg-config --silence-errors --modversion mmal))
-ifneq ($strip $(MMAL)),)
-	@echo "Targetting mmal"
-	$(eval TAGS += mmal)
-endif
-
-.PHONY: builddir
-builddir:
-	install -d $(BUILDDIR)
+.PHONY: mkdir
+mkdir:
+	@install -d $(BUILDDIR)
 
 .PHONY: clean
 clean: 
-	rm -fr $(BUILDDIR)
-	$(GO) clean
+	@rm -fr $(BUILDDIR)
 	$(GO) mod tidy
-
+	$(GO) clean

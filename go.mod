@@ -1,3 +1,3 @@
-module github.com/djthorpe/goapp
+module github.com/djthorpe/go-dom
 
-go 1.13
+go 1.16
