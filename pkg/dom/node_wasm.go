@@ -57,6 +57,30 @@ func NewNode(v js.Value) dom.Node {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// STRINGIFY
+
+func (this *node) String() string {
+	str := "<DOMNode"
+	if name := this.NodeName(); name != "" {
+		str += fmt.Sprintf(" name=%q", name)
+	}
+	if t := this.NodeType(); t != dom.UNKNOWN_NODE {
+		str += fmt.Sprint(" type=", t)
+	}
+	if parent := this.ParentNode(); parent != nil {
+		str += " parent=<DOMNode"
+		if name := parent.NodeName(); name != "" {
+			str += fmt.Sprintf(" name=%q", name)
+		}
+		return str + ">"
+	}
+	for c := this.FirstChild(); c != nil; c = c.NextSibling() {
+		str += fmt.Sprint(" child=", c)
+	}
+	return str + ">"
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // PROPERTIES
 
 func (this *node) BaseURI() string {

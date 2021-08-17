@@ -21,7 +21,7 @@ type document struct {
 // LIFECYCLE
 
 func NewHTMLDocument() *document {
-	doc := NewNode(nil, "document", dom.DOCUMENT_NODE).(*document)
+	doc := NewNode(nil, "#document", dom.DOCUMENT_NODE).(*document)
 	doc.body = doc.AppendChild(doc.CreateElement("html")).AppendChild(doc.CreateElement("body")).(dom.Element)
 	return doc
 }

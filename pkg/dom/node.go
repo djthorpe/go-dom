@@ -63,8 +63,8 @@ func (this *node) String() string {
 		}
 		return str + ">"
 	}
-	if len(this.children) > 0 {
-		str += fmt.Sprint(" children=", this.children)
+	for c := this.FirstChild(); c != nil; c = c.NextSibling() {
+		str += fmt.Sprint(" child=", c)
 	}
 	return str + ">"
 }

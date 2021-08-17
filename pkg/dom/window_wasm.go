@@ -3,6 +3,7 @@
 package dom
 
 import (
+	"fmt"
 	"syscall/js"
 
 	"github.com/djthorpe/go-dom"
@@ -27,6 +28,17 @@ var (
 
 func NewWindow() dom.Window {
 	return w
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// STRINGIFY
+
+func (this *window) String() string {
+	str := "<DOMWindow"
+	if doc := this.Document(); doc != nil {
+		str += fmt.Sprint(" document=", doc)
+	}
+	return str + ">"
 }
 
 ///////////////////////////////////////////////////////////////////////////////
