@@ -13,11 +13,14 @@ var (
 
 func main() {
 	flag.Parse()
-	fmt.Println("Listening on ", *flagPort)
-	if wd, err := os.Getwd(); err != nil {
+	wd, err := os.Getwd()
+	if err != nil {
 		fmt.Println("Failed to start server", err)
 		os.Exit(-1)
-	} else if err := http.ListenAndServe(*flagPort, http.FileServer(http.Dir(wd))); err != nil {
+	}
+	fmt.Println("Serving folder ", wd)
+	fmt.Println("Listening on   ", *flagPort)
+	if err := http.ListenAndServe(*flagPort, http.FileServer(http.Dir(wd))); err != nil {
 		fmt.Println("Failed to start server", err)
 		os.Exit(-1)
 	}
