@@ -1,17 +1,39 @@
-// +build w
+//go:build js
 
 package dom
 
 import (
-	"syscall/js"
+	"fmt"
 
-	"github.com/djthorpe/go-dom"
+	dom "github.com/djthorpe/go-dom"
 )
 
-func Document() dom.Document {
-	return js.Global().Get("document")
+///////////////////////////////////////////////////////////////////////////////
+// TYPES
+
+type document struct {
+	*node
 }
 
-func Window() dom.Window {
-	return js.Global()
+///////////////////////////////////////////////////////////////////////////////
+// PROPERTIES
+
+func (this *document) Body() dom.Element {
+	return NewNode(this.Get("body")).(dom.Element)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// METHODS
+
+func (this *document) CreateElement(name string) dom.Element {
+	return NewNode(this.Call("createElement", name)).(dom.Element)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// STRINGIFY
+
+func (this *document) String() string {
+	str := "<DOMDocument"
+	str += fmt.Sprint(" ", this.node)
+	return str + ">"
 }

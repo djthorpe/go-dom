@@ -3,7 +3,7 @@
 GO=go
 GOFLAGS = -ldflags "-s -w $(GOLDFLAGS)" 
 BUILDDIR = build
-TAGS = w
+TAGS = 
 WASM = $(wildcard cmd/wasm/*)
 GOROOT = $(shell go env GOROOT)
 
@@ -14,13 +14,19 @@ all: test mkdir $(WASM)
 # Rules for building
 .PHONY: $(WASM)
 $(WASM): 
+	TAGS = js
 	@echo "Building $(BUILDDIR)/$(shell basename $@).html"
 	@GOOS=js GOARCH=wasm $(GO) build -o ${BUILDDIR}/$@.wasm -tags "$(TAGS)" ${GOFLAGS} ./$@
 	@sed 's|json.wasm|$@.wasm|' etc/wasm.html > ${BUILDDIR}/$(shell basename $@).html
 
 .PHONY: test
 test:
-	$(GO) test -tags "$(TAGS)" ./pkg/...
+	$(GO) test -v -tags "$(TAGS)" ./pkg/...
+
+.PHONY: jstest
+jstest:
+	$(GO) install github.com/agnivade/wasmbrowsertest
+	@GOOS=js GOARCH=wasm $(GO) test -v -tags "$(TAGS)" -exec="${GOPATH}/bin/wasmbrowsertest" ./pkg/dom
 
 .PHONY: mkdir
 mkdir:
