@@ -26,7 +26,7 @@ func Test_Node_002(t *testing.T) {
 	b := NewNode(nil, "b", dom.ELEMENT_NODE)
 	c := NewNode(nil, "c", dom.ELEMENT_NODE)
 	if node.HasChildNodes() != false {
-		t.Error("HasChildNodes() failed")
+		t.Error("HasChildNodes() failed: ", node)
 	}
 	if b.ParentNode() != nil {
 		t.Error("ParentNode() failed")
@@ -35,16 +35,16 @@ func Test_Node_002(t *testing.T) {
 		t.Error("ParentNode() failed")
 	}
 	node.AppendChild(b)
-	if node.FirstChild() != b {
-		t.Error("FirstChild() failed")
+	if node.FirstChild().Equals(b) == false {
+		t.Error("FirstChild() failed, ", node.FirstChild())
 	}
-	if node.LastChild() != b {
+	if node.LastChild().Equals(b) == false {
 		t.Error("LastChild() failed")
 	}
 	if node.HasChildNodes() != true {
-		t.Error("HasChildNodes() failed")
+		t.Error("HasChildNodes() failed: ", node)
 	}
-	if b.ParentNode() != node {
+	if b.ParentNode().Equals(node) == false {
 		t.Error("ParentNode() failed")
 	}
 	if b.PreviousSibling() != nil {
@@ -54,32 +54,32 @@ func Test_Node_002(t *testing.T) {
 		t.Error("NextSibling() failed")
 	}
 	node.AppendChild(c)
-	if node.FirstChild() != b {
+	if node.FirstChild().Equals(b) == false {
 		t.Error("FirstChild() failed")
 	}
-	if node.LastChild() != c {
+	if node.LastChild().Equals(c) == false {
 		t.Error("LastChild() failed")
 	}
-	if c.ParentNode() != node {
+	if c.ParentNode().Equals(node) == false {
 		t.Error("ParentNode() failed")
 	}
 	if b.PreviousSibling() != nil {
 		t.Error("PreviousSibling() failed")
 	}
-	if b.NextSibling() != c {
+	if b.NextSibling().Equals(c) == false {
 		t.Error("NextSibling() failed")
 	}
-	if c.PreviousSibling() != b {
+	if c.PreviousSibling().Equals(b) == false {
 		t.Error("PreviousSibling() failed")
 	}
 	if c.NextSibling() != nil {
 		t.Error("NextSibling() failed")
 	}
 	node.RemoveChild(b)
-	if node.FirstChild() != c {
+	if node.FirstChild().Equals(c) == false {
 		t.Error("FirstChild() failed")
 	}
-	if node.LastChild() != c {
+	if node.LastChild().Equals(c) == false {
 		t.Error("LastChild() failed")
 	}
 	if b.ParentNode() != nil {

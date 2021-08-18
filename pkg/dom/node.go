@@ -29,19 +29,20 @@ type nodevalue interface {
 // LIFECYCLE
 
 func NewNode(doc dom.Document, name string, nodetype dom.NodeType) dom.Node {
+	node := &node{doc, nil, name, nodetype, nil}
 	switch nodetype {
 	case dom.DOCUMENT_NODE:
-		return &document{&node{nil, nil, name, nodetype, nil}, nil}
-	case dom.ELEMENT_NODE:
-		return &element{&node{doc, nil, name, nodetype, nil}}
-	case dom.TEXT_NODE:
-		return &node{doc, nil, name, nodetype, nil}
-	case dom.COMMENT_NODE:
-		return &node{doc, nil, name, nodetype, nil}
+		return &document{node, nil, nil, nil}
 	case dom.DOCUMENT_TYPE_NODE:
-		return &node{doc, nil, name, nodetype, nil}
+		return &doctype{node, "", ""}
+	case dom.ELEMENT_NODE:
+		return &element{node}
+	case dom.TEXT_NODE:
+		return &text{node, ""}
+	case dom.COMMENT_NODE:
+		return &comment{node, ""}
 	default:
-		return &node{doc, nil, name, nodetype, nil}
+		return node
 	}
 }
 
@@ -75,6 +76,20 @@ func (this *node) String() string {
 func (this *node) BaseURI() string {
 	// TODO
 	return "TODO"
+}
+
+func (this *node) Contains(child dom.Node) bool {
+	for _, c := range this.children {
+		if c == child {
+			return true
+		}
+	}
+	for _, c := range this.children {
+		if c.Contains(child) {
+			return true
+		}
+	}
+	return false
 }
 
 func (this *node) Equals(other dom.Node) bool {
@@ -119,7 +134,11 @@ func (this *node) NextSibling() dom.Node {
 }
 
 func (this *node) NodeName() string {
-	return strings.ToUpper(this.name)
+	if strings.HasPrefix(this.name, "#") {
+		return this.name
+	} else {
+		return strings.ToUpper(this.name)
+	}
 }
 
 func (this *node) NodeType() dom.NodeType {
@@ -159,32 +178,23 @@ func (this *node) TextContent() string {
 // PUBLIC METHODS
 
 func (this *node) AppendChild(child dom.Node) dom.Node {
-	this.appendchild(child, this)
+	node := child.(nodevalue).v()
+	if node.parent != nil {
+		node.parent.RemoveChild(child)
+	}
+	node.parent = this
+	this.children = append(this.children, node)
 	return child
 }
 
-func (this *node) CloneNode() dom.Node {
+func (this *node) CloneNode(deep bool) dom.Node {
 	clone := NewNode(this.document, this.name, this.nodetype).(nodevalue)
 	clone.v().children = make([]dom.Node, len(this.children))
 	for i := range this.children {
-		child := this.children[i].CloneNode()
+		child := this.children[i].CloneNode(deep)
 		child.(*node).parent = clone
 	}
 	return clone
-}
-
-func (this *node) Contains(child dom.Node) bool {
-	for _, c := range this.children {
-		if c == child {
-			return true
-		}
-	}
-	for _, c := range this.children {
-		if c.Contains(child) {
-			return true
-		}
-	}
-	return false
 }
 
 func (this *node) HasChildNodes() bool {
@@ -192,39 +202,42 @@ func (this *node) HasChildNodes() bool {
 }
 
 func (this *node) InsertBefore(new dom.Node, ref dom.Node) dom.Node {
+	// newNode is inserted at the end of parentNode's child nodes.
+	if ref == nil {
+		return this.AppendChild(new)
+	}
+	// Check new
+	if new == nil {
+		return nil
+	}
+	// insert node before ref
+	node := new.(nodevalue).v()
+	for i := range this.children {
+		if this.children[i] != ref {
+			continue
+		}
+		// Detach new from current parent
+		if node.parent != nil {
+			node.parent.RemoveChild(new)
+		}
+		// Attach new to this
+		this.children = append(this.children[:i], append([]dom.Node{new}, this.children[i:]...)...)
+		return new
+	}
+	// Ref not in children, return nil
 	return nil
-	/*
-		if ref == nil {
-			// newNode is inserted at the end of parentNode's child nodes.
-		}
-		switch ref := ref.(type) {
-		case *node:
-			if ref.parent == this {
-				this.removechild(child)
-				child.parent = nil
-			}
-		case *element:
-		default:
-			panic("InsertBefore: not a *node")
-		}
-		// TODO
-	*/
 }
 
 func (this *node) RemoveChild(child dom.Node) {
-	switch child := child.(type) {
-	case *node:
-		if child.parent == this {
-			this.removechild(child)
-			child.parent = nil
+	for i, c := range this.children {
+		if c != child {
+			continue
 		}
-	case *element:
-		if child.parent != nil {
-			this.removechild(child)
-			child.parent = nil
-		}
-	default:
-		panic("RemoveChild: not a *node")
+		// Deattach child from parent
+		child.(nodevalue).v().parent = nil
+		// Remove child from parent
+		this.children = append(this.children[:i], this.children[i+1:]...)
+		return
 	}
 }
 
@@ -237,26 +250,6 @@ func (this *node) ReplaceChild(dom.Node, dom.Node) {
 
 func (this *node) v() *node {
 	return this
-}
-
-// Append child node and set parent node
-func (this *node) appendchild(child, parent dom.Node) {
-	switch child := child.(type) {
-	case *node:
-		if child.parent != nil {
-			child.parent.RemoveChild(child)
-		}
-		child.parent = parent
-		this.children = append(this.children, child)
-	case *element:
-		if child.parent != nil {
-			child.parent.RemoveChild(child)
-		}
-		child.parent = parent
-		this.children = append(this.children, child)
-	default:
-		panic("AppendChild: not a *node")
-	}
 }
 
 // Return next child node
@@ -319,15 +312,4 @@ func previousSibling(parent, child dom.Node) dom.Node {
 		panic("PreviousSibling: not a *node")
 	}
 	return nil
-}
-
-// Remove a child node
-func (this *node) removechild(child dom.Node) {
-	for i, c := range this.children {
-		if c != child {
-			continue
-		}
-		this.children = append(this.children[:i], this.children[i+1:]...)
-		return
-	}
 }

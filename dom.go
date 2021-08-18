@@ -28,7 +28,7 @@ type Node interface {
 	// Methods
 	Equals(Node) bool
 	AppendChild(Node) Node
-	CloneNode() Node
+	CloneNode(bool) Node
 	Contains(Node) bool
 	HasChildNodes() bool
 	InsertBefore(Node, Node) Node
@@ -50,9 +50,45 @@ type Document interface {
 
 	// Properties
 	Body() Element
+	//CharacterSet() string
+	//ContentType() string
+	Doctype() DocumentType
+	//DocumentElement() Element
+	//DocumentURI() string
+	//Head() Element
+	//Title() string
 
 	// Methods
 	CreateElement(string) Element
+	//CreateElementNS(string, string) Element
+	CreateComment(string) Comment
+	CreateTextNode(string) Text
+}
+
+type Text interface {
+	Node
+
+	// Properties
+	Data() string
+	Length() int
+}
+
+type Comment interface {
+	Node
+
+	// Properties
+	Data() string
+	Length() int
+}
+
+// Document implements https://developer.mozilla.org/en-US/docs/Web/API/DocumentType
+type DocumentType interface {
+	Node
+
+	// Properties
+	Name() string
+	PublicId() string
+	SystemId() string
 }
 
 type Window interface {

@@ -20,7 +20,7 @@ type window struct {
 // GLOBALS
 
 var (
-	w = &window{NewHTMLDocument()}
+	w = &window{NewHTMLDocument("")}
 )
 
 ///////////////////////////////////////////////////////////////////////////////

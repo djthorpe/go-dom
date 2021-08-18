@@ -26,15 +26,20 @@ type nodevalue interface {
 
 var (
 	// Constructors
-	cArray    = js.Global().Get("Array")
-	cObject   = js.Global().Get("Object")
-	cDocument = js.Global().Get("HTMLDocument")
-	cElement  = js.Global().Get("HTMLElement")
+	cArray        = js.Global().Get("Array")
+	cObject       = js.Global().Get("Object")
+	cNode         = js.Global().Get("Node")
+	cText         = js.Global().Get("Text")
+	cComment      = js.Global().Get("Comment")
+	cDocument     = js.Global().Get("HTMLDocument")
+	cDocumentType = js.Global().Get("DocumentType")
+	cElement      = js.Global().Get("HTMLElement")
 )
 
 ///////////////////////////////////////////////////////////////////////////////
 // LIFECYCLE
 
+// NewNode returns a new go object wrapping js.Value
 func NewNode(v js.Value) dom.Node {
 	if v.IsNull() || v.IsUndefined() {
 		return nil
@@ -50,8 +55,16 @@ func NewNode(v js.Value) dom.Node {
 			return &document{node: &node{v}}
 		case c.Equal(cElement):
 			return &element{node: &node{v}}
-		case c.Equal(cObject):
+		case c.Equal(cText):
+			return &text{node: &node{v}}
+		case c.Equal(cComment):
+			return &comment{node: &node{v}}
+		case c.Equal(cDocumentType):
+			return &doctype{node: &node{v}}
+		case c.Equal(cNode):
 			return &node{v}
+		case c.IsNull() || c.IsUndefined():
+			panic("NewNode failed for " + constructor(cObject.Call("getPrototypeOf", v)).Get("name").String())
 		}
 	}
 }
@@ -91,13 +104,20 @@ func (this *node) ChildNodes() []dom.Node {
 	return fromNodeList(this.Get("childNodes"))
 }
 
+func (this *node) Contains(other dom.Node) bool {
+	return this.Call("contains", other.(nodevalue).v()).Bool()
+}
+
 func (this *node) FirstChild() dom.Node {
 	return NewNode(this.Get("firstChild"))
 }
 
+func (this *node) HasChildNodes() bool {
+	return this.Call("hasChildNodes").Bool()
+}
+
 func (this *node) IsConnected() bool {
-	// TODO
-	return false
+	return this.Get("isConnected").Bool()
 }
 
 func (this *node) LastChild() dom.Node {
@@ -140,7 +160,7 @@ func (this *node) TextContent() string {
 // PUBLIC METHODS
 
 func (this *node) Equals(other dom.Node) bool {
-	return this.v().Equal(other.(nodevalue).v())
+	return this.Equal(other.(nodevalue).v())
 }
 
 func (this *node) AppendChild(child dom.Node) dom.Node {
@@ -148,32 +168,25 @@ func (this *node) AppendChild(child dom.Node) dom.Node {
 	return child
 }
 
-func (this *node) CloneNode() dom.Node {
-	// TODO
-	return nil
+func (this *node) CloneNode(deep bool) dom.Node {
+	return NewNode(this.Call("cloneNode", deep))
 }
 
-func (this *node) Contains(dom.Node) bool {
-	// TODO
-	return false
+func (this *node) InsertBefore(child dom.Node, before dom.Node) dom.Node {
+	if before == nil {
+		return this.AppendChild(child)
+	} else {
+		this.Call("insertBefore", child.(nodevalue).v(), before.(nodevalue).v())
+		return child
+	}
 }
 
-func (this *node) HasChildNodes() bool {
-	// TODO
-	return false
+func (this *node) RemoveChild(child dom.Node) {
+	this.Call("removeChild", child.(nodevalue).v())
 }
 
-func (this *node) InsertBefore(dom.Node, dom.Node) dom.Node {
-	// TODO
-	return nil
-}
-
-func (this *node) RemoveChild(dom.Node) {
-
-}
-
-func (this *node) ReplaceChild(dom.Node, dom.Node) {
-
+func (this *node) ReplaceChild(new, old dom.Node) {
+	this.Call("replaceChild", new.(nodevalue).v(), old.(nodevalue).v())
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -201,15 +214,9 @@ func nodeListToSlice(v js.Value) []js.Value {
 }
 
 func constructor(v js.Value) js.Value {
-	return v.Get("constructor")
-}
-
-func toMap(v js.Value) map[string]interface{} {
-	result := make(map[string]interface{})
-	if v.Type() != js.TypeObject {
-		return nil
+	if v.IsNull() || v.IsUndefined() {
+		return v
+	} else {
+		return v.Get("constructor")
 	}
-	entries := cObject.Call("entries", v)
-	fmt.Println("iter=", entries.Get("length"))
-	return result
 }

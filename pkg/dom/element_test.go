@@ -41,8 +41,8 @@ func Test_Element_002(t *testing.T) {
 	if parent.LastChild().Equals(b) == false {
 		t.Error("LastChild() failed")
 	}
-	if parent.HasChildNodes() != true {
-		t.Error("HasChildNodes() failed")
+	if parent.HasChildNodes() == false {
+		t.Error("HasChildNodes() failed: ", parent)
 	}
 	if b.ParentNode().Equals(parent) == false {
 		t.Error("ParentNode() failed")
