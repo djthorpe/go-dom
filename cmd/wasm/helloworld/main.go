@@ -4,12 +4,13 @@ import (
 	"fmt"
 
 	// Modules
-	. "github.com/djthorpe/go-dom/pkg/bootstrap"
+	. "github.com/djthorpe/go-dom/pkg/dom"
 )
 
 func main() {
-	doc := NewDocument()
-	nav := doc.Append(doc.Nav())
-	// ...add things into the nav
-	fmt.Println("Document=", doc.Body().ParentElement().OuterHTML())
+	// Create HTML document and set title and body for document
+	doc := NewWindow().Document()
+	doc.Title().SetInnerHTML("Hello, world!")
+	doc.Body().AppendChild(doc.CreateTextNode("Hello, world!"))
+	fmt.Println(doc)
 }
