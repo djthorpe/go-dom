@@ -8,9 +8,7 @@ import (
 )
 
 func main() {
-	// Create HTML document and set title and body for document
-	doc := NewWindow().Document()
-	doc.Title().SetInnerHTML("Hello, world!")
-	doc.Body().AppendChild(doc.CreateTextNode("Hello, world!"))
-	fmt.Println(doc)
+	window := GetWindow()
+	window.Document().SetTitle("Hello, World!")
+	fmt.Println(window.Document().DocumentElement().OuterHTML())
 }

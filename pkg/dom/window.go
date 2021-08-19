@@ -22,7 +22,8 @@ type window struct {
 ///////////////////////////////////////////////////////////////////////////////
 // LIFECYCLE
 
-func NewWindow() dom.Window {
+// GetWindow returns a global window object
+func GetWindow() dom.Window {
 	return &window{NewHTMLDocument("")}
 }
 
