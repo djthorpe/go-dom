@@ -15,7 +15,7 @@ import (
 
 type element struct {
 	*node
-	attrs []dom.Attr
+	attrs map[string]dom.Attr
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -69,9 +69,9 @@ func (this *element) TagName() string {
 }
 
 func (this *element) Attributes() []dom.Attr {
-	result := make([]dom.Attr, len(this.attrs))
-	for i, attr := range this.attrs {
-		result[i] = attr
+	result := make([]dom.Attr, 0, len(this.attrs))
+	for _, attr := range this.attrs {
+		result = append(result, attr)
 	}
 	return result
 }
@@ -84,7 +84,7 @@ func (this *element) SetAttribute(name, value string) dom.Attr {
 	attr := this.document.CreateAttribute(name)
 	attr.SetValue(value)
 	attr.(nodevalue).v().parent = this
-	this.attrs = append(this.attrs, attr)
+	this.attrs[name] = attr
 	return attr
 }
 

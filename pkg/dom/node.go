@@ -36,11 +36,11 @@ func NewNode(doc dom.Document, name string, nodetype dom.NodeType, cdata string)
 	node := &node{doc, nil, name, nodetype, nil, cdata}
 	switch nodetype {
 	case dom.DOCUMENT_NODE:
-		return &document{node, nil, nil, nil, nil, nil}
+		return &document{node, nil, nil, nil, nil}
 	case dom.DOCUMENT_TYPE_NODE:
 		return &doctype{node, "", ""}
 	case dom.ELEMENT_NODE:
-		return &element{node, nil}
+		return &element{node, map[string]dom.Attr{}}
 	case dom.TEXT_NODE:
 		return &text{node}
 	case dom.COMMENT_NODE:
