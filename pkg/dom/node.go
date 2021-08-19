@@ -4,6 +4,7 @@ package dom
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	dom "github.com/djthorpe/go-dom"
@@ -18,29 +19,33 @@ type node struct {
 	name     string
 	nodetype dom.NodeType
 	children []dom.Node
+	cdata    string
 }
 
 type nodevalue interface {
 	dom.Node
 	v() *node
+	write(io.Writer) (int, error)
 }
 
 /////////////////////////////////////////////////////////////////////
 // LIFECYCLE
 
-func NewNode(doc dom.Document, name string, nodetype dom.NodeType) dom.Node {
-	node := &node{doc, nil, name, nodetype, nil}
+func NewNode(doc dom.Document, name string, nodetype dom.NodeType, cdata string) dom.Node {
+	node := &node{doc, nil, name, nodetype, nil, cdata}
 	switch nodetype {
 	case dom.DOCUMENT_NODE:
-		return &document{node, nil, nil, nil}
+		return &document{node, nil, nil, nil, nil}
 	case dom.DOCUMENT_TYPE_NODE:
 		return &doctype{node, "", ""}
 	case dom.ELEMENT_NODE:
-		return &element{node}
+		return &element{node, nil}
 	case dom.TEXT_NODE:
-		return &text{node, ""}
+		return &text{node}
 	case dom.COMMENT_NODE:
-		return &comment{node, ""}
+		return &comment{node}
+	case dom.ATTRIBUTE_NODE:
+		return &attr{node}
 	default:
 		return node
 	}
@@ -72,11 +77,6 @@ func (this *node) String() string {
 
 /////////////////////////////////////////////////////////////////////
 // PROPERTIES
-
-func (this *node) BaseURI() string {
-	// TODO
-	return "TODO"
-}
 
 func (this *node) Contains(child dom.Node) bool {
 	for _, c := range this.children {
@@ -126,11 +126,7 @@ func (this *node) LastChild() dom.Node {
 }
 
 func (this *node) NextSibling() dom.Node {
-	if this.parent == nil {
-		return nil
-	} else {
-		return nextSibling(this.parent, this)
-	}
+	return nextSibling(this.parent, this)
 }
 
 func (this *node) NodeName() string {
@@ -162,14 +158,13 @@ func (this *node) ParentElement() dom.Element {
 }
 
 func (this *node) PreviousSibling() dom.Node {
-	if this.parent == nil {
-		return nil
-	} else {
-		return previousSibling(this.parent, this)
-	}
+	return previousSibling(this.parent, this)
 }
 
 func (this *node) TextContent() string {
+	if this.nodetype == dom.TEXT_NODE || this.nodetype == dom.COMMENT_NODE {
+		return this.cdata
+	}
 	// TODO
 	return "TODO"
 }
@@ -183,16 +178,18 @@ func (this *node) AppendChild(child dom.Node) dom.Node {
 		node.parent.RemoveChild(child)
 	}
 	node.parent = this
-	this.children = append(this.children, node)
+	this.children = append(this.children, child)
 	return child
 }
 
 func (this *node) CloneNode(deep bool) dom.Node {
-	clone := NewNode(this.document, this.name, this.nodetype).(nodevalue)
-	clone.v().children = make([]dom.Node, len(this.children))
-	for i := range this.children {
-		child := this.children[i].CloneNode(deep)
-		child.(*node).parent = clone
+	clone := NewNode(this.document, this.name, this.nodetype, this.cdata).(nodevalue)
+	if deep {
+		clone.v().children = make([]dom.Node, len(this.children))
+		for i := range this.children {
+			child := this.children[i].CloneNode(deep)
+			child.(*node).parent = clone
+		}
 	}
 	return clone
 }
@@ -202,13 +199,14 @@ func (this *node) HasChildNodes() bool {
 }
 
 func (this *node) InsertBefore(new dom.Node, ref dom.Node) dom.Node {
-	// newNode is inserted at the end of parentNode's child nodes.
-	if ref == nil {
-		return this.AppendChild(new)
-	}
-	// Check new
+	// Check parameters
 	if new == nil {
 		return nil
+	}
+	// 'new' is inserted at the end of parentNode's child nodes
+	// when 'ref' is nil
+	if ref == nil {
+		return this.AppendChild(new)
 	}
 	// insert node before ref
 	node := new.(nodevalue).v()
@@ -252,64 +250,62 @@ func (this *node) v() *node {
 	return this
 }
 
+func (this *node) write(w io.Writer) (int, error) {
+	s := 0
+	if n, err := w.Write([]byte("<" + this.name + ">")); err != nil {
+		return 0, err
+	} else {
+		s += n
+	}
+	for _, child := range this.children {
+		if n, err := child.(nodevalue).write(w); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+	}
+	if n, err := w.Write([]byte("</" + this.name + ">")); err != nil {
+		return 0, err
+	} else {
+		s += n
+	}
+	return s, nil
+}
+
 // Return next child node
 func nextSibling(parent, child dom.Node) dom.Node {
-	switch parent := parent.(type) {
-	case *node:
-		for i, c := range parent.children {
-			if c != child {
-				continue
-			}
-			if i < len(parent.children)-1 {
-				return parent.children[i+1]
-			} else {
-				return nil
-			}
+	if parent == nil || child == nil {
+		return nil
+	}
+	node := parent.(nodevalue).v()
+	for i, c := range node.children {
+		if c != child {
+			continue
 		}
-	case *element:
-		for i, c := range parent.children {
-			if c != child {
-				continue
-			}
-			if i < len(parent.children)-1 {
-				return parent.children[i+1]
-			} else {
-				return nil
-			}
+		if i < len(node.children)-1 {
+			return node.children[i+1]
+		} else {
+			return nil
 		}
-	default:
-		panic("NextSibling: not a *node")
 	}
 	return nil
 }
 
 // Return previous child node
 func previousSibling(parent, child dom.Node) dom.Node {
-	switch parent := parent.(type) {
-	case *node:
-		for i, c := range parent.children {
-			if c != child {
-				continue
-			}
-			if i > 0 {
-				return parent.children[i-1]
-			} else {
-				return nil
-			}
+	if parent == nil || child == nil {
+		return nil
+	}
+	node := parent.(nodevalue).v()
+	for i, c := range node.children {
+		if c != child {
+			continue
 		}
-	case *element:
-		for i, c := range parent.children {
-			if c != child {
-				continue
-			}
-			if i > 0 {
-				return parent.children[i-1]
-			} else {
-				return nil
-			}
+		if i > 0 {
+			return node.children[i-1]
+		} else {
+			return nil
 		}
-	default:
-		panic("PreviousSibling: not a *node")
 	}
 	return nil
 }

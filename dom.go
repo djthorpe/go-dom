@@ -1,5 +1,7 @@
 package dom
 
+import "io"
+
 ///////////////////////////////////////////////////////////////////////////////
 // TYPES
 
@@ -11,26 +13,25 @@ type NodeType int
 // Node implements https://developer.mozilla.org/en-US/docs/Web/API/Node
 type Node interface {
 	// Properties
-	BaseURI() string
 	ChildNodes() []Node
+	Contains(Node) bool
+	Equals(Node) bool
 	FirstChild() Node
+	HasChildNodes() bool
 	IsConnected() bool
 	LastChild() Node
 	NextSibling() Node
 	NodeName() string
 	NodeType() NodeType
 	OwnerDocument() Document
-	ParentNode() Node
 	ParentElement() Element
+	ParentNode() Node
 	PreviousSibling() Node
 	TextContent() string
 
 	// Methods
-	Equals(Node) bool
 	AppendChild(Node) Node
 	CloneNode(bool) Node
-	Contains(Node) bool
-	HasChildNodes() bool
 	InsertBefore(Node, Node) Node
 	RemoveChild(Node)
 	ReplaceChild(Node, Node)
@@ -42,6 +43,19 @@ type Element interface {
 	// Properties
 	InnerHTML() string
 	OuterHTML() string
+	TagName() string
+	Attributes() []Attr
+
+	// Methods
+	/*RemoveAttrbute(string)
+	RemoveAttributeNode(Attr) Attr
+	SetAttribute(string, string) Attr
+	SetAttributeNode(Attr) Attr
+	GetAttribute(string) string
+	GetAttributeNames() []string
+	GetAttributeNode(string) Attr
+	HasAttribute(string) bool*/
+	HasAttributes() bool
 }
 
 // Document implements https://developer.mozilla.org/en-US/docs/Web/API/Document
@@ -60,7 +74,7 @@ type Document interface {
 
 	// Methods
 	CreateElement(string) Element
-	//CreateElementNS(string, string) Element
+	CreateAttribute(string) Attr
 	CreateComment(string) Comment
 	CreateTextNode(string) Text
 }
@@ -81,6 +95,16 @@ type Comment interface {
 	Length() int
 }
 
+type Attr interface {
+	Node
+
+	// Properties
+	OwnerElement() Element
+	Name() string
+	Value() string
+	SetValue(string)
+}
+
 // Document implements https://developer.mozilla.org/en-US/docs/Web/API/DocumentType
 type DocumentType interface {
 	Node
@@ -94,6 +118,10 @@ type DocumentType interface {
 type Window interface {
 	// Properties
 	Document() Document
+
+	// Methods
+	Write(io.Writer, Node) (int, error)
+	Read(io.Reader, string) (Document, error)
 }
 
 ///////////////////////////////////////////////////////////////////////////////

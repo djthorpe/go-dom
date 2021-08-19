@@ -1,7 +1,7 @@
 
 # Go parameters
 GO=go
-GOFLAGS = -ldflags "-s -w $(GOLDFLAGS)" 
+GOFLAGS = -ldflags "-s -w" 
 BUILDDIR = build
 WASM = $(wildcard cmd/wasm/*)
 GOROOT = $(shell go env GOROOT)

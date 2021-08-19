@@ -22,6 +22,9 @@ cd go-dom
 make test && make jstest
 ```
 
+Testing in a WASM environment uses [wasmbrowsertest](https://github.com/agnivade/wasmbrowsertest). Please see the documentation for that package for more information
+on testing in the WASM environment and browser support.
+
 ## Example: Hello, World 
 
 There is a simple "Hello, World" example which runs both on the command line

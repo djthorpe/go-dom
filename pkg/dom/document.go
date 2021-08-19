@@ -17,20 +17,33 @@ type document struct {
 	doctype dom.DocumentType
 	head    dom.Element
 	body    dom.Element
+	charset dom.Element
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // LIFECYCLE
 
 func NewHTMLDocument(title string) *document {
-	doc := NewNode(nil, "#document", dom.DOCUMENT_NODE).(*document)
-	html := doc.AppendChild(doc.CreateElement("html"))
+	doc := NewNode(nil, "#document", dom.DOCUMENT_NODE, "").(*document)
 
 	// Append doctype, head, body and title to document
-	doc.doctype = doc.AppendChild(NewNode(doc, "html", dom.DOCUMENT_TYPE_NODE)).(dom.DocumentType)
+	doc.doctype = doc.AppendChild(NewNode(doc, "html", dom.DOCUMENT_TYPE_NODE, "")).(dom.DocumentType)
+	html := doc.AppendChild(doc.CreateElement("html"))
 	doc.head = html.AppendChild(doc.CreateElement("head")).(dom.Element)
+	doc.charset = doc.head.AppendChild(doc.CreateElement("meta")).(dom.Element)
 	doc.body = html.AppendChild(doc.CreateElement("body")).(dom.Element)
-	doc.head.AppendChild(doc.CreateTextNode(title))
+	if title != "" {
+		titlenode := doc.head.AppendChild(doc.CreateElement("title")).(dom.Element)
+		titlenode.AppendChild(doc.CreateTextNode(title))
+	}
+
+	// Return the document
+	return doc
+}
+
+func NewXMLDocument(root string) *document {
+	doc := NewNode(nil, "#document", dom.DOCUMENT_NODE, "").(*document)
+	doc.body = doc.AppendChild(doc.CreateElement(root)).(dom.Element)
 
 	// Return the document
 	return doc
@@ -38,6 +51,14 @@ func NewHTMLDocument(title string) *document {
 
 ///////////////////////////////////////////////////////////////////////////////
 // PROPERTIES
+
+func (this *document) NextSibling() dom.Node {
+	return nextSibling(this.parent, this)
+}
+
+func (this *document) PreviousSibling() dom.Node {
+	return previousSibling(this.parent, this)
+}
 
 func (this *document) Body() dom.Element {
 	return this.body
@@ -51,19 +72,19 @@ func (this *document) Doctype() dom.DocumentType {
 // PUBLIC METHODS
 
 func (this *document) CreateElement(name string) dom.Element {
-	return NewNode(this, name, dom.ELEMENT_NODE).(dom.Element)
+	return NewNode(this, name, dom.ELEMENT_NODE, "").(dom.Element)
 }
 
-func (this *document) CreateComment(data string) dom.Comment {
-	comment := NewNode(this, "#comment", dom.COMMENT_NODE).(*comment)
-	comment.data = data
-	return comment
+func (this *document) CreateComment(cdata string) dom.Comment {
+	return NewNode(this, "#comment", dom.COMMENT_NODE, cdata).(dom.Comment)
 }
 
-func (this *document) CreateTextNode(data string) dom.Text {
-	text := NewNode(this, "#text", dom.TEXT_NODE).(*text)
-	text.data = data
-	return text
+func (this *document) CreateTextNode(cdata string) dom.Text {
+	return NewNode(this, "#text", dom.TEXT_NODE, cdata).(dom.Text)
+}
+
+func (this *document) CreateAttribute(name string) dom.Attr {
+	return NewNode(this, name, dom.ATTRIBUTE_NODE, "").(dom.Attr)
 }
 
 ///////////////////////////////////////////////////////////////////////////////

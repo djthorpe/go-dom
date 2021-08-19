@@ -54,6 +54,9 @@ func Test_Element_002(t *testing.T) {
 		t.Error("NextSibling() failed")
 	}
 	parent.AppendChild(c)
+	if b.NextSibling() == nil {
+		t.Error("NextSibling() failed")
+	}
 	if parent.FirstChild().Equals(b) == false {
 		t.Error("FirstChild() failed")
 	}
@@ -103,5 +106,15 @@ func Test_Element_002(t *testing.T) {
 	}
 	if c.ParentNode() != nil {
 		t.Error("ParentNode() failed")
+	}
+}
+func Test_Element_003(t *testing.T) {
+	doc := NewWindow().Document()
+	parent := doc.CreateElement("a")
+	if parent.InnerHTML() != "" {
+		t.Error("InnerHTML() failed")
+	}
+	if parent.OuterHTML() != "<a></a>" {
+		t.Error("OuterHTML() failed: ", parent.OuterHTML())
 	}
 }

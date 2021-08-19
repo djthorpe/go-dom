@@ -1,6 +1,7 @@
 package dom_test
 
 import (
+	"bytes"
 	"testing"
 
 	// Modules
@@ -13,5 +14,16 @@ func Test_Doctype_001(t *testing.T) {
 		t.Error("Doctype() returned nil")
 	} else {
 		t.Log(doc.Doctype())
+	}
+}
+
+func Test_Doctype_002(t *testing.T) {
+	win := NewWindow()
+	doc := win.Document()
+	w := new(bytes.Buffer)
+	if _, err := win.Write(w, doc); err != nil {
+		t.Error(err)
+	} else {
+		t.Log(w.String())
 	}
 }

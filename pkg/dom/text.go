@@ -4,6 +4,8 @@ package dom
 
 import (
 	"fmt"
+	"html"
+	"io"
 
 	dom "github.com/djthorpe/go-dom"
 )
@@ -13,7 +15,6 @@ import (
 
 type text struct {
 	*node
-	data string
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,28 +29,36 @@ func (this *text) String() string {
 /////////////////////////////////////////////////////////////////////
 // PROPERTIES
 
+func (this *text) NextSibling() dom.Node {
+	return nextSibling(this.parent, this)
+}
+
+func (this *text) PreviousSibling() dom.Node {
+	return previousSibling(this.parent, this)
+}
+
 func (this *text) Data() string {
-	return this.data
+	return this.cdata
 }
 
 func (this *text) Length() int {
-	return len(this.data)
+	return len(this.cdata)
 }
 
 /////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
 
+func (this *text) CloneNode(bool) dom.Node {
+	return NewNode(this.document, this.name, this.nodetype, this.cdata)
+}
+
 func (this *text) AppendChild(child dom.Node) dom.Node {
+	// NO-OP
 	return nil
 }
 
-func (this *text) CloneNode(bool) dom.Node {
-	clone := NewNode(this.document, this.name, this.nodetype).(*text)
-	clone.data = this.data
-	return clone
-}
-
 func (this *text) InsertBefore(new dom.Node, ref dom.Node) dom.Node {
+	// NO-OP
 	return nil
 }
 
@@ -66,4 +75,8 @@ func (this *text) ReplaceChild(dom.Node, dom.Node) {
 
 func (this *text) v() *node {
 	return this.node
+}
+
+func (this *text) write(w io.Writer) (int, error) {
+	return w.Write([]byte(html.EscapeString(this.cdata)))
 }
