@@ -19,9 +19,12 @@ func Test_Window_001(t *testing.T) {
 	document := window.Document()
 	if document == nil {
 		t.Fatal("Document() returned nil")
-	} else {
-		t.Log("document=", document)
 	}
+	w := new(bytes.Buffer)
+	if _, err := window.Write(w, document); err != nil {
+		t.Fatal(err)
+	}
+	t.Log("document=", w.String())
 }
 
 func Test_Window_002(t *testing.T) {
@@ -36,10 +39,16 @@ func Test_Window_002(t *testing.T) {
 	}
 	for _, test := range tests {
 		buf := bytes.NewBufferString(test.data)
-		if doc, err := window.Read(buf, test.mime); err != nil {
+		document, err := window.Read(buf, test.mime)
+		if err != nil {
 			t.Error(err)
-		} else {
-			t.Log("doc=", doc)
+			continue
 		}
+		buf.Reset()
+		if _, err := window.Write(buf, document); err != nil {
+			t.Error(err)
+			continue
+		}
+		t.Log("document=", buf.String())
 	}
 }

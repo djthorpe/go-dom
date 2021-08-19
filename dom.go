@@ -47,14 +47,14 @@ type Element interface {
 	Attributes() []Attr
 
 	// Methods
-	/*RemoveAttrbute(string)
-	RemoveAttributeNode(Attr) Attr
+	//RemoveAttrbute(string)
+	//RemoveAttributeNode(Attr) Attr
 	SetAttribute(string, string) Attr
-	SetAttributeNode(Attr) Attr
-	GetAttribute(string) string
-	GetAttributeNames() []string
-	GetAttributeNode(string) Attr
-	HasAttribute(string) bool*/
+	//SetAttributeNode(Attr) Attr
+	//GetAttribute(string) string
+	//GetAttributeNames() []string
+	//GetAttributeNode(string) Attr
+	//HasAttribute(string) bool
 	HasAttributes() bool
 }
 

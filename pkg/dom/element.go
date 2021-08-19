@@ -72,6 +72,14 @@ func (this *element) HasAttributes() bool {
 	return len(this.attrs) > 0
 }
 
+func (this *element) SetAttribute(name, value string) dom.Attr {
+	attr := this.document.CreateAttribute(name)
+	attr.SetValue(value)
+	attr.(nodevalue).v().parent = this
+	this.attrs = append(this.attrs, attr)
+	return attr
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // PRIVATE METHODS
 

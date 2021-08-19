@@ -41,12 +41,8 @@ func NewHTMLDocument(title string) *document {
 	return doc
 }
 
-func NewXMLDocument(root string) *document {
-	doc := NewNode(nil, "#document", dom.DOCUMENT_NODE, "").(*document)
-	doc.body = doc.AppendChild(doc.CreateElement(root)).(dom.Element)
-
-	// Return the document
-	return doc
+func NewDocument() *document {
+	return NewNode(nil, "#document", dom.DOCUMENT_NODE, "").(*document)
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -5,7 +5,6 @@ package dom
 import (
 	"fmt"
 	"io"
-	"strings"
 
 	dom "github.com/djthorpe/go-dom"
 )
@@ -130,11 +129,7 @@ func (this *node) NextSibling() dom.Node {
 }
 
 func (this *node) NodeName() string {
-	if strings.HasPrefix(this.name, "#") {
-		return this.name
-	} else {
-		return strings.ToUpper(this.name)
-	}
+	return this.name
 }
 
 func (this *node) NodeType() dom.NodeType {
