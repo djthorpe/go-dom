@@ -10,8 +10,7 @@ import (
 )
 
 func Test_Element_001(t *testing.T) {
-	doc := NewWindow().Document()
-	element := doc.CreateElement("A")
+	element := GetWindow().Document().CreateElement("A")
 	if element.NodeName() != "A" {
 		t.Errorf("Element.NodeName() = %v, want %v", element.NodeName(), "a")
 	}
@@ -21,7 +20,7 @@ func Test_Element_001(t *testing.T) {
 }
 
 func Test_Element_002(t *testing.T) {
-	doc := NewWindow().Document()
+	doc := GetWindow().Document()
 	parent := doc.CreateElement("A")
 	b := doc.CreateElement("CB")
 	c := doc.CreateElement("CC")
@@ -109,7 +108,7 @@ func Test_Element_002(t *testing.T) {
 	}
 }
 func Test_Element_003(t *testing.T) {
-	doc := NewWindow().Document()
+	doc := GetWindow().Document()
 	parent := doc.CreateElement("a")
 	if parent.InnerHTML() != "" {
 		t.Error("InnerHTML() failed")

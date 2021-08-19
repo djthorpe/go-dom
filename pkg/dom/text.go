@@ -30,11 +30,19 @@ func (this *text) String() string {
 // PROPERTIES
 
 func (this *text) NextSibling() dom.Node {
-	return nextSibling(this.parent, this)
+	if this.parent == nil {
+		return nil
+	} else {
+		return this.parent.(nodevalue).nextChild(this)
+	}
 }
 
 func (this *text) PreviousSibling() dom.Node {
-	return previousSibling(this.parent, this)
+	if this.parent == nil {
+		return nil
+	} else {
+		return this.parent.(nodevalue).previousChild(this)
+	}
 }
 
 func (this *text) Data() string {

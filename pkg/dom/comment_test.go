@@ -9,8 +9,7 @@ import (
 )
 
 func Test_Comment_001(t *testing.T) {
-	doc := NewWindow().Document()
-	comment := doc.CreateComment("test")
+	comment := GetWindow().Document().CreateComment("test")
 	if comment.NodeType() != dom.COMMENT_NODE {
 		t.Error("Expected COMMENT_NODE")
 	} else if comment.NodeName() != "#comment" {

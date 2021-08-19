@@ -38,11 +38,19 @@ func (this *comment) String() string {
 // PROPERTIES
 
 func (this *comment) NextSibling() dom.Node {
-	return nextSibling(this.parent, this)
+	if this.parent == nil {
+		return nil
+	} else {
+		return this.parent.(nodevalue).nextChild(this)
+	}
 }
 
 func (this *comment) PreviousSibling() dom.Node {
-	return previousSibling(this.parent, this)
+	if this.parent == nil {
+		return nil
+	} else {
+		return this.parent.(nodevalue).previousChild(this)
+	}
 }
 
 func (this *comment) Data() string {

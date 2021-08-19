@@ -24,6 +24,8 @@ type node struct {
 type nodevalue interface {
 	dom.Node
 	v() *node
+	nextChild(dom.Node) dom.Node
+	previousChild(dom.Node) dom.Node
 	write(io.Writer) (int, error)
 }
 
@@ -34,7 +36,7 @@ func NewNode(doc dom.Document, name string, nodetype dom.NodeType, cdata string)
 	node := &node{doc, nil, name, nodetype, nil, cdata}
 	switch nodetype {
 	case dom.DOCUMENT_NODE:
-		return &document{node, nil, nil, nil, nil}
+		return &document{node, nil, nil, nil, nil, nil}
 	case dom.DOCUMENT_TYPE_NODE:
 		return &doctype{node, "", ""}
 	case dom.ELEMENT_NODE:
@@ -125,7 +127,11 @@ func (this *node) LastChild() dom.Node {
 }
 
 func (this *node) NextSibling() dom.Node {
-	return nextSibling(this.parent, this)
+	if this.parent == nil {
+		return nil
+	} else {
+		return this.parent.(nodevalue).nextChild(this)
+	}
 }
 
 func (this *node) NodeName() string {
@@ -153,15 +159,22 @@ func (this *node) ParentElement() dom.Element {
 }
 
 func (this *node) PreviousSibling() dom.Node {
-	return previousSibling(this.parent, this)
+	if this.parent == nil {
+		return nil
+	} else {
+		return this.parent.(nodevalue).previousChild(this)
+	}
 }
 
 func (this *node) TextContent() string {
-	if this.nodetype == dom.TEXT_NODE || this.nodetype == dom.COMMENT_NODE {
+	if this.nodetype == dom.TEXT_NODE {
 		return this.cdata
 	}
-	// TODO
-	return "TODO"
+	var data string
+	for _, child := range this.children {
+		data += child.TextContent()
+	}
+	return data
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -267,18 +280,17 @@ func (this *node) write(w io.Writer) (int, error) {
 	return s, nil
 }
 
-// Return next child node
-func nextSibling(parent, child dom.Node) dom.Node {
-	if parent == nil || child == nil {
+// Return next child node for a child
+func (parent *node) nextChild(child dom.Node) dom.Node {
+	if child == nil {
 		return nil
 	}
-	node := parent.(nodevalue).v()
-	for i, c := range node.children {
+	for i, c := range parent.children {
 		if c != child {
 			continue
 		}
-		if i < len(node.children)-1 {
-			return node.children[i+1]
+		if i < len(parent.children)-1 {
+			return parent.children[i+1]
 		} else {
 			return nil
 		}
@@ -287,17 +299,16 @@ func nextSibling(parent, child dom.Node) dom.Node {
 }
 
 // Return previous child node
-func previousSibling(parent, child dom.Node) dom.Node {
-	if parent == nil || child == nil {
+func (parent *node) previousChild(child dom.Node) dom.Node {
+	if child == nil {
 		return nil
 	}
-	node := parent.(nodevalue).v()
-	for i, c := range node.children {
+	for i, c := range parent.children {
 		if c != child {
 			continue
 		}
 		if i > 0 {
-			return node.children[i-1]
+			return parent.children[i-1]
 		} else {
 			return nil
 		}

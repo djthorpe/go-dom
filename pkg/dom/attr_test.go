@@ -5,12 +5,11 @@ import (
 	"testing"
 
 	// Modules
-
 	. "github.com/djthorpe/go-dom/pkg/dom"
 )
 
 func Test_Attr_001(t *testing.T) {
-	win := NewWindow()
+	win := GetWindow()
 	doc := win.Document()
 	tests := []struct {
 		name     string

@@ -8,7 +8,7 @@ import (
 )
 
 func Test_Document_001(t *testing.T) {
-	if doc := NewWindow().Document(); doc == nil {
+	if doc := GetWindow().Document(); doc == nil {
 		t.Error("Unexpected nil returned from NewWindow().Document()")
 	} else if body := doc.Body(); body == nil {
 		t.Error("Unexpected nil returned from Document.Body()")

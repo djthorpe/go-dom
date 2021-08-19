@@ -31,11 +31,19 @@ func (this *element) String() string {
 // PROPERTIES
 
 func (this *element) NextSibling() dom.Node {
-	return nextSibling(this.parent, this)
+	if this.parent == nil {
+		return nil
+	} else {
+		return this.parent.(nodevalue).nextChild(this)
+	}
 }
 
 func (this *element) PreviousSibling() dom.Node {
-	return previousSibling(this.parent, this)
+	if this.parent == nil {
+		return nil
+	} else {
+		return this.parent.(nodevalue).previousChild(this)
+	}
 }
 
 func (this *element) InnerHTML() string {

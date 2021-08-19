@@ -9,7 +9,7 @@ import (
 )
 
 func Test_Text_001(t *testing.T) {
-	doc := NewWindow().Document()
+	doc := GetWindow().Document()
 	text := doc.CreateTextNode("test")
 	if text.NodeType() != dom.TEXT_NODE {
 		t.Error("Expected TEXT_NODE")
@@ -21,7 +21,7 @@ func Test_Text_001(t *testing.T) {
 }
 
 func Test_Text_002(t *testing.T) {
-	doc := NewWindow().Document()
+	doc := GetWindow().Document()
 	tests := []struct {
 		data string
 		want string

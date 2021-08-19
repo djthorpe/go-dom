@@ -67,7 +67,7 @@ type Document interface {
 	//CharacterSet() string
 	//ContentType() string
 	Doctype() DocumentType
-	//DocumentElement() Element
+	DocumentElement() Element
 	//DocumentURI() string
 	//Head() Element
 	//Title() string

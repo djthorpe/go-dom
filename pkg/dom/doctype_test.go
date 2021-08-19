@@ -9,7 +9,7 @@ import (
 )
 
 func Test_Doctype_001(t *testing.T) {
-	doc := NewWindow().Document()
+	doc := GetWindow().Document()
 	if doc.Doctype() == nil {
 		t.Error("Doctype() returned nil")
 	} else {
@@ -18,7 +18,7 @@ func Test_Doctype_001(t *testing.T) {
 }
 
 func Test_Doctype_002(t *testing.T) {
-	win := NewWindow()
+	win := GetWindow()
 	doc := win.Document()
 	w := new(bytes.Buffer)
 	if _, err := win.Write(w, doc); err != nil {

@@ -48,11 +48,13 @@ func (this *doctype) String() string {
 // PROPERTIES
 
 func (this *doctype) NextSibling() dom.Node {
-	return nextSibling(this.parent, this)
+	// NO-OP
+	return nil
 }
 
 func (this *doctype) PreviousSibling() dom.Node {
-	return previousSibling(this.parent, this)
+	// NO-OP
+	return nil
 }
 
 func (this *doctype) Name() string {
@@ -70,6 +72,7 @@ func (this *doctype) SystemId() string {
 // PUBLIC METHODS
 
 func (this *doctype) AppendChild(child dom.Node) dom.Node {
+	// NO-OP
 	return nil
 }
 
@@ -81,6 +84,7 @@ func (this *doctype) CloneNode(bool) dom.Node {
 }
 
 func (this *doctype) InsertBefore(new dom.Node, ref dom.Node) dom.Node {
+	// NO-OP
 	return nil
 }
 

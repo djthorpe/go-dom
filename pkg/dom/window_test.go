@@ -9,7 +9,7 @@ import (
 )
 
 func Test_Window_001(t *testing.T) {
-	window := NewWindow()
+	window := GetWindow()
 	if window == nil {
 		t.Fatal("Window() returned nil")
 	} else {
@@ -28,7 +28,7 @@ func Test_Window_001(t *testing.T) {
 }
 
 func Test_Window_002(t *testing.T) {
-	window := NewWindow()
+	window := GetWindow()
 	tests := []struct {
 		mime, data string
 	}{
