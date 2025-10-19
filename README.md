@@ -97,7 +97,7 @@ components is available in `cmd/wasm/bootstrap-app`.
 
 ### Bootstrap Quick Start
 
-Build and run the Bootstrap demo:
+Build and run the Bootstrap demo, which demonstrates all the components which can be created using the `pkg/bs5` package:
 
 ```bash
 ./build/wasmserver serve --watch ./cmd/wasm/bootstrap-app --bs-5
