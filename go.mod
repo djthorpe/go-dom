@@ -1,8 +1,8 @@
 module github.com/djthorpe/go-dom
 
-go 1.16
+go 1.24.0
 
 require (
-	github.com/agnivade/wasmbrowsertest v0.3.5 // indirect
-	golang.org/x/net v0.0.0-20210813160813-60bc85c4be6d // indirect
+	github.com/alecthomas/kong v1.12.1
+	golang.org/x/net v0.46.0
 )

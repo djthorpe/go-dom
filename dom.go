@@ -51,7 +51,7 @@ type Element interface {
 	//RemoveAttributeNode(Attr) Attr
 	SetAttribute(string, string) Attr
 	//SetAttributeNode(Attr) Attr
-	//GetAttribute(string) string
+	GetAttribute(string) Attr
 	//GetAttributeNames() []string
 	//GetAttributeNode(string) Attr
 	//HasAttribute(string) bool
@@ -67,7 +67,7 @@ type Document interface {
 	//CharacterSet() string
 	//ContentType() string
 	Doctype() DocumentType
-	DocumentElement() Element
+	//DocumentElement() Element
 	//DocumentURI() string
 	//Head() Element
 	//Title() string
@@ -121,7 +121,7 @@ type Window interface {
 
 	// Methods
 	Write(io.Writer, Node) (int, error)
-	Read(io.Reader, string) (Document, error)
+	//Read(io.Reader, string) (Document, error)
 }
 
 ///////////////////////////////////////////////////////////////////////////////

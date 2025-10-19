@@ -33,7 +33,12 @@ func (this *document) Body() dom.Element {
 }
 
 func (this *document) Doctype() dom.DocumentType {
-	return NewNode(this.Get("doctype")).(dom.DocumentType)
+	doctype := this.Get("doctype")
+	if !doctype.Truthy() {
+		return nil
+	} else {
+		return NewNode(this.Get("doctype")).(dom.DocumentType)
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -49,6 +54,10 @@ func (this *document) CreateComment(data string) dom.Comment {
 
 func (this *document) CreateTextNode(data string) dom.Text {
 	return NewNode(this.Call("createTextNode", data)).(dom.Text)
+}
+
+func (this *document) CreateAttribute(name string) dom.Attr {
+	return NewNode(this.Call("createAttribute", name)).(dom.Attr)
 }
 
 /////////////////////////////////////////////////////////////////////

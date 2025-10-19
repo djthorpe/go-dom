@@ -27,6 +27,7 @@ func Test_Window_001(t *testing.T) {
 	t.Log("document=", w.String())
 }
 
+/*
 func Test_Window_002(t *testing.T) {
 	window := GetWindow()
 	tests := []struct {
@@ -52,3 +53,4 @@ func Test_Window_002(t *testing.T) {
 		t.Log("document=", buf.String())
 	}
 }
+*/

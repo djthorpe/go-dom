@@ -4,7 +4,9 @@ package dom
 
 import (
 	"fmt"
-	"syscall/js"
+
+	// Packages
+	dom "github.com/djthorpe/go-dom"
 )
 
 /////////////////////////////////////////////////////////////////////
@@ -34,9 +36,29 @@ func (this *element) OuterHTML() string {
 	return this.Get("outerHTML").String()
 }
 
-/////////////////////////////////////////////////////////////////////
-// PRIVATE METHODS
+func (e *element) TagName() string {
+	return e.Get("tagName").String()
+}
 
-func (this *element) v() js.Value {
-	return this.node.v()
+func (e *element) Attributes() []dom.Attr {
+	attrs := e.Get("attributes")
+	length := attrs.Get("length").Int()
+	result := make([]dom.Attr, 0, length)
+	for i := 0; i < length; i++ {
+		result = append(result, NewNode(attrs.Call("item", i)).(dom.Attr))
+	}
+	return result
+}
+
+func (e *element) HasAttributes() bool {
+	return e.Call("hasAttributes").Bool()
+}
+
+func (e *element) SetAttribute(name string, value string) dom.Attr {
+	e.Call("setAttribute", name, value)
+	return e.GetAttribute(name)
+}
+
+func (e *element) GetAttribute(name string) dom.Attr {
+	return NewNode(e.Call("getAttribute", name)).(dom.Attr)
 }
