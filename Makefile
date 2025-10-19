@@ -15,7 +15,6 @@ all: wasmserver $(WASM)
 $(WASM): mkdir
 	@echo "Building $(BUILDDIR)/$(shell basename $@).html"
 	@GOOS=js GOARCH=wasm $(GO) build -o ${BUILDDIR}/$@.wasm -tags js ${GOFLAGS} ./$@
-	@sed 's|json.wasm|$@.wasm|' etc/wasm.html > ${BUILDDIR}/$(shell basename $@).html
 
 .PHONY: wasmserver
 wasmserver: mkdir
@@ -31,7 +30,7 @@ jstest: clean
 		echo "wasmbrowsertest not found, installing..."; \
 		$(GO) install github.com/agnivade/wasmbrowsertest@latest; \
 	fi
-	@GOOS=js GOARCH=wasm $(GO) test -v -tags js -exec="${GOPATH}/bin/wasmbrowsertest" ./pkg/dom
+	@GOOS=js GOARCH=wasm $(GO) test -v -tags js -exec="wasmbrowsertest" ./pkg/dom
 
 .PHONY: mkdir
 mkdir:
