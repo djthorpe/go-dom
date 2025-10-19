@@ -47,7 +47,7 @@ type Element interface {
 	Attributes() []Attr
 	Style() Style
 
-	// Methods
+	// Attribute Methods
 	//RemoveAttrbute(string)
 	//RemoveAttributeNode(Attr) Attr
 	SetAttribute(string, string) Attr
@@ -57,6 +57,10 @@ type Element interface {
 	//GetAttributeNode(string) Attr
 	//HasAttribute(string) bool
 	HasAttributes() bool
+
+	// Class Methods
+	AddClass(string)
+	RemoveClass(string)
 }
 
 // Document implements https://developer.mozilla.org/en-US/docs/Web/API/Document
@@ -71,7 +75,7 @@ type Document interface {
 	//DocumentElement() Element
 	//DocumentURI() string
 	//Head() Element
-	//Title() string
+	Title() string
 
 	// Methods
 	CreateElement(string) Element

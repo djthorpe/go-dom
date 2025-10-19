@@ -7,6 +7,9 @@ import (
 //go:embed bootstrap.html
 var BootstrapHTML []byte
 
+//go:embed bs5.html
+var Bootstrap5 []byte
+
 //go:embed notify.js
 var NotifyJS []byte
 

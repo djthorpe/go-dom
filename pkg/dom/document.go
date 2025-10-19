@@ -70,6 +70,13 @@ func (this *document) DocumentElement() dom.Element {
 	return this.FirstChild().(dom.Element)
 }
 
+func (doc *document) Title() string {
+	if doc.head == nil {
+		return ""
+	}
+	return fmt.Sprint(doc.node.v())
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
 

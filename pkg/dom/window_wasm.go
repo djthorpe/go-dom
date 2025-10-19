@@ -7,6 +7,7 @@ import (
 	"io"
 	"syscall/js"
 
+	// Packages
 	"github.com/djthorpe/go-dom"
 )
 
@@ -23,6 +24,13 @@ type window struct {
 // GetWindow returns a global window object
 func GetWindow() dom.Window {
 	return &window{js.Global()}
+}
+
+// GetWindowWithTitle returns a global window object with the specified title
+func GetWindowWithTitle(title string) dom.Window {
+	w := js.Global()
+	w.Get("document").Set("title", title)
+	return &window{w}
 }
 
 ///////////////////////////////////////////////////////////////////////////////

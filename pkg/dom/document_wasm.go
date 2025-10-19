@@ -41,6 +41,15 @@ func (this *document) Doctype() dom.DocumentType {
 	}
 }
 
+func (doc *document) Title() string {
+	value := doc.v().Get("title")
+	if value.Truthy() && value.Type() == js.TypeString {
+		return value.String()
+	} else {
+		return ""
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
 

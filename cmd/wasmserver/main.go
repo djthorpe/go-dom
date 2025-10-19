@@ -35,6 +35,7 @@ type ServeCmd struct {
 	Path   string `arg:"" default:"." help:"Path to the wasm application source"`
 	Listen string `short:"l" default:"localhost:9090" help:"Address to listen on (e.g., localhost:9090 or 0.0.0.0:9090)"`
 	Watch  bool   `short:"w" help:"Watch for changes and recompile automatically (includes local dependencies)"`
+	BS5    bool   `help:"Include Bootstrap 5 library in the HTML template"`
 }
 
 func main() {

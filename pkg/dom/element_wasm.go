@@ -78,6 +78,16 @@ func (e *element) GetAttribute(name string) dom.Attr {
 	return NewNode(attrNode).(dom.Attr)
 }
 
+func (e *element) AddClass(className string) {
+	classList := e.Get("classList")
+	classList.Call("add", className)
+}
+
+func (e *element) RemoveClass(className string) {
+	classList := e.Get("classList")
+	classList.Call("remove", className)
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // STYLE METHODS
 

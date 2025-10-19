@@ -97,6 +97,56 @@ func (this *element) GetAttribute(name string) dom.Attr {
 	return this.attrs[name]
 }
 
+func (this *element) AddClass(className string) {
+	// Get current class attribute
+	classAttr := this.GetAttribute("class")
+	if classAttr == nil {
+		// No class attribute exists, create one
+		this.SetAttribute("class", className)
+		return
+	}
+
+	// Parse existing classes
+	classes := strings.Fields(classAttr.Value())
+
+	// Check if class already exists
+	for _, c := range classes {
+		if c == className {
+			return // Class already present
+		}
+	}
+
+	// Add the new class
+	classes = append(classes, className)
+	this.SetAttribute("class", strings.Join(classes, " "))
+}
+
+func (this *element) RemoveClass(className string) {
+	// Get current class attribute
+	classAttr := this.GetAttribute("class")
+	if classAttr == nil {
+		return // No classes to remove
+	}
+
+	// Parse existing classes
+	classes := strings.Fields(classAttr.Value())
+
+	// Filter out the class to remove
+	filtered := make([]string, 0, len(classes))
+	for _, c := range classes {
+		if c != className {
+			filtered = append(filtered, c)
+		}
+	}
+
+	// Update or remove the class attribute
+	if len(filtered) == 0 {
+		delete(this.attrs, "class")
+	} else {
+		this.SetAttribute("class", strings.Join(filtered, " "))
+	}
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // PRIVATE METHODS
 
