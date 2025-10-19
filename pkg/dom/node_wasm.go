@@ -22,6 +22,14 @@ type nodevalue interface {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// PUBLIC METHODS
+
+// JSValue returns the underlying js.Value for interop with JavaScript
+func (n *node) JSValue() js.Value {
+	return n.Value
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // GLOBALS
 
 var (
@@ -34,6 +42,7 @@ var (
 	cDocument     = js.Global().Get("HTMLDocument")
 	cDocumentType = js.Global().Get("DocumentType")
 	cElement      = js.Global().Get("HTMLElement")
+	cAttr         = js.Global().Get("Attr")
 )
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -50,20 +59,27 @@ func NewNode(v js.Value) dom.Node {
 		if proto.IsNull() || proto.IsUndefined() {
 			panic(fmt.Sprint("Unknown constructor"))
 		}
-		switch c := constructor(proto); {
-		case c.Equal(cDocument):
+
+		// Check if this prototype matches any known types
+		// For custom elements, we check the prototype itself, not its constructor
+		switch {
+		case proto.Equal(cDocument.Get("prototype")):
 			return &document{node: &node{v}}
-		case c.Equal(cElement):
+		case proto.Equal(cElement.Get("prototype")):
 			return &element{node: &node{v}}
-		case c.Equal(cText):
+		case proto.Equal(cText.Get("prototype")):
 			return &text{node: &node{v}}
-		case c.Equal(cComment):
+		case proto.Equal(cComment.Get("prototype")):
 			return &comment{node: &node{v}}
-		case c.Equal(cDocumentType):
+		case proto.Equal(cDocumentType.Get("prototype")):
 			return &doctype{node: &node{v}}
-		case c.Equal(cNode):
+		case proto.Equal(cAttr.Get("prototype")):
+			return &attr{node: &node{v}}
+		case proto.Equal(cNode.Get("prototype")):
 			return &node{v}
-		case c.IsNull() || c.IsUndefined():
+		} // Also check constructor for compatibility (legacy behavior)
+		c := constructor(proto)
+		if c.IsNull() || c.IsUndefined() {
 			panic("NewNode failed for " + constructor(cObject.Call("getPrototypeOf", v)).Get("name").String())
 		}
 	}

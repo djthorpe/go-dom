@@ -45,13 +45,14 @@ type Element interface {
 	OuterHTML() string
 	TagName() string
 	Attributes() []Attr
+	Style() Style
 
 	// Methods
 	//RemoveAttrbute(string)
 	//RemoveAttributeNode(Attr) Attr
 	SetAttribute(string, string) Attr
 	//SetAttributeNode(Attr) Attr
-	//GetAttribute(string) string
+	GetAttribute(string) Attr
 	//GetAttributeNames() []string
 	//GetAttributeNode(string) Attr
 	//HasAttribute(string) bool
@@ -67,7 +68,7 @@ type Document interface {
 	//CharacterSet() string
 	//ContentType() string
 	Doctype() DocumentType
-	DocumentElement() Element
+	//DocumentElement() Element
 	//DocumentURI() string
 	//Head() Element
 	//Title() string
@@ -105,6 +106,13 @@ type Attr interface {
 	SetValue(string)
 }
 
+// Style implements https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleDeclaration
+type Style interface {
+	// Methods
+	Get(string) string
+	Set(string, string)
+}
+
 // Document implements https://developer.mozilla.org/en-US/docs/Web/API/DocumentType
 type DocumentType interface {
 	Node
@@ -121,7 +129,7 @@ type Window interface {
 
 	// Methods
 	Write(io.Writer, Node) (int, error)
-	Read(io.Reader, string) (Document, error)
+	//Read(io.Reader, string) (Document, error)
 }
 
 ///////////////////////////////////////////////////////////////////////////////

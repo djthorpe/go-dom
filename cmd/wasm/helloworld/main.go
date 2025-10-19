@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
-
 	// Modules
-	. "github.com/djthorpe/go-dom/pkg/dom"
+	dom "github.com/djthorpe/go-dom/pkg/dom"
 )
 
 func main() {
-	window := GetWindow()
-	window.Document().SetTitle("Hello, World!")
-	fmt.Println(window.Document().DocumentElement().OuterHTML())
+	document := dom.GetWindow().Document()
+	body := document.Body()
+	h1 := document.CreateElement("h1")
+	h1.AppendChild(document.CreateTextNode("Hello, World!"))
+	body.AppendChild(h1)
 }

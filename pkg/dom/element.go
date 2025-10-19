@@ -80,12 +80,21 @@ func (this *element) HasAttributes() bool {
 	return len(this.attrs) > 0
 }
 
+func (this *element) Style() dom.Style {
+	// Not implemented for non-WASM builds
+	return nil
+}
+
 func (this *element) SetAttribute(name, value string) dom.Attr {
 	attr := this.document.CreateAttribute(name)
 	attr.SetValue(value)
 	attr.(nodevalue).v().parent = this
 	this.attrs[name] = attr
 	return attr
+}
+
+func (this *element) GetAttribute(name string) dom.Attr {
+	return this.attrs[name]
 }
 
 ///////////////////////////////////////////////////////////////////////////////

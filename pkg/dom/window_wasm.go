@@ -40,11 +40,11 @@ func (this *window) String() string {
 // PROPERTIES
 
 func (this *window) Document() dom.Document {
-	return NewNode(w.Get("document")).(dom.Document)
+	return NewNode(this.Get("document")).(dom.Document)
 }
 
 // Write the HTML inside a node
-func (this *window) Write(node dom.Node, w io.Writer) (int, error) {
+func (this *window) Write(w io.Writer, node dom.Node) (int, error) {
 	var s int
 	if node == nil {
 		return 0, dom.ErrBadParameter

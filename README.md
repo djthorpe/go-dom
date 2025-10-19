@@ -3,11 +3,75 @@
 > *Experimental!* Please note this repository contains code which depends
 on experimental features of the Go language.
 
+## Overview
+
+This repository provides two main components:
+
+1. **DOM Package** (`pkg/dom`) - A Go implementation of the Document Object Model (DOM) API that works both natively and in WebAssembly (WASM) environments
+2. **WASM Development Server** (`cmd/wasmserver`) - A feature-rich development server for building and serving WASM applications with live reload, error notifications, and automatic dependency watching
+
+## WASM Development Server
+
+The `wasmserver` tool provides a modern development experience for WASM applications:
+
+### Features
+
+- **Live Reload** - Automatically recompiles and reloads the browser when source files change
+- **Automatic Dependency Discovery** - Watches all local package dependencies (no manual configuration needed)
+- **Real-time Error Display** - Compilation errors appear directly in the browser with full error messages
+- **Server-Sent Events (SSE)** - Efficient communication between server and browser
+
+### Quick Start
+
+Build the wasmserver to the `build/` directory:
+
+```bash
+make wasmserver
+```
+
+Serve your WASM application with live reload:
+
+```bash
+./build/wasmserver serve --watch ./cmd/wasm/helloworld
+```
+
+Or compile without serving:
+
+```bash
+./build/wasmserver compile ./cmd/wasm/helloworld
+```
+
+### Usage
+
+```bash
+# Serve with live reload (discovers and watches local dependencies automatically)
+./build/wasmserver serve --watch <path-to-wasm-app>
+
+# Serve with verbose logging
+./build/wasmserver serve --verbose --watch <path-to-wasm-app>
+
+# Compile to a specific output directory
+./build/wasmserver compile --output ./build <path-to-wasm-app>
+
+# Custom listen address
+./build/wasmserver serve --listen 0.0.0.0:8080 <path-to-wasm-app>
+```
+
+The server automatically:
+
+- Discovers all local package dependencies using `go list`
+- Watches the main application and all dependent packages for changes
+- Recompiles when any `.go` file changes
+- Sends compilation errors to the browser in real-time
+- Triggers browser reload on successful compilation
+
+## DOM Package
+
 Implements the document object model (DOM) for Go - which is
 runnable both in a native go environment or via a web browser
 when compiling for WASM target.
 
-Presently go version 1.17 has been tested. [Tinygo](https://tinygo.org/) should
+Presently go version 1.24 has been tested. [Tinygo](https://tinygo.org/) should
 eventually be supported in order to facilitate smaller binary sizes.
 
 ## Hello, World
@@ -46,7 +110,7 @@ cd go-dom
 GOOS=js GOARCH=wasm go build -o build/helloworld.wasm ./cmd/wasm/helloworld
 ```
 
-See the instructions [here](https://github.com/golang/go/wiki/WebAssembly) for running
+See the [WebAssembly documentation](https://github.com/golang/go/wiki/WebAssembly) for running
 WASM within a web browser. There is some helper code which allows you to run it
 from the command line:
 
