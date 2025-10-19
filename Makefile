@@ -27,6 +27,10 @@ test:
 
 .PHONY: jstest
 jstest: clean
+	@if [ ! -x "${GOPATH}/bin/wasmbrowsertest" ]; then \
+		echo "wasmbrowsertest not found, installing..."; \
+		$(GO) install github.com/agnivade/wasmbrowsertest@latest; \
+	fi
 	@GOOS=js GOARCH=wasm $(GO) test -v -tags js -exec="${GOPATH}/bin/wasmbrowsertest" ./pkg/dom
 
 .PHONY: mkdir
