@@ -5,10 +5,11 @@ on experimental features of the Go language.
 
 ## Overview
 
-This repository provides two main components:
+This repository provides three main components:
 
 1. **DOM Package** (`pkg/dom`) - A Go implementation of the Document Object Model (DOM) API that works both natively and in WebAssembly (WASM) environments
-2. **WASM Development Server** (`cmd/wasmserver`) - A feature-rich development server for building and serving WASM applications with live reload, error notifications, and automatic dependency watching
+2. **Bootstrap 5 Package** (`pkg/bs5`) - Experimental Go wrappers for Bootstrap 5 components (very rough and ready)
+3. **WASM Development Server** (`cmd/wasmserver`) - A feature-rich development server for building and serving WASM applications with live reload, error notifications, and automatic dependency watching
 
 ## WASM Development Server
 
@@ -18,6 +19,7 @@ The `wasmserver` tool provides a modern development experience for WASM applicat
 
 - **Compile Go to WASM** - Seamlessly compiles Go applications to WebAssembly
 - **Serve WASM Applications** - Hosts your WASM apps with a built-in HTTP server, including serving the bootstrap HTML and JS needed to run Go WASM applications
+- **Bootstrap 5 Support** - Optional `--bs-5` flag includes Bootstrap 5 CSS, JavaScript, and Icons in the HTML template
 - **Automatic Dependency Discovery** - Watches all local package dependencies (no manual configuration needed)
 - **Server-Sent Events (SSE)** - Efficient communication between server and browser
 - **Live Reload** - Automatically recompiles and reloads the browser when source files change
@@ -49,6 +51,9 @@ Or compile without serving:
 # Serve with live reload (discovers and watches local dependencies automatically)
 ./build/wasmserver serve --watch <path-to-wasm-app>
 
+# Serve with Bootstrap 5 support (includes Bootstrap CSS/JS in the HTML)
+./build/wasmserver serve --watch --bs-5 <path-to-wasm-app>
+
 # Serve with verbose logging
 ./build/wasmserver serve --verbose --watch <path-to-wasm-app>
 
@@ -66,6 +71,39 @@ The server automatically:
 - Recompiles when any `.go` file changes
 - Sends compilation errors to the browser in real-time
 - Triggers browser reload on successful compilation
+
+## Bootstrap 5 Package (Experimental)
+
+> **Note:** The Bootstrap 5 wrapper (`pkg/bs5`) is very rough and ready. It provides
+> Go bindings for Bootstrap 5 components but is not production-ready and should be
+> considered experimental.
+
+The `pkg/bs5` package provides Go wrappers for Bootstrap 5 components, allowing you to build
+Bootstrap-based web applications in Go/WASM. A comprehensive demo application showcasing all
+components is available in `cmd/wasm/bootstrap-app`.
+
+### Bootstrap Components
+
+- Card-based layouts with headers and footers
+- Navigation bars with dropdowns and color schemes
+- Alerts, badges, buttons with icon support
+- Modals with forms and input groups
+- Accordions, pagination, progress bars
+- Toast notifications, offcanvas panels
+- Tables, tabs, breadcrumbs
+- Responsive grid system (Row/Col)
+- Form controls with validation
+- Bootstrap Icons integration
+
+### Bootstrap Quick Start
+
+Build and run the Bootstrap demo, which demonstrates all the components which can be created using the `pkg/bs5` package:
+
+```bash
+./build/wasmserver serve --watch ./cmd/wasm/bootstrap-app --bs-5
+```
+
+See [`cmd/wasm/bootstrap-app/README.md`](cmd/wasm/bootstrap-app/README.md) for detailed documentation.
 
 ## DOM Package
 

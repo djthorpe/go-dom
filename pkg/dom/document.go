@@ -70,6 +70,13 @@ func (this *document) DocumentElement() dom.Element {
 	return this.FirstChild().(dom.Element)
 }
 
+func (doc *document) Title() string {
+	if doc.head == nil {
+		return ""
+	}
+	return fmt.Sprint(doc.node.v())
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
 
@@ -122,6 +129,11 @@ func (this *document) CreateTextNode(cdata string) dom.Text {
 
 func (this *document) CreateAttribute(name string) dom.Attr {
 	return NewNode(this, name, dom.ATTRIBUTE_NODE, "").(dom.Attr)
+}
+
+func (this *document) ActiveElement() dom.Element {
+	// Not supported in non-WASM builds
+	return nil
 }
 
 ///////////////////////////////////////////////////////////////////////////////

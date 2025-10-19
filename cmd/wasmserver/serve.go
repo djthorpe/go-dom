@@ -142,6 +142,13 @@ func (s *ServeCmd) Run(ctx *Context) error {
 	wasmFileName := dirName + ".wasm"
 	bootstrapHTML := bytes.Replace(etc.BootstrapHTML, []byte("{{WASM_FILE}}"), []byte(wasmFileName), 1)
 
+	// Replace {{LIBRARY}} with Bootstrap 5 HTML or empty string
+	var libraryHTML []byte
+	if s.BS5 {
+		libraryHTML = etc.Bootstrap5
+	}
+	bootstrapHTML = bytes.Replace(bootstrapHTML, []byte("{{LIBRARY}}"), libraryHTML, 1)
+
 	// Create custom handler that serves bootstrap.html at root and wasm_exec.js from GOROOT
 	fs := http.FileServer(http.Dir(buildDir))
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

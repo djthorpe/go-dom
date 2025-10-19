@@ -27,12 +27,17 @@ func GetWindow() dom.Window {
 	return &window{NewHTMLDocument("")}
 }
 
+// GetWindowWithTitle returns a global window object
+func GetWindowWithTitle(title string) dom.Window {
+	return &window{NewHTMLDocument(title)}
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // STRINGIFY
 
-func (this *window) String() string {
+func (w *window) String() string {
 	str := "<DOMWindow"
-	str += fmt.Sprint(" document=", this.document)
+	str += fmt.Sprint(" document=", w.document)
 	return str + ">"
 }
 
