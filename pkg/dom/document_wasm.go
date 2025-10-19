@@ -37,7 +37,7 @@ func (this *document) Doctype() dom.DocumentType {
 	if !doctype.Truthy() {
 		return nil
 	} else {
-		return NewNode(this.Get("doctype")).(dom.DocumentType)
+		return NewNode(doctype).(dom.DocumentType)
 	}
 }
 
