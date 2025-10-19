@@ -61,7 +61,9 @@ func NewPromise(executor func(resolve, reject js.Value)) js.Value {
 		}
 		return nil
 	})
-	return js.Global().Get("Promise").New(executorFunc)
+	promise := js.Global().Get("Promise").New(executorFunc)
+	executorFunc.Release()
+	return promise
 }
 
 // NewError creates a new JavaScript Error with the given message.
