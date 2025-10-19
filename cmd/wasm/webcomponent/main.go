@@ -1,19 +1,22 @@
 package main
 
 import (
-	"syscall/js"
-
 	// Modules
 	dom "github.com/djthorpe/go-dom/pkg/dom"
+	js "github.com/djthorpe/go-dom/pkg/js"
+
+	// Namespace imports
+	. "github.com/djthorpe/go-dom"
 )
 
 func main() {
-	// Define a custom element class
-	defineCustomElement()
 
 	// Now we can use the Go DOM wrapper to create custom elements!
 	document := dom.GetWindow().Document()
 	body := document.Body()
+
+	// Define a custom element class
+	defineCustomElement(document)
 
 	// Create custom elements using the Go DOM wrapper
 	customElem := document.CreateElement("my-greeting")
@@ -32,26 +35,13 @@ func main() {
 	body.AppendChild(h1)
 }
 
-func defineCustomElement() {
-	// Create a minimal ES6 class with just the constructor
-	// Then add methods programmatically to the prototype
-	classDefinition := `
-		class MyGreeting extends HTMLElement {
-			constructor() {
-				super();
-			}
-		}
-		MyGreeting
-	`
-
-	// Execute the class definition and get a reference to the class
-	myGreetingClass := js.Global().Call("eval", classDefinition)
-
-	// Get the prototype
-	prototype := myGreetingClass.Get("prototype")
+func defineCustomElement(doc Document) {
+	// Create a custom element class that extends HTMLElement using the jsutil package
+	htmlElement := js.GetClass("HTMLElement")
+	myGreetingClass := js.NewClass("MyGreeting", htmlElement)
 
 	// Add connectedCallback method
-	prototype.Set("connectedCallback", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+	myGreetingClass.NewFunction("connectedCallback", func(this js.Value, args []js.Value) interface{} {
 		// Attach shadow DOM
 		shadow := this.Call("attachShadow", map[string]interface{}{
 			"mode": "open",
@@ -64,13 +54,16 @@ func defineCustomElement() {
 			nameStr = name.String()
 		}
 
-		// Create wrapper div
-		wrapper := js.Global().Get("document").Call("createElement", "div")
-		wrapper.Set("innerHTML", "Hello, <strong>"+nameStr+"</strong>!")
+		// Create wrapper div using Go DOM
+		wrapper := doc.CreateElement("div")
+		// Get the underlying js.Value for shadow DOM manipulation
+		wrapperJS := js.Unwrap(wrapper)
+		wrapperJS.Set("innerHTML", "Hello, <strong>"+nameStr+"</strong>!")
 
-		// Create style element (scoped to shadow DOM)
-		styleElem := js.Global().Get("document").Call("createElement", "style")
-		styleElem.Set("textContent", `
+		// Create style element (scoped to shadow DOM) using Go DOM
+		styleElem := doc.CreateElement("style")
+		styleJS := js.Unwrap(styleElem)
+		styleJS.Set("textContent", `
 			div {
 				border: 2px solid blue;
 				padding: 10px;
@@ -81,26 +74,28 @@ func defineCustomElement() {
 		`)
 
 		// Append style and content to shadow DOM
-		shadow.Call("appendChild", styleElem)
-		shadow.Call("appendChild", wrapper)
+		shadow.Call("appendChild", styleJS)
+		shadow.Call("appendChild", wrapperJS)
 
 		return nil
-	}))
+	})
 
 	// Add disconnectedCallback method
-	prototype.Set("disconnectedCallback", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		js.Global().Get("console").Call("log", "Custom element removed from DOM")
+	myGreetingClass.NewFunction("disconnectedCallback", func(this js.Value, args []js.Value) interface{} {
+		console := js.GetConsole()
+		console.Log("Custom element removed from DOM")
 		return nil
-	}))
+	})
 
 	// Add attributeChangedCallback method
-	prototype.Set("attributeChangedCallback", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+	myGreetingClass.NewFunction("attributeChangedCallback", func(this js.Value, args []js.Value) interface{} {
 		if len(args) >= 3 {
 			attrName := args[0].String()
 			oldValue := args[1]
 			newValue := args[2].String()
 
-			js.Global().Get("console").Call("log", "Attribute changed:", attrName, "from", oldValue, "to", newValue)
+			console := js.GetConsole()
+			console.Log("Attribute changed:", attrName, "from", oldValue, "to", newValue)
 
 			// Re-render when 'name' attribute changes
 			if attrName == "name" {
@@ -115,19 +110,20 @@ func defineCustomElement() {
 			}
 		}
 		return nil
-	}))
+	})
 
 	// Define observedAttributes as a static getter
-	observedAttrs := js.Global().Get("Array").New()
+	observedAttrs := js.NewArray()
 	observedAttrs.Call("push", "name")
 
 	// Use Object.defineProperty to create a static getter
-	js.Global().Get("Object").Call("defineProperty", myGreetingClass, "observedAttributes", map[string]interface{}{
-		"get": js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-			return observedAttrs
-		}),
+	observedAttributesGetter := js.NewFunction(func(this js.Value, args []js.Value) interface{} {
+		return observedAttrs
+	})
+	js.Global().Get("Object").Call("defineProperty", myGreetingClass.Value(), "observedAttributes", map[string]interface{}{
+		"get": observedAttributesGetter.Value(),
 	})
 
 	// Register the custom element
-	js.Global().Get("customElements").Call("define", "my-greeting", myGreetingClass)
+	js.Global().Get("customElements").Call("define", "my-greeting", myGreetingClass.Value())
 }

@@ -258,22 +258,30 @@ func (s *ServeCmd) watchAndRecompile(sourcePaths []string, compile *CompileComma
 	modTimes := make(map[string]time.Time)
 	var mu sync.Mutex
 
-	// Initial scan to populate modification times for all watched paths
-	for _, sourcePath := range sourcePaths {
-		filepath.WalkDir(sourcePath, func(path string, d fs.DirEntry, err error) error {
-			if err != nil {
-				return nil
-			}
-			if !d.IsDir() && filepath.Ext(path) == ".go" {
-				if info, err := d.Info(); err == nil {
-					mu.Lock()
-					modTimes[path] = info.ModTime()
-					mu.Unlock()
+	// Helper function to update modification times for all paths
+	updateModTimes := func(paths []string) {
+		for _, sourcePath := range paths {
+			filepath.WalkDir(sourcePath, func(path string, d fs.DirEntry, err error) error {
+				if err != nil {
+					return nil
 				}
-			}
-			return nil
-		})
+				if !d.IsDir() && filepath.Ext(path) == ".go" {
+					if info, err := d.Info(); err == nil {
+						mu.Lock()
+						modTimes[path] = info.ModTime()
+						mu.Unlock()
+					}
+				}
+				return nil
+			})
+		}
 	}
+
+	// Initial scan to populate modification times for all watched paths
+	updateModTimes(sourcePaths)
+
+	// Keep track of current watch paths
+	currentWatchPaths := sourcePaths
 
 	// Poll for changes every second
 	ticker := time.NewTicker(1 * time.Second)
@@ -283,7 +291,7 @@ func (s *ServeCmd) watchAndRecompile(sourcePaths []string, compile *CompileComma
 		changed := false
 
 		// Check all watched paths for changes
-		for _, sourcePath := range sourcePaths {
+		for _, sourcePath := range currentWatchPaths {
 			filepath.WalkDir(sourcePath, func(path string, d fs.DirEntry, err error) error {
 				if err != nil {
 					return nil
@@ -319,6 +327,28 @@ func (s *ServeCmd) watchAndRecompile(sourcePaths []string, compile *CompileComma
 				logger.Info("Error notification broadcasted")
 			} else {
 				logger.Info("Recompilation successful")
+
+				// Rediscover dependencies after successful compilation
+				absPath := sourcePaths[0] // The main source path
+				localDeps, err := discoverLocalDependencies(compile.GoPath, absPath)
+				if err != nil {
+					logger.Errorf("Failed to rediscover local dependencies: %v", err)
+				} else {
+					// Build new watch paths list
+					newWatchPaths := []string{absPath}
+					if len(localDeps) > 0 {
+						logger.Infof("Rediscovered %d local dependencies to watch:", len(localDeps))
+						for _, dep := range localDeps {
+							logger.Infof("  - %s", dep)
+						}
+						newWatchPaths = append(newWatchPaths, localDeps...)
+					}
+
+					// Update current watch paths and scan new dependencies
+					currentWatchPaths = newWatchPaths
+					updateModTimes(currentWatchPaths)
+				}
+
 				// Broadcast reload to all connected SSE clients
 				broadcaster.broadcast(SSEMessage{Type: "reload"})
 				logger.Info("Reload notification broadcasted")
