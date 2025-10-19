@@ -61,6 +61,7 @@ func NewPromise(executor func(resolve, reject js.Value)) js.Value {
 		}
 		return nil
 	})
+	defer executorFunc.Release()
 	promise := js.Global().Get("Promise").New(executorFunc)
 	executorFunc.Release()
 	return promise
