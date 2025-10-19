@@ -17,27 +17,27 @@ func GetConsole() *Console {
 }
 
 // Log writes a message to the console.
-func (c *Console) Log(args ...interface{}) {
+func (c *Console) Log(args ...any) {
 	c.value.Call("log", args...)
 }
 
 // Warn writes a warning message to the console.
-func (c *Console) Warn(args ...interface{}) {
+func (c *Console) Warn(args ...any) {
 	c.value.Call("warn", args...)
 }
 
 // Error writes an error message to the console.
-func (c *Console) Error(args ...interface{}) {
+func (c *Console) Error(args ...any) {
 	c.value.Call("error", args...)
 }
 
 // Info writes an informational message to the console.
-func (c *Console) Info(args ...interface{}) {
+func (c *Console) Info(args ...any) {
 	c.value.Call("info", args...)
 }
 
 // Debug writes a debug message to the console.
-func (c *Console) Debug(args ...interface{}) {
+func (c *Console) Debug(args ...any) {
 	c.value.Call("debug", args...)
 }
 
