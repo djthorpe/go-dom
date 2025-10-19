@@ -1,6 +1,7 @@
 package bs5
 
 import (
+	// Packages
 	"github.com/djthorpe/go-dom"
 )
 
@@ -17,6 +18,20 @@ type NavItem struct {
 }
 
 type NavSpacer struct {
+	dom.Element
+}
+
+type NavDropdown struct {
+	dom.Element
+	link         dom.Element
+	dropdownMenu dom.Element
+}
+
+type NavDropdownItem struct {
+	dom.Element
+}
+
+type NavDropdownDivider struct {
 	dom.Element
 }
 
@@ -79,6 +94,76 @@ func (app *App) NavSpacer() *NavSpacer {
 
 	return &NavSpacer{
 		Element: spacer,
+	}
+}
+
+// NavDropdownItem creates a dropdown menu item
+func (app *App) NavDropdownItem(label string, href string) *NavDropdownItem {
+	// Create list item
+	li := app.CreateElement("li")
+
+	// Create link
+	a := app.CreateElement("a")
+	a.AddClass("dropdown-item")
+	a.SetAttribute("href", href)
+	a.AppendChild(app.CreateTextNode(label))
+
+	li.AppendChild(a)
+
+	return &NavDropdownItem{
+		Element: li,
+	}
+}
+
+// NavDropdownDivider creates a dropdown divider
+func (app *App) NavDropdownDivider() *NavDropdownDivider {
+	// Create list item
+	li := app.CreateElement("li")
+
+	// Create hr element
+	hr := app.CreateElement("hr")
+	hr.AddClass("dropdown-divider")
+
+	li.AppendChild(hr)
+
+	return &NavDropdownDivider{
+		Element: li,
+	}
+}
+
+// NavDropdown creates a dropdown menu for the navbar
+func (app *App) NavDropdown(label string, items ...dom.Node) *NavDropdown {
+	// Create list item
+	li := app.CreateElement("li")
+	li.AddClass("nav-item")
+	li.AddClass("dropdown")
+
+	// Create dropdown toggle link
+	a := app.CreateElement("a")
+	a.AddClass("nav-link")
+	a.AddClass("dropdown-toggle")
+	a.SetAttribute("href", "#")
+	a.SetAttribute("role", "button")
+	a.SetAttribute("data-bs-toggle", "dropdown")
+	a.SetAttribute("aria-expanded", "false")
+	a.AppendChild(app.CreateTextNode(label))
+
+	// Create dropdown menu
+	ul := app.CreateElement("ul")
+	ul.AddClass("dropdown-menu")
+
+	// Add items to dropdown menu
+	for _, item := range items {
+		ul.AppendChild(item)
+	}
+
+	li.AppendChild(a)
+	li.AppendChild(ul)
+
+	return &NavDropdown{
+		Element:      li,
+		link:         a,
+		dropdownMenu: ul,
 	}
 }
 
@@ -182,6 +267,12 @@ func (i *NavItem) SetActive(active bool) *NavItem {
 	return i
 }
 
+// AddEventListener adds an event listener to the nav item
+func (i *NavItem) AddEventListener(eventType string, callback func(dom.Node)) *NavItem {
+	i.Element.AddEventListener(eventType, callback)
+	return i
+}
+
 // AddClass adds a CSS class to the spacer
 func (s *NavSpacer) AddClass(className string) *NavSpacer {
 	s.Element.AddClass(className)
@@ -192,6 +283,48 @@ func (s *NavSpacer) AddClass(className string) *NavSpacer {
 func (s *NavSpacer) RemoveClass(className string) *NavSpacer {
 	s.Element.RemoveClass(className)
 	return s
+}
+
+// AddClass adds a CSS class to the dropdown
+func (d *NavDropdown) AddClass(className string) *NavDropdown {
+	d.Element.AddClass(className)
+	return d
+}
+
+// RemoveClass removes a CSS class from the dropdown
+func (d *NavDropdown) RemoveClass(className string) *NavDropdown {
+	d.Element.RemoveClass(className)
+	return d
+}
+
+// AddItem adds a dropdown item to the dropdown menu
+func (d *NavDropdown) AddItem(item dom.Node) *NavDropdown {
+	d.dropdownMenu.AppendChild(item)
+	return d
+}
+
+// AddClass adds a CSS class to the dropdown item
+func (i *NavDropdownItem) AddClass(className string) *NavDropdownItem {
+	i.Element.AddClass(className)
+	return i
+}
+
+// RemoveClass removes a CSS class from the dropdown item
+func (i *NavDropdownItem) RemoveClass(className string) *NavDropdownItem {
+	i.Element.RemoveClass(className)
+	return i
+}
+
+// AddClass adds a CSS class to the dropdown divider
+func (d *NavDropdownDivider) AddClass(className string) *NavDropdownDivider {
+	d.Element.AddClass(className)
+	return d
+}
+
+// RemoveClass removes a CSS class from the dropdown divider
+func (d *NavDropdownDivider) RemoveClass(className string) *NavDropdownDivider {
+	d.Element.RemoveClass(className)
+	return d
 }
 
 // AddItem adds a navigation item to the navbar (can be used to add items dynamically)
@@ -231,6 +364,18 @@ func (i *NavItem) String() string {
 
 func (s *NavSpacer) String() string {
 	return "<bs5-navspacer>"
+}
+
+func (d *NavDropdown) String() string {
+	return "<bs5-navdropdown>"
+}
+
+func (i *NavDropdownItem) String() string {
+	return "<bs5-navdropdownitem>"
+}
+
+func (d *NavDropdownDivider) String() string {
+	return "<bs5-navdropdowndivider>"
 }
 
 func (n *Nav) String() string {

@@ -69,6 +69,14 @@ func (this *document) CreateAttribute(name string) dom.Attr {
 	return NewNode(this.Call("createAttribute", name)).(dom.Attr)
 }
 
+func (this *document) ActiveElement() dom.Element {
+	activeEl := this.Get("activeElement")
+	if activeEl.IsNull() || activeEl.IsUndefined() {
+		return nil
+	}
+	return NewNode(activeEl).(dom.Element)
+}
+
 /////////////////////////////////////////////////////////////////////
 // PRIVATE METHODS
 

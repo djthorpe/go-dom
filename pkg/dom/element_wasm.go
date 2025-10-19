@@ -15,6 +15,7 @@ import (
 
 type element struct {
 	*node
+	eventListeners map[string][]js.Func // Store event listeners to prevent GC
 }
 
 type style struct {
@@ -86,6 +87,41 @@ func (e *element) AddClass(className string) {
 func (e *element) RemoveClass(className string) {
 	classList := e.Get("classList")
 	classList.Call("remove", className)
+}
+
+func (e *element) AddEventListener(eventType string, callback func(dom.Node)) dom.Element {
+	// Initialize event listeners map if needed
+	if e.eventListeners == nil {
+		e.eventListeners = make(map[string][]js.Func)
+	}
+
+	// Create a JS function wrapper
+	jsCallback := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		if len(args) > 0 {
+			// Create a Node from the event target
+			target := args[0].Get("target")
+			if !target.IsUndefined() && !target.IsNull() {
+				callback(NewNode(target))
+			}
+		}
+		return nil
+	})
+
+	// Store the callback to prevent garbage collection
+	e.eventListeners[eventType] = append(e.eventListeners[eventType], jsCallback)
+
+	// Add event listener
+	e.Call("addEventListener", eventType, jsCallback)
+
+	return e
+}
+
+func (e *element) Blur() {
+	e.Call("blur")
+}
+
+func (e *element) Focus() {
+	e.Call("focus")
 }
 
 ///////////////////////////////////////////////////////////////////////////////

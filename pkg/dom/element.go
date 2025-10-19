@@ -147,6 +147,20 @@ func (this *element) RemoveClass(className string) {
 	}
 }
 
+func (this *element) AddEventListener(eventType string, callback func(dom.Node)) dom.Element {
+	// Event listeners are not supported in non-WASM builds
+	// This is a no-op since there's no event loop outside the browser
+	return this
+}
+
+func (this *element) Blur() {
+	// Not supported in non-WASM builds
+}
+
+func (this *element) Focus() {
+	// Not supported in non-WASM builds
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // PRIVATE METHODS
 

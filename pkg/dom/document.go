@@ -131,6 +131,11 @@ func (this *document) CreateAttribute(name string) dom.Attr {
 	return NewNode(this, name, dom.ATTRIBUTE_NODE, "").(dom.Attr)
 }
 
+func (this *document) ActiveElement() dom.Element {
+	// Not supported in non-WASM builds
+	return nil
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // PRIVATE METHODS
 

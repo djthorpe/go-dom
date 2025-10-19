@@ -3,6 +3,7 @@ package bs5
 import (
 	"fmt"
 
+	// Packages
 	"github.com/djthorpe/go-dom"
 )
 

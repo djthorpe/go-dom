@@ -61,6 +61,13 @@ type Element interface {
 	// Class Methods
 	AddClass(string)
 	RemoveClass(string)
+
+	// Event Methods
+	AddEventListener(string, func(Node)) Element
+
+	// Focus Methods
+	Blur()
+	Focus()
 }
 
 // Document implements https://developer.mozilla.org/en-US/docs/Web/API/Document
@@ -82,6 +89,7 @@ type Document interface {
 	CreateAttribute(string) Attr
 	CreateComment(string) Comment
 	CreateTextNode(string) Text
+	ActiveElement() Element
 }
 
 type Text interface {
