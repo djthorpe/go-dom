@@ -45,6 +45,7 @@ type Element interface {
 	OuterHTML() string
 	TagName() string
 	Attributes() []Attr
+	Style() Style
 
 	// Methods
 	//RemoveAttrbute(string)
@@ -103,6 +104,13 @@ type Attr interface {
 	Name() string
 	Value() string
 	SetValue(string)
+}
+
+// Style implements https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleDeclaration
+type Style interface {
+	// Methods
+	Get(string) string
+	Set(string, string)
 }
 
 // Document implements https://developer.mozilla.org/en-US/docs/Web/API/DocumentType

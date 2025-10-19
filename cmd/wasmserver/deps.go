@@ -23,7 +23,8 @@ type PackageInfo struct {
 func discoverLocalDependencies(goPath, sourcePath string) ([]string, error) {
 
 	// Get package information including all dependencies
-	cmd := exec.Command(goPath, "list", "-json", ".")
+	// Use -tags js to handle packages with build constraints
+	cmd := exec.Command(goPath, "list", "-tags", "js", "-json", ".")
 	cmd.Dir = sourcePath
 	output, err := cmd.Output()
 	if err != nil {
@@ -50,7 +51,7 @@ func discoverLocalDependencies(goPath, sourcePath string) ([]string, error) {
 	for _, dep := range pkgInfo.Deps {
 		if strings.HasPrefix(dep, modulePath) && dep != pkgInfo.ImportPath {
 			// Get the directory for this dependency
-			depCmd := exec.Command(goPath, "list", "-json", dep)
+			depCmd := exec.Command(goPath, "list", "-tags", "js", "-json", dep)
 			depCmd.Dir = sourcePath
 			depOutput, err := depCmd.Output()
 			if err != nil {

@@ -4,6 +4,7 @@ package dom
 
 import (
 	"fmt"
+	"syscall/js"
 
 	// Packages
 	dom "github.com/djthorpe/go-dom"
@@ -14,6 +15,10 @@ import (
 
 type element struct {
 	*node
+}
+
+type style struct {
+	js.Value
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,11 +59,32 @@ func (e *element) HasAttributes() bool {
 	return e.Call("hasAttributes").Bool()
 }
 
+func (e *element) Style() dom.Style {
+	return &style{e.Get("style")}
+}
+
 func (e *element) SetAttribute(name string, value string) dom.Attr {
 	e.Call("setAttribute", name, value)
 	return e.GetAttribute(name)
 }
 
 func (e *element) GetAttribute(name string) dom.Attr {
-	return NewNode(e.Call("getAttribute", name)).(dom.Attr)
+	// Use getAttributeNode instead of getAttribute
+	// getAttribute returns a string, getAttributeNode returns an Attr object
+	attrNode := e.Call("getAttributeNode", name)
+	if attrNode.IsNull() {
+		return nil
+	}
+	return NewNode(attrNode).(dom.Attr)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// STYLE METHODS
+
+func (s *style) Get(name string) string {
+	return s.Value.Get(name).String()
+}
+
+func (s *style) Set(name string, value string) {
+	s.Value.Set(name, value)
 }
