@@ -52,10 +52,6 @@ func NewClass(name string, parent *Class) *Class {
 		classValue = js.Global().Call("eval", classDefinition)
 	} else {
 		// Get the parent class name
-		parentName := parent.value.Get("name").String()
-		if parentName == "" {
-			parentName = "ParentClass"
-		}
 
 		// Create a class that extends the parent
 		// We need to make the parent available in the eval scope
