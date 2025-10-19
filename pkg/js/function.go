@@ -7,7 +7,7 @@ import (
 // CallbackFunc is the signature for JavaScript callback functions.
 // The 'this' parameter is the JavaScript 'this' context.
 // The 'args' parameter contains the arguments passed from JavaScript.
-type CallbackFunc func(this Value, args []Value) interface{}
+type CallbackFunc func(this Value, args []Value) any
 
 // Function represents a JavaScript function.
 type Function struct {
@@ -21,13 +21,13 @@ func (f *Function) Value() Value {
 
 // Call invokes the function with the given arguments.
 // The 'this' context will be undefined.
-func (f *Function) Call(args ...interface{}) Value {
+func (f *Function) Call(args ...any) Value {
 	return f.fn.Value.Invoke(args...)
 }
 
 // CallWithContext invokes the function with a specific 'this' context and arguments.
-func (f *Function) CallWithContext(this Value, args ...interface{}) Value {
-	return f.fn.Value.Call("call", append([]interface{}{this}, args...)...)
+func (f *Function) CallWithContext(this Value, args ...any) Value {
+	return f.fn.Value.Call("call", append([]any{this}, args...)...)
 }
 
 // NewFunction creates a new JavaScript function from a Go function.

@@ -2,6 +2,8 @@ package main
 
 import (
 	// Modules
+	"fmt"
+
 	dom "github.com/djthorpe/go-dom/pkg/dom"
 	js "github.com/djthorpe/go-dom/pkg/js"
 
@@ -10,13 +12,12 @@ import (
 )
 
 func main() {
-
 	// Now we can use the Go DOM wrapper to create custom elements!
 	document := dom.GetWindow().Document()
 	body := document.Body()
 
 	// Define a custom element class
-	defineCustomElement(document)
+	defineCustomElement(document, "Greeting", "my-greeting")
 
 	// Create custom elements using the Go DOM wrapper
 	customElem := document.CreateElement("my-greeting")
@@ -28,22 +29,16 @@ func main() {
 	customElem2.SetAttribute("name", "Go WASM")
 	customElem2.Style().Set("margin", "10px")
 	body.AppendChild(customElem2)
-
-	// Also add a regular h1 for comparison
-	h1 := document.CreateElement("h1")
-	h1.AppendChild(document.CreateTextNode("Hello from Go DOM!"))
-	body.AppendChild(h1)
 }
 
-func defineCustomElement(doc Document) {
-	// Create a custom element class that extends HTMLElement using the jsutil package
-	htmlElement := js.GetClass("HTMLElement")
-	myGreetingClass := js.NewClass("MyGreeting", htmlElement)
+// Create a custom element class that extends HTMLElement
+func defineCustomElement(doc Document, className, elementName string) {
+	myGreetingClass := js.NewClass(className, js.GetClass("HTMLElement"))
 
 	// Add connectedCallback method
-	myGreetingClass.NewFunction("connectedCallback", func(this js.Value, args []js.Value) interface{} {
+	myGreetingClass.NewFunction("connectedCallback", func(this js.Value, args []js.Value) any {
 		// Attach shadow DOM
-		shadow := this.Call("attachShadow", map[string]interface{}{
+		shadow := this.Call("attachShadow", map[string]any{
 			"mode": "open",
 		})
 
@@ -56,6 +51,7 @@ func defineCustomElement(doc Document) {
 
 		// Create wrapper div using Go DOM
 		wrapper := doc.CreateElement("div")
+
 		// Get the underlying js.Value for shadow DOM manipulation
 		wrapperJS := js.Unwrap(wrapper)
 		wrapperJS.Set("innerHTML", "Hello, <strong>"+nameStr+"</strong>!")
@@ -81,21 +77,18 @@ func defineCustomElement(doc Document) {
 	})
 
 	// Add disconnectedCallback method
-	myGreetingClass.NewFunction("disconnectedCallback", func(this js.Value, args []js.Value) interface{} {
-		console := js.GetConsole()
-		console.Log("Custom element removed from DOM")
+	myGreetingClass.NewFunction("disconnectedCallback", func(this js.Value, args []js.Value) any {
+		fmt.Println("Custom element removed from DOM")
 		return nil
 	})
 
 	// Add attributeChangedCallback method
-	myGreetingClass.NewFunction("attributeChangedCallback", func(this js.Value, args []js.Value) interface{} {
+	myGreetingClass.NewFunction("attributeChangedCallback", func(this js.Value, args []js.Value) any {
 		if len(args) >= 3 {
 			attrName := args[0].String()
 			oldValue := args[1]
 			newValue := args[2].String()
-
-			console := js.GetConsole()
-			console.Log("Attribute changed:", attrName, "from", oldValue, "to", newValue)
+			fmt.Println("Attribute changed:", attrName, "from", oldValue, "to", newValue)
 
 			// Re-render when 'name' attribute changes
 			if attrName == "name" {
@@ -125,5 +118,5 @@ func defineCustomElement(doc Document) {
 	})
 
 	// Register the custom element
-	js.Global().Get("customElements").Call("define", "my-greeting", myGreetingClass.Value())
+	js.Global().Get("customElements").Call("define", elementName, myGreetingClass.Value())
 }

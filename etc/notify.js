@@ -51,7 +51,7 @@
         const eventSource = new EventSource('/_notify');
 
         eventSource.onmessage = function (event) {
-            console.log('SSE message:', event.data);
+            console.log('wasmserver:', event.data);
             if (event.data === 'reload') {
                 console.log('Reloading page...');
                 // Hide any error overlay before reload
@@ -61,12 +61,12 @@
         };
 
         eventSource.addEventListener('compileerror', function (event) {
-            console.error('Compilation error:', event.data);
+            console.error('wasmserver compilation error:', event.data);
             showCompileError(event.data);
         });
 
         eventSource.onerror = function (error) {
-            console.log('SSE connection error, will retry...');
+            console.log('wasmserver connection error, will retry...');
         };
     }
 
