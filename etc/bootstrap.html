@@ -3,14 +3,16 @@
 
 <head>
     <meta charset="utf-8" />
-    <link rel="icon" type="image/png" href="/favicon.png" />
-    <script src="wasm_exec.js"></script>
 
-    <!-- Reload when code is changed -->
+    <!-- favicon -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <!-- reload when code is changed -->
     <link rel="stylesheet" href="notify.css" />
     <script src="notify.js"></script>
 
-    <!-- Bootstrap the application -->
+    <!-- bootstrap the application -->
+    <script src="wasm_exec.js"></script>
     <script>
         const go = new Go();
         WebAssembly.instantiateStreaming(fetch("{{WASM_FILE}}"), go.importObject).then((result) => {

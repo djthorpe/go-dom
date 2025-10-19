@@ -12,14 +12,16 @@ This repository provides two main components:
 
 ## WASM Development Server
 
-The `wasmserver` tool provides a modern development experience for WASM applications:
+The `wasmserver` tool provides a modern development experience for WASM applications written in Go:
 
 ### Features
 
-- **Live Reload** - Automatically recompiles and reloads the browser when source files change
+- **Compile Go to WASM** - Seamlessly compiles Go applications to WebAssembly
+- **Serve WASM Applications** - Hosts your WASM apps with a built-in HTTP server, including serving the bootstrap HTML and JS needed to run Go WASM applications
 - **Automatic Dependency Discovery** - Watches all local package dependencies (no manual configuration needed)
-- **Real-time Error Display** - Compilation errors appear directly in the browser with full error messages
 - **Server-Sent Events (SSE)** - Efficient communication between server and browser
+- **Live Reload** - Automatically recompiles and reloads the browser when source files change
+- **Real-time Error Display** - Compilation errors appear directly in the browser with full error messages
 
 ### Quick Start
 
@@ -74,7 +76,7 @@ when compiling for WASM target.
 Presently go version 1.24 has been tested. [Tinygo](https://tinygo.org/) should
 eventually be supported in order to facilitate smaller binary sizes.
 
-## Hello, World
+### Hello, World
 
 In order to access the current HTML document, access the `window` object. You
 can dump the current document contents from the root element, or set the
@@ -110,7 +112,7 @@ cd go-dom
 GOOS=js GOARCH=wasm go build -o build/helloworld.wasm ./cmd/wasm/helloworld
 ```
 
-See the [WebAssembly documentation](https://github.com/golang/go/wiki/WebAssembly) for running
+See the [WebAssembly documentation](https://go.dev/wiki/WebAssembly) for running
 WASM within a web browser. There is some helper code which allows you to run it
 from the command line:
 
@@ -125,6 +127,8 @@ Then you can simply view the page at [`http://localhost:9090/helloworld.html`](h
 
 ## Running Tests
 
+(TODO)
+
 You should run tests both in the native go environment and in the WASM
 environment. For the latter, Google Chrome needs to be installed (other browsers
 may work but have not been tested). The commands for testing are:
@@ -135,5 +139,4 @@ cd go-dom
 make test && make jstest
 ```
 
-Testing in a WASM environment uses [wasmbrowsertest](https://github.com/agnivade/wasmbrowsertest). Please see the documentation for that package for more information
-on testing in the WASM environment and browser support.
+Testing in a WASM environment uses [wasmbrowsertest](https://github.com/agnivade/wasmbrowsertest). Please see the documentation for that package for more information on testing in the WASM environment and browser support.
