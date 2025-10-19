@@ -42,7 +42,11 @@ func (this *attr) SetValue(value string) {
 }
 
 func (this *attr) OwnerElement() dom.Element {
-	return NewNode(this.Get("ownerElement")).(dom.Element)
+	owner := this.Get("ownerElement")
+	if owner.IsNull() || owner.IsUndefined() {
+		return nil
+	}
+	return NewNode(owner).(dom.Element)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
