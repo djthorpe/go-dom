@@ -1,23 +1,34 @@
-# go-dom
+# go-wasmbuild
 
-> *Experimental!* Please note this repository contains code which depends
-on experimental features of the Go language.
+**wasmbuild** is a command-line tool for compiling applications in the Go programming language ("golang") into 
+[WASM](https://webassembly.org/) so they can be run in a web browser. 
+
+It provides a development environment so you can test your code as you
+develop it. There are also various packages which implement bridges to the web browser runtime, and several
+popular JavaScript libtaties, so you can - for example - create reactive web components in your golang
+application.
+
+> *Experimental!* Please note this repository contains code which depends on experimental features of the Go language,
+> and is also a very rough and ready implementation itself.
 
 ## Overview
 
 This repository provides three main components:
 
-1. **DOM Package** (`pkg/dom`) - A Go implementation of the Document Object Model (DOM) API that works both natively and in WebAssembly (WASM) environments
-2. **Bootstrap 5 Package** (`pkg/bs5`) - Experimental Go wrappers for Bootstrap 5 components (very rough and ready)
-3. **WASM Development Server** (`cmd/wasmserver`) - A feature-rich development server for building and serving WASM applications with live reload, error notifications, and automatic dependency watching
+1. **WASM Build Server** (`cmd/wasmbuild`) - A feature-rich development server for building and serving golang WASM
+   applications with live reload, error notifications, and automatic dependency watching
+2. **DOM Package** (`pkg/dom`) - A Go implementation of the Document Object Model (DOM) API that works both natively and in WASM environments
+3. **Bootstrap 5 Package** (`pkg/bs5`) - Experimental Go wrappers for Bootstrap 5 components (very rough and ready)
 
-## WASM Development Server
+There are also some examples of developing front-end applications in the `cmd/wasm` folder.
 
-The `wasmserver` tool provides a modern development experience for WASM applications written in Go:
+## WASM Build Server
+
+The `wasmbuild` tool provides a modern development experience for WASM applications written in Go:
 
 ### Features
 
-- **Compile Go to WASM** - Seamlessly compiles Go applications to WebAssembly
+- **Compile golang to WASM** - Seamlessly compiles Go applications to WebAssembly
 - **Serve WASM Applications** - Hosts your WASM apps with a built-in HTTP server, including serving the bootstrap HTML and JS needed to run Go WASM applications
 - **Bootstrap 5 Support** - Optional `--bs-5` flag includes Bootstrap 5 CSS, JavaScript, and Icons in the HTML template
 - **Automatic Dependency Discovery** - Watches all local package dependencies (no manual configuration needed)
@@ -27,41 +38,41 @@ The `wasmserver` tool provides a modern development experience for WASM applicat
 
 ### Quick Start
 
-Build the wasmserver to the `build/` directory:
+Build the wasmbuild to the `build/` directory:
 
 ```bash
-make wasmserver
+make wasmbuild
 ```
 
 Serve your WASM application with live reload:
 
 ```bash
-./build/wasmserver serve --watch ./cmd/wasm/helloworld
+./build/wasmbuild serve --watch ./cmd/wasm/helloworld
 ```
 
-Or compile without serving:
+Or compile without serving, which also copies the required bootstrapping assets into the build folder:
 
 ```bash
-./build/wasmserver compile ./cmd/wasm/helloworld
+./build/wasmbuild compile ./cmd/wasm/helloworld
 ```
 
 ### Usage
 
 ```bash
 # Serve with live reload (discovers and watches local dependencies automatically)
-./build/wasmserver serve --watch <path-to-wasm-app>
+./build/wasmbuild serve --watch <path-to-wasm-app>
 
 # Serve with Bootstrap 5 support (includes Bootstrap CSS/JS in the HTML)
-./build/wasmserver serve --watch --bs-5 <path-to-wasm-app>
+./build/wasmbuild serve --watch --bs-5 <path-to-wasm-app>
 
 # Serve with verbose logging
-./build/wasmserver serve --verbose --watch <path-to-wasm-app>
+./build/wasmbuild serve --verbose --watch <path-to-wasm-app>
 
 # Compile to a specific output directory
-./build/wasmserver compile --output ./build <path-to-wasm-app>
+./build/wasmbuild compile --output ./build <path-to-wasm-app>
 
 # Custom listen address
-./build/wasmserver serve --listen 0.0.0.0:8080 <path-to-wasm-app>
+./build/wasmbuild serve --listen 0.0.0.0:8080 <path-to-wasm-app>
 ```
 
 The server automatically:
@@ -100,7 +111,7 @@ components is available in `cmd/wasm/bootstrap-app`.
 Build and run the Bootstrap demo, which demonstrates all the components which can be created using the `pkg/bs5` package:
 
 ```bash
-./build/wasmserver serve --watch ./cmd/wasm/bootstrap-app --bs-5
+./build/wasmbuild serve --watch ./cmd/wasm/bootstrap-app --bs-5
 ```
 
 See [`cmd/wasm/bootstrap-app/README.md`](cmd/wasm/bootstrap-app/README.md) for detailed documentation.
@@ -157,11 +168,11 @@ from the command line:
 ```bash
 git clone git@github.com:djthorpe/go-dom.git
 cd go-dom
-make httpserver cmd/wasm/helloworld
-cd build && ./httpserver -port :9090 
+make wasmbuild
+./build/wasmbuild serve cmd/wasm/helloworld
 ```
 
-Then you can simply view the page at [`http://localhost:9090/helloworld.html`](http://localhost:9090/helloworld.html) and check the console log to see the output.
+Then you can simply view the page at <http://localhost:9090/> and check the console log to see the output.
 
 ## Running Tests
 
