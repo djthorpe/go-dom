@@ -24,7 +24,7 @@ func main() {
 	logoDiv := app.CreateElement("div")
 	logoDiv.AddClass("text-center")
 	logoDiv.AddClass("mb-4")
-	
+
 	logo := app.CreateElement("img")
 	logo.SetAttribute("src", "https://upload.wikimedia.org/wikipedia/commons/2/26/Bart-logo.svg")
 	logo.SetAttribute("alt", "BART Logo")
