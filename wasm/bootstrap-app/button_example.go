@@ -1,190 +1,207 @@
 package main
 
 import (
-	"fmt"
+	// Packages
+	bs "github.com/djthorpe/go-wasmbuild/pkg/bootstrap"
 
-	"github.com/djthorpe/go-dom"
-	"github.com/djthorpe/go-dom/pkg/bs5"
+	// Namespace import for interfaces
+	. "github.com/djthorpe/go-wasmbuild"
 )
 
-// AddButtonExamples adds button component examples to the app
-func AddButtonExamples(app *bs5.App) dom.Element {
-	container := app.Container()
+// ButtonExamples returns a container with various button examples
+func ButtonExamples() Component {
+	container := bs.Container(
+		bs.WithBreakpoint(bs.BreakpointLarge),
+		bs.WithMargin(bs.TOP, 4),
+	)
 
-	// Heading
-	container.AppendChild(app.H2(app.CreateTextNode("Buttons")).Element)
+	// Section heading
+	container.Append(
+		bs.Heading(2, bs.WithMargin(bs.BOTTOM, 4)).Append("Button Examples"),
+	)
 
-	// Solid Buttons section with icons
-	solidDiv := app.CreateElement("div")
-	solidDiv.AddClass("mb-3")
-	solidDiv.AppendChild(app.CreateTextNode("Solid Buttons with Icons: "))
+	// Basic button variants
+	container.Append(
+		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3)).Append("Button Variants"),
+	)
 
-	primaryContent := app.CreateElement("span")
-	primaryIcon := app.Icon("house-fill")
-	primaryIcon.AddClass("me-1")
-	primaryContent.AppendChild(primaryIcon.Element)
-	primaryContent.AppendChild(app.CreateTextNode("Primary"))
-	solidDiv.AppendChild(app.Button(bs5.ColorPrimary, primaryContent).
-		AddEventListener("click", func(target dom.Node) {
-			fmt.Println("Primary button clicked!")
-		}).AddClass("me-2").Element)
+	buttonRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
+		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Primary"),
+		bs.Button(bs.WithColor(bs.SECONDARY)).Append("Secondary"),
+		bs.Button(bs.WithColor(bs.SUCCESS)).Append("Success"),
+		bs.Button(bs.WithColor(bs.DANGER)).Append("Danger"),
+		bs.Button(bs.WithColor(bs.WARNING)).Append("Warning"),
+		bs.Button(bs.WithColor(bs.INFO)).Append("Info"),
+		bs.Button(bs.WithColor(bs.LIGHT)).Append("Light"),
+		bs.Button(bs.WithColor(bs.DARK)).Append("Dark"),
+	)
+	container.Append(buttonRow)
 
-	successContent := app.CreateElement("span")
-	successIcon := app.Icon("check-circle-fill")
-	successIcon.AddClass("me-1")
-	successContent.AppendChild(successIcon.Element)
-	successContent.AppendChild(app.CreateTextNode("Success"))
-	solidDiv.AppendChild(app.Button(bs5.ColorSuccess, successContent).AddClass("me-2").Element)
+	// Outline buttons
+	container.Append(
+		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Outline Buttons"),
+	)
 
-	dangerContent := app.CreateElement("span")
-	dangerIcon := app.Icon("x-circle-fill")
-	dangerIcon.AddClass("me-1")
-	dangerContent.AppendChild(dangerIcon.Element)
-	dangerContent.AppendChild(app.CreateTextNode("Danger"))
-	solidDiv.AppendChild(app.Button(bs5.ColorDanger, dangerContent).AddClass("me-2").Element)
+	outlineRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
+		bs.OutlineButton(bs.PRIMARY).Append("Primary"),
+		bs.OutlineButton(bs.SECONDARY).Append("Secondary"),
+		bs.OutlineButton(bs.SUCCESS).Append("Success"),
+		bs.OutlineButton(bs.DANGER).Append("Danger"),
+		bs.OutlineButton(bs.WARNING).Append("Warning"),
+		bs.OutlineButton(bs.INFO).Append("Info"),
+		bs.OutlineButton(bs.LIGHT).Append("Light"),
+		bs.OutlineButton(bs.DARK).Append("Dark"),
+	)
+	container.Append(outlineRow)
 
-	warningContent := app.CreateElement("span")
-	warningIcon := app.Icon("exclamation-triangle-fill")
-	warningIcon.AddClass("me-1")
-	warningContent.AppendChild(warningIcon.Element)
-	warningContent.AppendChild(app.CreateTextNode("Warning"))
-	solidDiv.AppendChild(app.Button(bs5.ColorWarning, warningContent).AddClass("me-2").Element)
+	// Button sizes
+	container.Append(
+		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Button Sizes"),
+	)
 
-	infoContent := app.CreateElement("span")
-	infoIcon := app.Icon("info-circle-fill")
-	infoIcon.AddClass("me-1")
-	infoContent.AppendChild(infoIcon.Element)
-	infoContent.AppendChild(app.CreateTextNode("Info"))
-	solidDiv.AppendChild(app.Button(bs5.ColorInfo, infoContent).Element)
-	container.AppendChild(solidDiv)
+	sizeRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap", "align-items-center")).Append(
+		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithSize(bs.SizeLarge)).Append("Large Button"),
+		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Default Button"),
+		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithSize(bs.SizeSmall)).Append("Small Button"),
+	)
+	container.Append(sizeRow)
 
-	// Outline Buttons section with icons
-	outlineDiv := app.CreateElement("div")
-	outlineDiv.AddClass("mb-3")
-	outlineDiv.AppendChild(app.CreateTextNode("Outline Buttons with Icons: "))
+	container.Append(
+		bs.Heading(6, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 3)).Append("Outline Button Sizes"),
+	)
 
-	outlinePrimaryContent := app.CreateElement("span")
-	outlinePrimaryIcon := app.Icon("star")
-	outlinePrimaryIcon.AddClass("me-1")
-	outlinePrimaryContent.AppendChild(outlinePrimaryIcon.Element)
-	outlinePrimaryContent.AppendChild(app.CreateTextNode("Primary"))
-	outlineDiv.AppendChild(app.Button(bs5.ColorPrimary, outlinePrimaryContent).SetOutline(true).AddClass("me-2").Element)
+	outlineSizeRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap", "align-items-center")).Append(
+		bs.OutlineButton(bs.SECONDARY, bs.WithSize(bs.SizeLarge)).Append("Large Outline"),
+		bs.OutlineButton(bs.SECONDARY).Append("Default Outline"),
+		bs.OutlineButton(bs.SECONDARY, bs.WithSize(bs.SizeSmall)).Append("Small Outline"),
+	)
+	container.Append(outlineSizeRow)
 
-	outlineSuccessContent := app.CreateElement("span")
-	outlineSuccessIcon := app.Icon("heart")
-	outlineSuccessIcon.AddClass("me-1")
-	outlineSuccessContent.AppendChild(outlineSuccessIcon.Element)
-	outlineSuccessContent.AppendChild(app.CreateTextNode("Success"))
-	outlineDiv.AppendChild(app.Button(bs5.ColorSuccess, outlineSuccessContent).SetOutline(true).AddClass("me-2").Element)
+	// Buttons with icons/badges
+	container.Append(
+		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Buttons with Badges"),
+	)
 
-	outlineDangerContent := app.CreateElement("span")
-	outlineDangerIcon := app.Icon("trash")
-	outlineDangerIcon.AddClass("me-1")
-	outlineDangerContent.AppendChild(outlineDangerIcon.Element)
-	outlineDangerContent.AppendChild(app.CreateTextNode("Danger"))
-	outlineDiv.AppendChild(app.Button(bs5.ColorDanger, outlineDangerContent).SetOutline(true).Element)
-	container.AppendChild(outlineDiv)
+	badgeButtonRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
+		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithClass("d-flex", "align-items-center", "gap-2")).Append(
+			"Notifications ",
+			bs.Badge(bs.WithColor(bs.LIGHT)).Append("4"),
+		),
+		bs.Button(bs.WithColor(bs.SUCCESS), bs.WithClass("d-flex", "align-items-center", "gap-2")).Append(
+			"Messages ",
+			bs.PillBadge(bs.WithColor(bs.LIGHT)).Append("12"),
+		),
+		bs.OutlineButton(bs.DANGER, bs.WithClass("d-flex", "align-items-center", "gap-2")).Append(
+			"Alerts ",
+			bs.PillBadge(bs.WithColor(bs.DANGER)).Append("3"),
+		),
+	)
+	container.Append(badgeButtonRow)
 
-	// Button Sizes section with icons
-	sizesDiv := app.CreateElement("div")
-	sizesDiv.AddClass("mb-3")
-	sizesDiv.AppendChild(app.CreateTextNode("Button Sizes with Icons: "))
+	// Button groups
+	container.Append(
+		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Button Groups"),
+	)
 
-	smallContent := app.CreateElement("span")
-	smallIcon := app.Icon("download")
-	smallIcon.AddClass("me-1")
-	smallContent.AppendChild(smallIcon.Element)
-	smallContent.AppendChild(app.CreateTextNode("Small"))
-	sizesDiv.AppendChild(app.Button(bs5.ColorPrimary, smallContent).SetSize(bs5.ButtonSizeSmall).AddClass("me-2").Element)
+	buttonGroup := bs.Container(bs.WithClass("btn-group")).Append(
+		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Left"),
+		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Middle"),
+		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Right"),
+	)
+	container.Append(buttonGroup)
 
-	mediumContent := app.CreateElement("span")
-	mediumIcon := app.Icon("download")
-	mediumIcon.AddClass("me-1")
-	mediumContent.AppendChild(mediumIcon.Element)
-	mediumContent.AppendChild(app.CreateTextNode("Medium"))
-	sizesDiv.AppendChild(app.Button(bs5.ColorPrimary, mediumContent).AddClass("me-2").Element)
+	container.Append(bs.Span(bs.WithMargin(bs.START, 3)))
 
-	largeContent := app.CreateElement("span")
-	largeIcon := app.Icon("download")
-	largeIcon.AddClass("me-1")
-	largeContent.AppendChild(largeIcon.Element)
-	largeContent.AppendChild(app.CreateTextNode("Large"))
-	sizesDiv.AppendChild(app.Button(bs5.ColorPrimary, largeContent).SetSize(bs5.ButtonSizeLarge).Element)
-	container.AppendChild(sizesDiv)
+	outlineButtonGroup := bs.Container(bs.WithClass("btn-group")).Append(
+		bs.OutlineButton(bs.SECONDARY).Append("Option 1"),
+		bs.OutlineButton(bs.SECONDARY).Append("Option 2"),
+		bs.OutlineButton(bs.SECONDARY).Append("Option 3"),
+	)
+	container.Append(outlineButtonGroup)
 
-	// Icon-only buttons section
-	iconOnlyDiv := app.CreateElement("div")
-	iconOnlyDiv.AddClass("mb-3")
-	iconOnlyDiv.AppendChild(app.CreateTextNode("Icon-Only Buttons: "))
-	iconOnlyDiv.AppendChild(app.Button(bs5.ColorPrimary, app.Icon("heart-fill").Element).AddClass("me-2").Element)
-	iconOnlyDiv.AppendChild(app.Button(bs5.ColorSuccess, app.Icon("check-lg").Element).AddClass("me-2").Element)
-	iconOnlyDiv.AppendChild(app.Button(bs5.ColorDanger, app.Icon("x-lg").Element).AddClass("me-2").Element)
-	iconOnlyDiv.AppendChild(app.Button(bs5.ColorInfo, app.Icon("gear-fill").Element).AddClass("me-2").Element)
-	iconOnlyDiv.AppendChild(app.Button(bs5.ColorWarning, app.Icon("bell-fill").Element).Element)
-	container.AppendChild(iconOnlyDiv)
+	// Toolbar with button groups
+	container.Append(
+		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Button Toolbar"),
+	)
 
-	// Action buttons section
-	actionDiv := app.CreateElement("div")
-	actionDiv.AddClass("mb-3")
-	actionDiv.AppendChild(app.CreateTextNode("Common Action Buttons: "))
+	toolbar := bs.Container(bs.WithClass("btn-toolbar", "gap-2")).Append(
+		bs.Container(bs.WithClass("btn-group")).Append(
+			bs.Button(bs.WithColor(bs.PRIMARY)).Append("1"),
+			bs.Button(bs.WithColor(bs.PRIMARY)).Append("2"),
+			bs.Button(bs.WithColor(bs.PRIMARY)).Append("3"),
+			bs.Button(bs.WithColor(bs.PRIMARY)).Append("4"),
+		),
+		bs.Container(bs.WithClass("btn-group")).Append(
+			bs.Button(bs.WithColor(bs.SECONDARY)).Append("5"),
+			bs.Button(bs.WithColor(bs.SECONDARY)).Append("6"),
+			bs.Button(bs.WithColor(bs.SECONDARY)).Append("7"),
+		),
+		bs.Container(bs.WithClass("btn-group")).Append(
+			bs.Button(bs.WithColor(bs.SUCCESS)).Append("8"),
+		),
+	)
+	container.Append(toolbar)
 
-	saveContent := app.CreateElement("span")
-	saveIcon := app.Icon("save")
-	saveIcon.AddClass("me-1")
-	saveContent.AppendChild(saveIcon.Element)
-	saveContent.AppendChild(app.CreateTextNode("Save"))
-	actionDiv.AppendChild(app.Button(bs5.ColorSuccess, saveContent).AddClass("me-2").Element)
+	// Block buttons
+	container.Append(
+		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Block Buttons"),
+	)
 
-	editContent := app.CreateElement("span")
-	editIcon := app.Icon("pencil-square")
-	editIcon.AddClass("me-1")
-	editContent.AppendChild(editIcon.Element)
-	editContent.AppendChild(app.CreateTextNode("Edit"))
-	actionDiv.AppendChild(app.Button(bs5.ColorPrimary, editContent).AddClass("me-2").Element)
+	blockButtonContainer := bs.Container(bs.WithClass("d-grid", "gap-2")).Append(
+		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Block Level Button"),
+		bs.Button(bs.WithColor(bs.SECONDARY)).Append("Another Block Button"),
+	)
+	container.Append(blockButtonContainer)
 
-	deleteContent := app.CreateElement("span")
-	deleteIcon := app.Icon("trash-fill")
-	deleteIcon.AddClass("me-1")
-	deleteContent.AppendChild(deleteIcon.Element)
-	deleteContent.AppendChild(app.CreateTextNode("Delete"))
-	actionDiv.AppendChild(app.Button(bs5.ColorDanger, deleteContent).AddClass("me-2").Element)
+	// Buttons with custom spacing
+	container.Append(
+		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Buttons with Custom Spacing"),
+	)
 
-	uploadContent := app.CreateElement("span")
-	uploadIcon := app.Icon("cloud-upload")
-	uploadIcon.AddClass("me-1")
-	uploadContent.AppendChild(uploadIcon.Element)
-	uploadContent.AppendChild(app.CreateTextNode("Upload"))
-	actionDiv.AppendChild(app.Button(bs5.ColorInfo, uploadContent).Element)
-	container.AppendChild(actionDiv)
+	spacingRow := bs.Container(bs.WithClass("d-flex", "flex-wrap")).Append(
+		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithMargin(bs.END, 2), bs.WithMargin(bs.BOTTOM, 2)).Append("Button 1"),
+		bs.Button(bs.WithColor(bs.SUCCESS), bs.WithMargin(bs.END, 2), bs.WithMargin(bs.BOTTOM, 2)).Append("Button 2"),
+		bs.Button(bs.WithColor(bs.WARNING), bs.WithMargin(bs.END, 2), bs.WithMargin(bs.BOTTOM, 2)).Append("Button 3"),
+		bs.Button(bs.WithColor(bs.DANGER), bs.WithMargin(bs.BOTTOM, 2)).Append("Button 4"),
+	)
+	container.Append(spacingRow)
 
-	// Button Dropdowns section
-	dropdownDiv := app.CreateElement("div")
-	dropdownDiv.AddClass("mb-3")
-	dropdownDiv.AppendChild(app.CreateTextNode("Button Dropdowns: "))
-	dropdownDiv.AppendChild(app.ButtonDropdown(
-		"Dropdown button",
-		bs5.ColorSecondary,
-		app.ButtonDropdownItem("Action", "#").Element,
-		app.ButtonDropdownItem("Another action", "#").Element,
-		app.ButtonDropdownItem("Something else here", "#").Element,
-	).AddClass("d-inline-block").AddClass("me-2").Element)
-	dropdownDiv.AppendChild(app.ButtonDropdown(
-		"Primary Dropdown",
-		bs5.ColorPrimary,
-		app.ButtonDropdownItem("First item", "#").Element,
-		app.ButtonDropdownDivider().Element,
-		app.ButtonDropdownItem("Second item", "#").Element,
-		app.ButtonDropdownItem("Third item", "#").AddEventListener("click", func(target dom.Node) {
-			fmt.Println("Third item clicked!")
-		}).Element,
-	).AddClass("d-inline-block").AddClass("me-2").Element)
-	dropdownDiv.AppendChild(app.ButtonDropdown(
-		"Danger Dropdown",
-		bs5.ColorDanger,
-		app.ButtonDropdownItem("Delete", "#").Element,
-		app.ButtonDropdownItem("Remove", "#").Element,
-	).SetSize(bs5.ButtonSizeSmall).AddClass("d-inline-block").Element)
-	container.AppendChild(dropdownDiv)
+	// Buttons with padding
+	container.Append(
+		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Buttons with Extra Padding"),
+	)
 
-	return container.Element
+	paddingRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
+		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithPadding(bs.PaddingAll, 1)).Append("Small Padding"),
+		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Default Padding"),
+		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithPadding(bs.PaddingAll, 3)).Append("Large Padding"),
+	)
+	container.Append(paddingRow)
+
+	// Mixed examples
+	container.Append(
+		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Mixed Button Styles"),
+	)
+
+	mixedRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
+		bs.Button(bs.WithColor(bs.SUCCESS), bs.WithSize(bs.SizeLarge), bs.WithClass("shadow")).Append("Large with Shadow"),
+		bs.OutlineButton(bs.DANGER, bs.WithSize(bs.SizeSmall), bs.WithClass("text-uppercase")).Append("Small Uppercase"),
+		bs.Button(bs.WithColor(bs.INFO), bs.WithClass("rounded-pill")).Append("Rounded Pill"),
+		bs.OutlineButton(bs.WARNING, bs.WithClass("rounded-0")).Append("No Border Radius"),
+	)
+	container.Append(mixedRow)
+
+	// Button states example (using divs as visual examples)
+	container.Append(
+		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Button States (Visual)"),
+	)
+
+	statesRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
+		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Normal State"),
+		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithClass("active")).Append("Active State"),
+		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithClass("disabled")).Append("Disabled Appearance"),
+	)
+	container.Append(statesRow)
+
+	return container
 }

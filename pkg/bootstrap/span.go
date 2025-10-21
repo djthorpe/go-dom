@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"strings"
 
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
@@ -12,45 +13,53 @@ import (
 ///////////////////////////////////////////////////////////////////////////////
 // TYPES
 
-type name string
-
-type component struct {
-	name name
-	root Element
+type span struct {
+	component
 }
 
-// Ensure that component implements Component interface
-var _ Component = (*component)(nil)
+// Ensure that span implements Component interface
+var _ Component = (*span)(nil)
 
 ///////////////////////////////////////////////////////////////////////////////
-// GLOBALS
+// LIFECYCLE
 
-const (
-	ContainerComponent name = "container"
-	HeadingComponent   name = "heading"
-	BadgeComponent     name = "badge"
-	AlertComponent     name = "alert"
-	SpanComponent      name = "span"
-	ParaComponent      name = "para"
-	RuleComponent      name = "rule"
-	ButtonComponent    name = "button"
-)
+// Span creates a new span element
+func Span(opt ...Opt) *span {
+	// Create a span element
+	root := dom.GetWindow().Document().CreateElement("SPAN")
+
+	// Apply options
+	if opts, err := NewOpts(SpanComponent); err != nil {
+		panic(err)
+	} else if err := opts.apply(opt...); err != nil {
+		panic(err)
+	} else {
+		// Set class list
+		classes := opts.classList.Values()
+		if len(classes) > 0 {
+			root.SetAttribute("class", strings.Join(classes, " "))
+		}
+	}
+
+	return &span{
+		component: component{
+			name: SpanComponent,
+			root: root,
+		},
+	}
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // PROPERTIES
 
-func (component *component) Name() string {
-	return string(component.name)
-}
-
-func (component *component) Element() Element {
-	return component.root
+func (span *span) Element() Element {
+	return span.root
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // METHODS
 
-func (component *component) Append(children ...any) Component {
+func (span *span) Append(children ...any) Component {
 	// Append Component, Element or string children to the root element
 	for _, child := range children {
 		// Convert to Element if necessary
@@ -61,9 +70,9 @@ func (component *component) Append(children ...any) Component {
 		}
 
 		// Append to root
-		component.root.AppendChild(child.(Node))
+		span.root.AppendChild(child.(Node))
 	}
 
-	// Return the component for chaining
-	return component
+	// Return the span for chaining
+	return span
 }

@@ -1,0 +1,213 @@
+package bootstrap_test
+
+import (
+	"strings"
+	"testing"
+
+	// Packages
+	dom "github.com/djthorpe/go-wasmbuild"
+	bs "github.com/djthorpe/go-wasmbuild/pkg/bootstrap"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestButton_Basic(t *testing.T) {
+	button := bs.Button()
+	assert.NotNil(t, button)
+	assert.NotNil(t, button.Element())
+}
+
+func TestButton_TagName(t *testing.T) {
+	button := bs.Button()
+	element := button.Element()
+	assert.Equal(t, "BUTTON", element.TagName())
+}
+
+func TestButton_DefaultClass(t *testing.T) {
+	button := bs.Button()
+	classList := button.Element().ClassList()
+	assert.True(t, classList.Contains("btn"))
+}
+
+func TestButton_DefaultType(t *testing.T) {
+	button := bs.Button()
+	element := button.Element()
+	assert.Equal(t, "button", element.GetAttribute("type"))
+}
+
+func TestButton_AppendText(t *testing.T) {
+	button := bs.Button().Append("Click me")
+	element := button.Element()
+	assert.Equal(t, "Click me", element.TextContent())
+}
+
+func TestButton_WithColor(t *testing.T) {
+	tests := []struct {
+		name          string
+		color         bs.Color
+		expectedClass string
+	}{
+		{"primary button", bs.PRIMARY, "btn-primary"},
+		{"secondary button", bs.SECONDARY, "btn-secondary"},
+		{"success button", bs.SUCCESS, "btn-success"},
+		{"danger button", bs.DANGER, "btn-danger"},
+		{"warning button", bs.WARNING, "btn-warning"},
+		{"info button", bs.INFO, "btn-info"},
+		{"light button", bs.LIGHT, "btn-light"},
+		{"dark button", bs.DARK, "btn-dark"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			button := bs.Button(bs.WithColor(tt.color))
+			classList := button.Element().ClassList()
+			assert.True(t, classList.Contains("btn"))
+			assert.True(t, classList.Contains(tt.expectedClass))
+		})
+	}
+}
+
+func TestButton_OuterHTML(t *testing.T) {
+	tests := []struct {
+		name         string
+		constructor  func() dom.Component
+		expectedHTML string
+	}{
+		{
+			name:         "default button",
+			constructor:  func() dom.Component { return bs.Button() },
+			expectedHTML: `<button class="btn" type="button"></button>`,
+		},
+		{
+			name:         "primary button",
+			constructor:  func() dom.Component { return bs.Button(bs.WithColor(bs.PRIMARY)) },
+			expectedHTML: `<button class="btn btn-primary" type="button"></button>`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			button := tt.constructor()
+			outerHTML := button.Element().OuterHTML()
+			assert.Equal(t, tt.expectedHTML, strings.ToLower(outerHTML))
+		})
+	}
+}
+
+func TestButton_OutlineButton(t *testing.T) {
+	tests := []struct {
+		name          string
+		color         bs.Color
+		expectedClass string
+	}{
+		{"outline primary", bs.PRIMARY, "btn-outline-primary"},
+		{"outline secondary", bs.SECONDARY, "btn-outline-secondary"},
+		{"outline success", bs.SUCCESS, "btn-outline-success"},
+		{"outline danger", bs.DANGER, "btn-outline-danger"},
+		{"outline warning", bs.WARNING, "btn-outline-warning"},
+		{"outline info", bs.INFO, "btn-outline-info"},
+		{"outline light", bs.LIGHT, "btn-outline-light"},
+		{"outline dark", bs.DARK, "btn-outline-dark"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			button := bs.OutlineButton(tt.color)
+			classList := button.Element().ClassList()
+			assert.True(t, classList.Contains("btn"))
+			assert.True(t, classList.Contains(tt.expectedClass))
+		})
+	}
+}
+
+func TestButton_WithSize(t *testing.T) {
+	tests := []struct {
+		name          string
+		size          bs.Size
+		expectedClass string
+	}{
+		{"small button", bs.SizeSmall, "btn-sm"},
+		{"large button", bs.SizeLarge, "btn-lg"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			button := bs.Button(bs.WithColor(bs.PRIMARY), bs.WithSize(tt.size))
+			classList := button.Element().ClassList()
+			assert.True(t, classList.Contains("btn"))
+			assert.True(t, classList.Contains("btn-primary"))
+			assert.True(t, classList.Contains(tt.expectedClass))
+		})
+	}
+}
+
+func TestButton_WithAdditionalClasses(t *testing.T) {
+	button := bs.Button(bs.WithClass("custom-class", "another-class"))
+	classList := button.Element().ClassList()
+	assert.True(t, classList.Contains("btn"))
+	assert.True(t, classList.Contains("custom-class"))
+	assert.True(t, classList.Contains("another-class"))
+}
+
+func TestButton_ComponentInterface(t *testing.T) {
+	button := bs.Button()
+	var component dom.Component = button
+	assert.NotNil(t, component)
+	assert.NotNil(t, component.Element())
+}
+
+func TestButton_ChainedAppends(t *testing.T) {
+	button := bs.Button().Append("Click ").Append("me")
+	assert.Equal(t, "Click me", button.Element().TextContent())
+}
+
+func TestButton_WithBadge(t *testing.T) {
+	// Test nesting a badge inside a button
+	button := bs.Button(bs.WithColor(bs.PRIMARY)).Append(
+		"Notifications ",
+		bs.Badge(bs.WithColor(bs.LIGHT)).Append("4"),
+	)
+
+	element := button.Element()
+	assert.True(t, element.HasChildNodes())
+	assert.Contains(t, element.TextContent(), "Notifications")
+	assert.Contains(t, element.TextContent(), "4")
+}
+
+func TestButton_WithMargin(t *testing.T) {
+	button := bs.Button(bs.WithMargin(bs.START, 2))
+	classList := button.Element().ClassList()
+	assert.True(t, classList.Contains("btn"))
+	assert.True(t, classList.Contains("ms-2"))
+}
+
+func TestButton_WithPadding(t *testing.T) {
+	button := bs.Button(bs.WithPadding(bs.PaddingAll, 3))
+	classList := button.Element().ClassList()
+	assert.True(t, classList.Contains("btn"))
+	assert.True(t, classList.Contains("p-3"))
+}
+
+func TestButton_ComplexCombination(t *testing.T) {
+	button := bs.Button(
+		bs.WithColor(bs.SUCCESS),
+		bs.WithSize(bs.SizeLarge),
+		bs.WithMargin(bs.END, 2),
+		bs.WithClass("shadow"),
+	).Append("Large Success Button")
+
+	classList := button.Element().ClassList()
+	assert.True(t, classList.Contains("btn"))
+	assert.True(t, classList.Contains("btn-success"))
+	assert.True(t, classList.Contains("btn-lg"))
+	assert.True(t, classList.Contains("me-2"))
+	assert.True(t, classList.Contains("shadow"))
+	assert.Equal(t, "Large Success Button", button.Element().TextContent())
+}
+
+func TestButton_OutlineWithSize(t *testing.T) {
+	button := bs.OutlineButton(bs.DANGER, bs.WithSize(bs.SizeSmall))
+	classList := button.Element().ClassList()
+	assert.True(t, classList.Contains("btn"))
+	assert.True(t, classList.Contains("btn-outline-danger"))
+	assert.True(t, classList.Contains("btn-sm"))
+}

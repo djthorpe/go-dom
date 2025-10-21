@@ -42,6 +42,18 @@ const (
 	BreakpointFluid Breakpoint = "fluid"
 )
 
+// Size defines button sizes
+type Size string
+
+const (
+	// SizeDefault is the default button size
+	SizeDefault Size = ""
+	// SizeSmall creates a small button (btn-sm)
+	SizeSmall Size = "sm"
+	// SizeLarge creates a large button (btn-lg)
+	SizeLarge Size = "lg"
+)
+
 ///////////////////////////////////////////////////////////////////////////////
 // LIFECYCLE
 
@@ -109,8 +121,8 @@ func WithBreakpoint(breakpoint Breakpoint) Opt {
 
 func WithBorder(position Position, color ...Color) Opt {
 	return func(o *opts) error {
-		// WithBorder works with heading, container, and badge components
-		if o.name != HeadingComponent && o.name != ContainerComponent && o.name != BadgeComponent {
+		// WithBorder works with heading, container, badge, and alert components
+		if o.name != HeadingComponent && o.name != ContainerComponent && o.name != BadgeComponent && o.name != AlertComponent {
 			return ErrBadParameter.Withf("Cannot use WithBorder with component of type %q", o.name)
 		}
 
@@ -148,20 +160,27 @@ func WithBackground(color Color) Opt {
 	}
 }
 
-// WithColor sets the color for badge components using the text-bg- prefix.
-// This ensures proper text contrast with the background color.
+// WithColor sets the color for badge, alert, and button components.
 // For badges: <span class="badge text-bg-primary">Primary</span>
+// For alerts: <div class="alert alert-primary" role="alert">Primary</div>
+// For buttons: <button class="btn btn-primary">Primary</button>
 func WithColor(color Color) Opt {
 	return func(o *opts) error {
-		// WithColor is specifically for badge components
-		if o.name != BadgeComponent {
+		// WithColor works with badge, alert, and button components
+		if o.name != BadgeComponent && o.name != AlertComponent && o.name != ButtonComponent {
 			return ErrBadParameter.Withf("Cannot use WithColor with component of type %q", o.name)
 		}
 
-		// TODO: Remove any existing text-bg color classes
+		// TODO: Remove any existing color classes
 
-		// Add text-bg color class
-		o.classList.Add(color.className("text-bg"))
+		// Add appropriate color class based on component type
+		if o.name == BadgeComponent {
+			o.classList.Add(color.className("text-bg"))
+		} else if o.name == AlertComponent {
+			o.classList.Add(color.className("alert"))
+		} else if o.name == ButtonComponent {
+			o.classList.Add(color.className("btn"))
+		}
 
 		// Return success
 		return nil
@@ -196,6 +215,29 @@ func WithPadding(position Position, padding int) Opt {
 
 		// Add padding classes
 		o.classList.Add(position.paddingClassNames(padding)...)
+
+		// Return success
+		return nil
+	}
+}
+
+// WithSize sets the size for button components (btn-sm, btn-lg)
+func WithSize(size Size) Opt {
+	return func(o *opts) error {
+		// WithSize only works with button components
+		if o.name != ButtonComponent {
+			return ErrBadParameter.Withf("Cannot use WithSize with component of type %q", o.name)
+		}
+
+		// Skip if default size
+		if size == SizeDefault {
+			return nil
+		}
+
+		// TODO: Remove any existing size classes
+
+		// Add size class
+		o.classList.Add("btn-" + string(size))
 
 		// Return success
 		return nil
