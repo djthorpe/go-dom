@@ -41,7 +41,6 @@ const (
 	CardComponent        name = "card"
 	ImageComponent       name = "image"
 	NavComponent         name = "nav"
-	ScrollspyComponent   name = "scrollspy"
 )
 
 ///////////////////////////////////////////////////////////////////////////////

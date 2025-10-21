@@ -8,6 +8,7 @@ import (
 func main() {
 	// Create the bootstrap app
 	bs.New().Append(
+		NavBar(),
 		NavExamples(),
 		NavBarExamples(),
 		BadgeExamples(),
