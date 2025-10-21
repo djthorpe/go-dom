@@ -18,6 +18,7 @@ func TestContainer_Basic(t *testing.T) {
 	assert.NotNil(t, container.Element(), "Container element should not be nil")
 	assert.Equal(t, dom.ELEMENT_NODE, container.Element().NodeType(), "Container should be an element node")
 	assert.Equal(t, "DIV", container.Element().TagName(), "Container should be a div element")
+	assert.Equal(t, "container", container.Name(), "Container should have correct component name")
 }
 
 func TestContainer_DefaultClass(t *testing.T) {
@@ -34,7 +35,7 @@ func TestContainer_DefaultClass(t *testing.T) {
 }
 
 func TestContainer_FluidOption(t *testing.T) {
-	container := bs.Container(bs.WithContainerFluid())
+	container := bs.Container(bs.WithBreakpoint(bs.BreakpointFluid))
 	element := container.Element()
 
 	assert.True(t, element.HasAttribute("class"), "Fluid container should have class attribute")
@@ -59,7 +60,7 @@ func TestContainer_OuterHTML(t *testing.T) {
 		},
 		{
 			name:         "fluid container",
-			constructor:  func() dom.Component { return bs.Container(bs.WithContainerFluid()) },
+			constructor:  func() dom.Component { return bs.Container(bs.WithBreakpoint(bs.BreakpointFluid)) },
 			expectedHTML: `<div class="container-fluid"></div>`,
 		},
 	}
@@ -92,7 +93,7 @@ func TestContainer_WithAdditionalClasses(t *testing.T) {
 		},
 		{
 			name:            "fluid container with additional classes",
-			options:         []bs.Opt{bs.WithContainerFluid(), bs.WithClass("custom-fluid")},
+			options:         []bs.Opt{bs.WithBreakpoint(bs.BreakpointFluid), bs.WithClass("custom-fluid")},
 			expectedClasses: []string{"container-fluid", "custom-fluid"},
 		},
 	}
@@ -116,10 +117,105 @@ func TestContainer_WithAdditionalClasses(t *testing.T) {
 func TestContainer_ComponentInterface(t *testing.T) {
 	container := bs.Container()
 
-	// Test that container implements Component interface
-	var component dom.Component = container
-	assert.NotNil(t, component, "Container should implement Component interface")
-	assert.Equal(t, container.Element(), component.Element(), "Element() method should return same element")
+	// Verify it implements the Component interface methods
+	var _ dom.Component = container
+
+	assert.NotNil(t, container.Element(), "Element() should return non-nil")
+	assert.Equal(t, "container", container.Name(), "Name() should return 'container'")
+}
+
+func TestContainer_AppendText(t *testing.T) {
+	container := bs.Container()
+	container.Append("Hello, World!")
+
+	element := container.Element()
+	assert.Equal(t, 1, len(element.ChildNodes()), "Should have one child node")
+	assert.Equal(t, "Hello, World!", element.TextContent(), "Should have correct text content")
+}
+
+func TestContainer_AppendMultipleTextNodes(t *testing.T) {
+	container := bs.Container()
+	container.Append("First", " Second", " Third")
+
+	element := container.Element()
+	assert.Equal(t, 3, len(element.ChildNodes()), "Should have three child nodes")
+	assert.Equal(t, "First Second Third", element.TextContent(), "Should concatenate all text")
+}
+
+func TestContainer_AppendElements(t *testing.T) {
+	container := bs.Container()
+	doc := domPkg.GetWindow().Document()
+
+	// Create some child elements
+	div := doc.CreateElement("DIV")
+	div.SetAttribute("class", "child")
+	div.AppendChild(doc.CreateTextNode("Child div"))
+
+	span := doc.CreateElement("SPAN")
+	span.AppendChild(doc.CreateTextNode("Child span"))
+
+	container.Append(div, span)
+
+	element := container.Element()
+	assert.Equal(t, 2, len(element.ChildNodes()), "Should have two child elements")
+	assert.Equal(t, "Child divChild span", element.TextContent(), "Should have correct text content")
+
+	// Verify the children
+	firstChild := element.ChildNodes()[0].(dom.Element)
+	assert.Equal(t, "DIV", firstChild.TagName(), "First child should be a div")
+	assert.Equal(t, "child", firstChild.GetAttribute("class"), "First child should have class")
+
+	secondChild := element.ChildNodes()[1].(dom.Element)
+	assert.Equal(t, "SPAN", secondChild.TagName(), "Second child should be a span")
+}
+
+func TestContainer_AppendComponents(t *testing.T) {
+	container := bs.Container()
+
+	// Create a heading component
+	heading := bs.Heading(2, bs.WithClass("inner-heading"))
+	heading.Append("Nested heading")
+
+	// Append the heading component to the container
+	container.Append(heading)
+
+	element := container.Element()
+	assert.Equal(t, 1, len(element.ChildNodes()), "Should have one child component")
+
+	// Verify the heading was appended correctly
+	childElement := element.ChildNodes()[0].(dom.Element)
+	assert.Equal(t, "H2", childElement.TagName(), "Child should be an H2 element")
+	assert.True(t, childElement.ClassList().Contains("inner-heading"), "Child should have inner-heading class")
+	assert.Equal(t, "Nested heading", childElement.TextContent(), "Child should have correct text")
+}
+
+func TestContainer_AppendMixed(t *testing.T) {
+	container := bs.Container()
+	doc := domPkg.GetWindow().Document()
+
+	// Create a heading component
+	heading := bs.Heading(3)
+	heading.Append("Section Title")
+
+	// Create a plain element
+	p := doc.CreateElement("P")
+	p.AppendChild(doc.CreateTextNode("Paragraph text"))
+
+	// Append mixed types: component, element, and text
+	container.Append(heading, p, "Plain text")
+
+	element := container.Element()
+	assert.Equal(t, 3, len(element.ChildNodes()), "Should have three children")
+	assert.Equal(t, "Section TitleParagraph textPlain text", element.TextContent(), "Should have all text content")
+}
+
+func TestContainer_ChainedAppends(t *testing.T) {
+	container := bs.Container()
+	result := container.Append("First").Append("Second").Append("Third")
+
+	assert.Equal(t, container, result, "Append should return container for chaining")
+	assert.Equal(t, "FirstSecondThird", container.Element().TextContent(),
+		"All appended text should be present")
 }
 
 func TestContainer_ElementProperties(t *testing.T) {
@@ -223,7 +319,7 @@ func TestContainer_ClassListOperations(t *testing.T) {
 func TestContainer_MultipleContainers(t *testing.T) {
 	// Test creating multiple containers
 	container1 := bs.Container()
-	container2 := bs.Container(bs.WithContainerFluid())
+	container2 := bs.Container(bs.WithBreakpoint(bs.BreakpointFluid))
 	container3 := bs.Container(bs.WithClass("custom"))
 
 	assert.NotEqual(t, container1.Element(), container2.Element(), "Different containers should have different elements")
@@ -246,19 +342,19 @@ func TestContainer_OptionsOrder(t *testing.T) {
 	}{
 		{
 			name:            "fluid then custom class",
-			options:         []bs.Opt{bs.WithContainerFluid(), bs.WithClass("custom")},
+			options:         []bs.Opt{bs.WithBreakpoint(bs.BreakpointFluid), bs.WithClass("custom")},
 			expectedClasses: []string{"container-fluid", "custom"},
-			description:     "WithContainerFluid should replace container with container-fluid, then add custom",
+			description:     "WithBreakpoint(BreakpointFluid) should replace container with container-fluid, then add custom",
 		},
 		{
 			name:            "custom class then fluid",
-			options:         []bs.Opt{bs.WithClass("custom"), bs.WithContainerFluid()},
+			options:         []bs.Opt{bs.WithClass("custom"), bs.WithBreakpoint(bs.BreakpointFluid)},
 			expectedClasses: []string{"container-fluid", "custom"},
 			description:     "Order should not matter for final result",
 		},
 		{
 			name:            "multiple custom classes with fluid",
-			options:         []bs.Opt{bs.WithClass("class1"), bs.WithContainerFluid(), bs.WithClass("class2")},
+			options:         []bs.Opt{bs.WithClass("class1"), bs.WithBreakpoint(bs.BreakpointFluid), bs.WithClass("class2")},
 			expectedClasses: []string{"container-fluid", "class1", "class2"},
 			description:     "All custom classes should be preserved with fluid",
 		},
@@ -330,6 +426,187 @@ func Test_Container_001(t *testing.T) {
 	assert.Equal(`<div class="container"></div>`, strings.ToLower(container.Element().OuterHTML()))
 
 	// Create a fluid container
-	fluid := bs.Container(bs.WithContainerFluid())
+	fluid := bs.Container(bs.WithBreakpoint(bs.BreakpointFluid))
 	assert.Equal(`<div class="container-fluid"></div>`, strings.ToLower(fluid.Element().OuterHTML()))
+}
+
+// TestContainer_ResponsiveBreakpoints tests all responsive breakpoint container options
+func TestContainer_ResponsiveBreakpoints(t *testing.T) {
+	tests := []struct {
+		name       string
+		breakpoint bs.Breakpoint
+		expected   string
+	}{
+		{
+			name:       "default container",
+			breakpoint: bs.BreakpointDefault,
+			expected:   "container",
+		},
+		{
+			name:       "small breakpoint",
+			breakpoint: bs.BreakpointSmall,
+			expected:   "container-sm",
+		},
+		{
+			name:       "medium breakpoint",
+			breakpoint: bs.BreakpointMedium,
+			expected:   "container-md",
+		},
+		{
+			name:       "large breakpoint",
+			breakpoint: bs.BreakpointLarge,
+			expected:   "container-lg",
+		},
+		{
+			name:       "extra large breakpoint",
+			breakpoint: bs.BreakpointXLarge,
+			expected:   "container-xl",
+		},
+		{
+			name:       "extra extra large breakpoint",
+			breakpoint: bs.BreakpointXXLarge,
+			expected:   "container-xxl",
+		},
+		{
+			name:       "fluid container",
+			breakpoint: bs.BreakpointFluid,
+			expected:   "container-fluid",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			container := bs.Container(bs.WithBreakpoint(tt.breakpoint))
+			element := container.Element()
+
+			// Check class attribute
+			assert.Equal(t, tt.expected, element.GetAttribute("class"),
+				"Container should have '%s' class", tt.expected)
+
+			// Check classList
+			classList := element.ClassList()
+			assert.Equal(t, 1, classList.Length(), "Container should have exactly one class")
+			assert.True(t, classList.Contains(tt.expected),
+				"Container should contain '%s' class", tt.expected)
+
+			// Check OuterHTML
+			expectedHTML := `<div class="` + tt.expected + `"></div>`
+			assert.Equal(t, expectedHTML, strings.ToLower(element.OuterHTML()),
+				"OuterHTML should match expected format")
+		})
+	}
+}
+
+// TestContainer_BreakpointWithAdditionalClasses tests responsive containers with additional classes
+func TestContainer_BreakpointWithAdditionalClasses(t *testing.T) {
+	tests := []struct {
+		name           string
+		breakpoint     bs.Breakpoint
+		additionalOpts []bs.Opt
+		expectedClass  string
+	}{
+		{
+			name:           "small with margin",
+			breakpoint:     bs.BreakpointSmall,
+			additionalOpts: []bs.Opt{bs.WithClass("mt-4")},
+			expectedClass:  "container-sm mt-4",
+		},
+		{
+			name:           "medium with padding",
+			breakpoint:     bs.BreakpointMedium,
+			additionalOpts: []bs.Opt{bs.WithClass("p-3")},
+			expectedClass:  "container-md p-3",
+		},
+		{
+			name:           "large with multiple utilities",
+			breakpoint:     bs.BreakpointLarge,
+			additionalOpts: []bs.Opt{bs.WithClass("mt-5", "mb-3")},
+			expectedClass:  "container-lg mt-5 mb-3",
+		},
+		{
+			name:           "extra large with custom class",
+			breakpoint:     bs.BreakpointXLarge,
+			additionalOpts: []bs.Opt{bs.WithClass("custom-container")},
+			expectedClass:  "container-xl custom-container",
+		},
+		{
+			name:           "extra extra large with text-center",
+			breakpoint:     bs.BreakpointXXLarge,
+			additionalOpts: []bs.Opt{bs.WithClass("text-center")},
+			expectedClass:  "container-xxl text-center",
+		},
+		{
+			name:           "fluid with margin",
+			breakpoint:     bs.BreakpointFluid,
+			additionalOpts: []bs.Opt{bs.WithClass("mt-4")},
+			expectedClass:  "container-fluid mt-4",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			opts := append([]bs.Opt{bs.WithBreakpoint(tt.breakpoint)}, tt.additionalOpts...)
+			container := bs.Container(opts...)
+			element := container.Element()
+
+			classAttr := element.GetAttribute("class")
+
+			// Check that all expected classes are present
+			expectedClasses := strings.Split(tt.expectedClass, " ")
+			for _, expectedClass := range expectedClasses {
+				assert.True(t, element.ClassList().Contains(expectedClass),
+					"Container should contain '%s' class", expectedClass)
+			}
+
+			// Verify the full class attribute matches
+			assert.Equal(t, tt.expectedClass, classAttr,
+				"Container class attribute should match expected")
+		})
+	}
+}
+
+// TestContainer_BreakpointSwitching tests switching between different container types
+func TestContainer_BreakpointSwitching(t *testing.T) {
+	tests := []struct {
+		name     string
+		options  []bs.Opt
+		expected string
+	}{
+		{
+			name:     "fluid overrides small",
+			options:  []bs.Opt{bs.WithBreakpoint(bs.BreakpointSmall), bs.WithBreakpoint(bs.BreakpointFluid)},
+			expected: "container-fluid",
+		},
+		{
+			name:     "large overrides medium",
+			options:  []bs.Opt{bs.WithBreakpoint(bs.BreakpointMedium), bs.WithBreakpoint(bs.BreakpointLarge)},
+			expected: "container-lg",
+		},
+		{
+			name:     "xxl overrides all",
+			options:  []bs.Opt{bs.WithBreakpoint(bs.BreakpointSmall), bs.WithBreakpoint(bs.BreakpointMedium), bs.WithBreakpoint(bs.BreakpointXXLarge)},
+			expected: "container-xxl",
+		},
+		{
+			name:     "default overrides fluid",
+			options:  []bs.Opt{bs.WithBreakpoint(bs.BreakpointFluid), bs.WithBreakpoint(bs.BreakpointDefault)},
+			expected: "container",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			container := bs.Container(tt.options...)
+			element := container.Element()
+
+			classAttr := element.GetAttribute("class")
+			assert.Equal(t, tt.expected, classAttr,
+				"Last option should win when multiple container types are specified")
+
+			// Verify only one container class exists
+			classList := element.ClassList()
+			assert.Equal(t, 1, classList.Length(),
+				"Should have exactly one class when switching between container types")
+		})
+	}
 }

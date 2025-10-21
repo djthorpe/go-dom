@@ -13,9 +13,7 @@ import (
 
 type app struct {
 	Document
-
-	// The root element in which the application is contained
-	root Element
+	component
 }
 
 // Ensure that app implements Application interface
@@ -25,7 +23,7 @@ var _ Application = (*app)(nil)
 // GLOBALS
 
 const (
-	AppIdentifier = "wasmbuild-bootstrap-app"
+	AppComponent name = "wasmbuild-bootstrap-app"
 )
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -38,40 +36,15 @@ func New() *app {
 
 	// Append a div to the body which will contain the application
 	root := doc.CreateElement("DIV")
-	root.SetAttribute("id", AppIdentifier)
+	root.SetAttribute("id", string(AppComponent))
 	doc.Body().AppendChild(root)
 
 	// Return the document
 	return &app{
 		Document: doc,
-		root:     root,
+		component: component{
+			name: AppComponent,
+			root: root,
+		},
 	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// PROPERTIES
-
-func (app *app) Root() Element {
-	return app.root
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// METHODS
-
-func (app *app) Append(children ...any) Application {
-	// Append Component, Element or string children to the root element
-	for _, child := range children {
-		// Convert to Element if necessary
-		if component, ok := child.(Component); ok {
-			child = component.Element()
-		} else if str, ok := child.(string); ok {
-			child = app.Document.CreateTextNode(str)
-		}
-
-		// Append to root
-		app.root.AppendChild(child.(Node))
-	}
-
-	// Return the application for chaining
-	return app
 }

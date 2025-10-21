@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"fmt"
 	"strings"
 
 	// Packages
@@ -13,25 +14,29 @@ import (
 ///////////////////////////////////////////////////////////////////////////////
 // TYPES
 
-type container struct {
+type heading struct {
 	component
+	level int
 }
 
-// Ensure that container implements Component interface
-var _ Component = (*container)(nil)
+// Ensure that heading implements Component interface
+var _ Component = (*heading)(nil)
 
 ///////////////////////////////////////////////////////////////////////////////
 // LIFECYCLE
 
-// Create a new bootstrap container
-func Container(opt ...Opt) *container {
-	// Create a container
-	root := dom.GetWindow().Document().CreateElement("DIV")
+// Heading creates a new heading element with the specified level (1-6)
+func Heading(level int, opt ...Opt) *heading {
+	if level < 1 || level > 6 {
+		panic("heading level must be between 1 and 6")
+	}
+
+	// Create heading element
+	tag := fmt.Sprintf("H%d", level)
+	root := dom.GetWindow().Document().CreateElement(tag)
 
 	// Apply options
-	if opts, err := NewOpts(ContainerComponent, WithClass("container")); err != nil {
-		panic(err)
-	} else if err := opts.apply(opt...); err != nil {
+	if opts, err := NewOpts(HeadingComponent, opt...); err != nil {
 		panic(err)
 	} else {
 		// Set class list
@@ -41,25 +46,27 @@ func Container(opt ...Opt) *container {
 		}
 	}
 
-	return &container{
+	return &heading{
 		component: component{
-			name: ContainerComponent,
+			name: HeadingComponent,
 			root: root,
 		},
+		level: level,
 	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // PROPERTIES
 
-func (container *container) Element() Element {
-	return container.root
+// Level returns the heading level (1-6)
+func (h *heading) Level() int {
+	return h.level
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // METHODS
 
-func (container *container) Append(children ...any) Component {
+func (h *heading) Append(children ...any) Component {
 	// Append Component, Element or string children to the root element
 	for _, child := range children {
 		// Convert to Element if necessary
@@ -70,9 +77,9 @@ func (container *container) Append(children ...any) Component {
 		}
 
 		// Append to root
-		container.root.AppendChild(child.(Node))
+		h.root.AppendChild(child.(Node))
 	}
 
-	// Return the container for chaining
-	return container
+	// Return the heading for chaining
+	return h
 }

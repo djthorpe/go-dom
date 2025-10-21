@@ -21,10 +21,10 @@ func Test_App_001(t *testing.T) {
 	assert.Equal("html", doctype.NodeName())
 
 	// The root element should be a div with the correct id
-	root := app.Root()
+	root := app.Element()
 	assert.NotNil(root)
 	assert.Equal("DIV", root.NodeName())
-	assert.Equal(bs.AppIdentifier, root.GetAttribute("id"))
+	assert.Equal(string(bs.AppComponent), root.GetAttribute("id"))
 }
 
 func Test_App_002(t *testing.T) {
@@ -35,6 +35,6 @@ func Test_App_002(t *testing.T) {
 
 	// Append a text node to the root
 	app.Append("Hello, World!")
-	assert.Len(app.Root().ChildNodes(), 1)
-	assert.Equal("Hello, World!", app.Root().TextContent())
+	assert.Len(app.Element().ChildNodes(), 1)
+	assert.Equal("Hello, World!", app.Element().TextContent())
 }

@@ -47,6 +47,10 @@ func (e Error) Error() string {
 	}
 }
 
-func (e Error) With(args ...interface{}) error {
-	return fmt.Errorf("%s: %w", fmt.Sprint(args...), e)
+func (e Error) With(args ...any) error {
+	return fmt.Errorf("%w: %s", e, fmt.Sprint(args...))
+}
+
+func (e Error) Withf(format string, args ...any) error {
+	return fmt.Errorf("%w: %s", e, fmt.Sprintf(format, args...))
 }
