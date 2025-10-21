@@ -3,22 +3,22 @@
 GO=go
 GOFLAGS = -ldflags "-s -w" 
 BUILDDIR = build
-WASM = $(wildcard cmd/wasm/*)
+WASM = $(wildcard wasm/*)
 GOROOT = $(shell go env GOROOT)
 
 # All targets
 all: wasmbuild $(WASM)
-	@cp ${GOROOT}/misc/wasm/wasm_exec.js ${BUILDDIR}
 
 # Rules for building
 .PHONY: $(WASM)
 $(WASM): mkdir
-	@echo "Building $(BUILDDIR)/$(shell basename $@).html"
-	@GOOS=js GOARCH=wasm $(GO) build -o ${BUILDDIR}/$@.wasm -tags js ${GOFLAGS} ./$@
+	@echo -n 'Building '
+	@$(BUILDDIR)/wasmbuild compile -o ${BUILDDIR}/$(shell basename $@).wasm ./$@
 
 .PHONY: wasmbuild
 wasmbuild: mkdir
-	$(GO) build -o $(BUILDDIR)/wasmbuild ${GOFLAGS} ./cmd/wasmbuild
+	@echo 'Building wasmbuild'
+	@$(GO) build -o $(BUILDDIR)/wasmbuild ${GOFLAGS} ./cmd/wasmbuild
 
 .PHONY: test
 test:
@@ -26,8 +26,9 @@ test:
 
 .PHONY: jstest
 jstest: clean
-	$(GO) install github.com/agnivade/wasmbrowsertest@latest
-	@GOOS=js GOARCH=wasm $(GO) test -v -tags js -exec="wasmbrowsertest" ./pkg/dom
+	@$(GO) install github.com/agnivade/wasmbrowsertest@latest
+	@GOOS=js GOARCH=wasm $(GO) test -v -exec="wasmbrowsertest" ./pkg/dom
+	@GOOS=js GOARCH=wasm $(GO) test -v -exec="wasmbrowsertest" ./pkg/bootstrap
 
 .PHONY: mkdir
 mkdir:
