@@ -62,24 +62,3 @@ func Heading(level int, opt ...Opt) *heading {
 func (h *heading) Level() int {
 	return h.level
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// METHODS
-
-func (h *heading) Append(children ...any) Component {
-	// Append Component, Element or string children to the root element
-	for _, child := range children {
-		// Convert to Element if necessary
-		if component, ok := child.(Component); ok {
-			child = component.Element()
-		} else if str, ok := child.(string); ok {
-			child = dom.GetWindow().Document().CreateTextNode(str)
-		}
-
-		// Append to root
-		h.root.AppendChild(child.(Node))
-	}
-
-	// Return the heading for chaining
-	return h
-}

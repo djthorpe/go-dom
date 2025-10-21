@@ -74,32 +74,3 @@ func VerticalRule(opt ...Opt) *rule {
 		},
 	}
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// PROPERTIES
-
-func (rule *rule) Element() Element {
-	return rule.root
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// METHODS
-
-// Append is provided for consistency but HR elements typically don't have children
-func (rule *rule) Append(children ...any) Component {
-	// Append Component, Element or string children to the root element
-	for _, child := range children {
-		// Convert to Element if necessary
-		if component, ok := child.(Component); ok {
-			child = component.Element()
-		} else if str, ok := child.(string); ok {
-			child = dom.GetWindow().Document().CreateTextNode(str)
-		}
-
-		// Append to root
-		rule.root.AppendChild(child.(Node))
-	}
-
-	// Return the rule for chaining
-	return rule
-}

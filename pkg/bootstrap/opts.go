@@ -13,8 +13,9 @@ import (
 // TYPES
 
 type opts struct {
-	name      name
-	classList TokenList
+	name       name
+	classList  TokenList
+	attributes map[string]string
 }
 
 type Opt func(*opts) error
@@ -59,8 +60,9 @@ const (
 
 func NewOpts(name name, opt ...Opt) (*opts, error) {
 	o := &opts{
-		name:      name,
-		classList: dom.NewTokenList(),
+		name:       name,
+		classList:  dom.NewTokenList(),
+		attributes: make(map[string]string),
 	}
 	if err := o.apply(opt...); err != nil {
 		return nil, err
@@ -160,14 +162,17 @@ func WithBackground(color Color) Opt {
 	}
 }
 
-// WithColor sets the color for badge, alert, and button components.
+// WithColor sets the color for badge, alert, button, icon, link, and card components.
 // For badges: <span class="badge text-bg-primary">Primary</span>
 // For alerts: <div class="alert alert-primary" role="alert">Primary</div>
 // For buttons: <button class="btn btn-primary">Primary</button>
+// For icons: <i class="bi bi-icon text-primary"></i>
+// For links: <a class="link-primary">Link</a>
+// For cards: <div class="card text-bg-primary">Card</div>
 func WithColor(color Color) Opt {
 	return func(o *opts) error {
-		// WithColor works with badge, alert, and button components
-		if o.name != BadgeComponent && o.name != AlertComponent && o.name != ButtonComponent {
+		// WithColor works with badge, alert, button, icon, link, and card components
+		if o.name != BadgeComponent && o.name != AlertComponent && o.name != ButtonComponent && o.name != IconComponent && o.name != LinkComponent && o.name != CardComponent {
 			return ErrBadParameter.Withf("Cannot use WithColor with component of type %q", o.name)
 		}
 
@@ -180,6 +185,12 @@ func WithColor(color Color) Opt {
 			o.classList.Add(color.className("alert"))
 		} else if o.name == ButtonComponent {
 			o.classList.Add(color.className("btn"))
+		} else if o.name == IconComponent {
+			o.classList.Add(color.className("text"))
+		} else if o.name == LinkComponent {
+			o.classList.Add(color.className("link"))
+		} else if o.name == CardComponent {
+			o.classList.Add(color.className("text-bg"))
 		}
 
 		// Return success
@@ -222,10 +233,11 @@ func WithPadding(position Position, padding int) Opt {
 }
 
 // WithSize sets the size for button components (btn-sm, btn-lg)
+// or button group components (btn-group-sm, btn-group-lg)
 func WithSize(size Size) Opt {
 	return func(o *opts) error {
-		// WithSize only works with button components
-		if o.name != ButtonComponent {
+		// WithSize only works with button or button-group components
+		if o.name != ButtonComponent && o.name != ButtonGroupComponent {
 			return ErrBadParameter.Withf("Cannot use WithSize with component of type %q", o.name)
 		}
 
@@ -236,10 +248,72 @@ func WithSize(size Size) Opt {
 
 		// TODO: Remove any existing size classes
 
-		// Add size class
-		o.classList.Add("btn-" + string(size))
+		// Add size class based on component type
+		if o.name == ButtonGroupComponent {
+			o.classList.Add("btn-group-" + string(size))
+		} else {
+			o.classList.Add("btn-" + string(size))
+		}
 
 		// Return success
+		return nil
+	}
+}
+
+// WithAriaLabel sets the aria-label attribute for accessibility
+func WithAriaLabel(label string) Opt {
+	return func(o *opts) error {
+		if label != "" {
+			o.attributes["aria-label"] = label
+		}
+		return nil
+	}
+}
+
+// WithAttribute sets a custom HTML attribute
+func WithAttribute(key, value string) Opt {
+	return func(o *opts) error {
+		if key != "" {
+			o.attributes[key] = value
+		}
+		return nil
+	}
+}
+
+// WithFlex sets flexbox alignment classes based on position
+// - CENTER or MIDDLE: adds "d-flex align-items-center"
+// - START or TOP: adds "d-flex align-items-start"
+// - END or BOTTOM: adds "d-flex align-items-end"
+// - START|END: adds "d-flex flex-row" (horizontal flow)
+// - TOP|BOTTOM: adds "d-flex flex-column" (vertical flow)
+func WithFlex(position Position) Opt {
+	return func(o *opts) error {
+		// Always add d-flex
+		o.classList.Add("d-flex")
+
+		// Handle alignment
+		switch {
+		case position&CENTER != 0 || position&MIDDLE != 0:
+			o.classList.Add("align-items-center")
+		case position&START != 0 && position&END == 0:
+			o.classList.Add("align-items-start")
+		case position&TOP != 0 && position&BOTTOM == 0:
+			o.classList.Add("align-items-start")
+		case position&END != 0 && position&START == 0:
+			o.classList.Add("align-items-end")
+		case position&BOTTOM != 0 && position&TOP == 0:
+			o.classList.Add("align-items-end")
+		}
+
+		// Handle flow direction
+		if (position&START != 0) && (position&END != 0) {
+			// Both START and END means horizontal flow
+			o.classList.Add("flex-row")
+		} else if (position&TOP != 0) && (position&BOTTOM != 0) {
+			// Both TOP and BOTTOM means vertical flow
+			o.classList.Add("flex-column")
+		}
+
 		return nil
 	}
 }

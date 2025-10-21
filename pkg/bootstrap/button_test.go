@@ -1,7 +1,6 @@
 package bootstrap_test
 
 import (
-	"strings"
 	"testing"
 
 	// Packages
@@ -11,31 +10,31 @@ import (
 )
 
 func TestButton_Basic(t *testing.T) {
-	button := bs.Button()
+	button := bs.Button(bs.PRIMARY)
 	assert.NotNil(t, button)
 	assert.NotNil(t, button.Element())
 }
 
 func TestButton_TagName(t *testing.T) {
-	button := bs.Button()
+	button := bs.Button(bs.PRIMARY)
 	element := button.Element()
 	assert.Equal(t, "BUTTON", element.TagName())
 }
 
 func TestButton_DefaultClass(t *testing.T) {
-	button := bs.Button()
+	button := bs.Button(bs.PRIMARY)
 	classList := button.Element().ClassList()
 	assert.True(t, classList.Contains("btn"))
 }
 
 func TestButton_DefaultType(t *testing.T) {
-	button := bs.Button()
+	button := bs.Button(bs.PRIMARY)
 	element := button.Element()
 	assert.Equal(t, "button", element.GetAttribute("type"))
 }
 
 func TestButton_AppendText(t *testing.T) {
-	button := bs.Button().Append("Click me")
+	button := bs.Button(bs.PRIMARY).Append("Click me")
 	element := button.Element()
 	assert.Equal(t, "Click me", element.TextContent())
 }
@@ -58,7 +57,7 @@ func TestButton_WithColor(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			button := bs.Button(bs.WithColor(tt.color))
+			button := bs.Button(tt.color)
 			classList := button.Element().ClassList()
 			assert.True(t, classList.Contains("btn"))
 			assert.True(t, classList.Contains(tt.expectedClass))
@@ -68,27 +67,32 @@ func TestButton_WithColor(t *testing.T) {
 
 func TestButton_OuterHTML(t *testing.T) {
 	tests := []struct {
-		name         string
-		constructor  func() dom.Component
-		expectedHTML string
+		name          string
+		constructor   func() dom.Component
+		expectedClass string
 	}{
 		{
-			name:         "default button",
-			constructor:  func() dom.Component { return bs.Button() },
-			expectedHTML: `<button class="btn" type="button"></button>`,
+			name:          "default button",
+			constructor:   func() dom.Component { return bs.Button(bs.PRIMARY) },
+			expectedClass: "btn btn-primary",
 		},
 		{
-			name:         "primary button",
-			constructor:  func() dom.Component { return bs.Button(bs.WithColor(bs.PRIMARY)) },
-			expectedHTML: `<button class="btn btn-primary" type="button"></button>`,
+			name:          "secondary button",
+			constructor:   func() dom.Component { return bs.Button(bs.SECONDARY) },
+			expectedClass: "btn btn-secondary",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			button := tt.constructor()
-			outerHTML := button.Element().OuterHTML()
-			assert.Equal(t, tt.expectedHTML, strings.ToLower(outerHTML))
+			element := button.Element()
+			// Check tag name
+			assert.Equal(t, "BUTTON", element.TagName())
+			// Check class attribute
+			assert.Equal(t, tt.expectedClass, element.GetAttribute("class"))
+			// Check type attribute
+			assert.Equal(t, "button", element.GetAttribute("type"))
 		})
 	}
 }
@@ -131,7 +135,7 @@ func TestButton_WithSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			button := bs.Button(bs.WithColor(bs.PRIMARY), bs.WithSize(tt.size))
+			button := bs.Button(bs.PRIMARY, bs.WithSize(tt.size))
 			classList := button.Element().ClassList()
 			assert.True(t, classList.Contains("btn"))
 			assert.True(t, classList.Contains("btn-primary"))
@@ -141,7 +145,7 @@ func TestButton_WithSize(t *testing.T) {
 }
 
 func TestButton_WithAdditionalClasses(t *testing.T) {
-	button := bs.Button(bs.WithClass("custom-class", "another-class"))
+	button := bs.Button(bs.PRIMARY, bs.WithClass("custom-class", "another-class"))
 	classList := button.Element().ClassList()
 	assert.True(t, classList.Contains("btn"))
 	assert.True(t, classList.Contains("custom-class"))
@@ -149,20 +153,20 @@ func TestButton_WithAdditionalClasses(t *testing.T) {
 }
 
 func TestButton_ComponentInterface(t *testing.T) {
-	button := bs.Button()
+	button := bs.Button(bs.PRIMARY)
 	var component dom.Component = button
 	assert.NotNil(t, component)
 	assert.NotNil(t, component.Element())
 }
 
 func TestButton_ChainedAppends(t *testing.T) {
-	button := bs.Button().Append("Click ").Append("me")
+	button := bs.Button(bs.PRIMARY).Append("Click ").Append("me")
 	assert.Equal(t, "Click me", button.Element().TextContent())
 }
 
 func TestButton_WithBadge(t *testing.T) {
 	// Test nesting a badge inside a button
-	button := bs.Button(bs.WithColor(bs.PRIMARY)).Append(
+	button := bs.Button(bs.PRIMARY).Append(
 		"Notifications ",
 		bs.Badge(bs.WithColor(bs.LIGHT)).Append("4"),
 	)
@@ -174,14 +178,14 @@ func TestButton_WithBadge(t *testing.T) {
 }
 
 func TestButton_WithMargin(t *testing.T) {
-	button := bs.Button(bs.WithMargin(bs.START, 2))
+	button := bs.Button(bs.PRIMARY, bs.WithMargin(bs.START, 2))
 	classList := button.Element().ClassList()
 	assert.True(t, classList.Contains("btn"))
 	assert.True(t, classList.Contains("ms-2"))
 }
 
 func TestButton_WithPadding(t *testing.T) {
-	button := bs.Button(bs.WithPadding(bs.PaddingAll, 3))
+	button := bs.Button(bs.PRIMARY, bs.WithPadding(bs.PaddingAll, 3))
 	classList := button.Element().ClassList()
 	assert.True(t, classList.Contains("btn"))
 	assert.True(t, classList.Contains("p-3"))
@@ -189,7 +193,7 @@ func TestButton_WithPadding(t *testing.T) {
 
 func TestButton_ComplexCombination(t *testing.T) {
 	button := bs.Button(
-		bs.WithColor(bs.SUCCESS),
+		bs.SUCCESS,
 		bs.WithSize(bs.SizeLarge),
 		bs.WithMargin(bs.END, 2),
 		bs.WithClass("shadow"),

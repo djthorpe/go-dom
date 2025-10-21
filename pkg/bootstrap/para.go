@@ -48,31 +48,3 @@ func Para(opt ...Opt) *para {
 		},
 	}
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// PROPERTIES
-
-func (para *para) Element() Element {
-	return para.root
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// METHODS
-
-func (para *para) Append(children ...any) Component {
-	// Append Component, Element or string children to the root element
-	for _, child := range children {
-		// Convert to Element if necessary
-		if component, ok := child.(Component); ok {
-			child = component.Element()
-		} else if str, ok := child.(string); ok {
-			child = dom.GetWindow().Document().CreateTextNode(str)
-		}
-
-		// Append to root
-		para.root.AppendChild(child.(Node))
-	}
-
-	// Return the para for chaining
-	return para
-}
