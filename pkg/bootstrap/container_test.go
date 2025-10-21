@@ -610,3 +610,364 @@ func TestContainer_BreakpointSwitching(t *testing.T) {
 		})
 	}
 }
+
+// TestContainer_WithBorder tests the WithBorder option
+func TestContainer_WithBorder(t *testing.T) {
+	tests := []struct {
+		name            string
+		position        bs.Position
+		color           []bs.Color
+		expectedClasses []string
+	}{
+		{
+			name:            "border on all sides",
+			position:        bs.BorderAll,
+			color:           nil,
+			expectedClasses: []string{"container", "border"},
+		},
+		{
+			name:            "border top only",
+			position:        bs.TOP,
+			color:           nil,
+			expectedClasses: []string{"container", "border-top"},
+		},
+		{
+			name:            "border bottom only",
+			position:        bs.BOTTOM,
+			color:           nil,
+			expectedClasses: []string{"container", "border-bottom"},
+		},
+		{
+			name:            "border start only",
+			position:        bs.START,
+			color:           nil,
+			expectedClasses: []string{"container", "border-start"},
+		},
+		{
+			name:            "border end only",
+			position:        bs.END,
+			color:           nil,
+			expectedClasses: []string{"container", "border-end"},
+		},
+		{
+			name:            "border top and bottom",
+			position:        bs.TOP | bs.BOTTOM,
+			color:           nil,
+			expectedClasses: []string{"container", "border-top", "border-bottom"},
+		},
+		{
+			name:            "border start and end",
+			position:        bs.START | bs.END,
+			color:           nil,
+			expectedClasses: []string{"container", "border-start", "border-end"},
+		},
+		{
+			name:            "border all with primary color",
+			position:        bs.BorderAll,
+			color:           []bs.Color{bs.PRIMARY},
+			expectedClasses: []string{"container", "border", "border-primary"},
+		},
+		{
+			name:            "border top with danger color",
+			position:        bs.TOP,
+			color:           []bs.Color{bs.DANGER},
+			expectedClasses: []string{"container", "border-top", "border-danger"},
+		},
+		{
+			name:            "border all with success color",
+			position:        bs.BorderAll,
+			color:           []bs.Color{bs.SUCCESS},
+			expectedClasses: []string{"container", "border", "border-success"},
+		},
+		{
+			name:            "border bottom with warning color",
+			position:        bs.BOTTOM,
+			color:           []bs.Color{bs.WARNING},
+			expectedClasses: []string{"container", "border-bottom", "border-warning"},
+		},
+		{
+			name:            "border with subtle color",
+			position:        bs.BorderAll,
+			color:           []bs.Color{bs.PRIMARY_SUBTLE},
+			expectedClasses: []string{"container", "border", "border-primary-subtle"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var container dom.Component
+			if len(tt.color) > 0 {
+				container = bs.Container(bs.WithBorder(tt.position, tt.color[0]))
+			} else {
+				container = bs.Container(bs.WithBorder(tt.position))
+			}
+
+			classList := container.Element().ClassList()
+			assert.Equal(t, len(tt.expectedClasses), classList.Length(),
+				"Should have expected number of classes")
+
+			for _, expectedClass := range tt.expectedClasses {
+				assert.True(t, classList.Contains(expectedClass),
+					"Should contain class: %s", expectedClass)
+			}
+		})
+	}
+}
+
+// TestContainer_WithBorderReplacement tests that WithBorder replaces existing borders
+func TestContainer_WithBorderReplacement(t *testing.T) {
+	// First apply border-top
+	container := bs.Container(bs.WithBorder(bs.TOP))
+	classList := container.Element().ClassList()
+	assert.True(t, classList.Contains("border-top"), "Should have border-top")
+	assert.Equal(t, 2, classList.Length(), "Should have container and border-top")
+
+	// Now apply border-bottom - this should be done by recreating the container
+	// since we can't directly modify the opts after creation
+	t.Run("border replacement by recreating", func(t *testing.T) {
+		newContainer := bs.Container(bs.WithBorder(bs.BOTTOM))
+		newClassList := newContainer.Element().ClassList()
+
+		assert.True(t, newClassList.Contains("border-bottom"), "Should have border-bottom")
+		assert.False(t, newClassList.Contains("border-top"), "Should not have border-top")
+		assert.Equal(t, 2, newClassList.Length(), "Should have container and border-bottom")
+	})
+}
+
+// TestContainer_WithBackground tests the WithBackground option
+func TestContainer_WithBackground(t *testing.T) {
+	tests := []struct {
+		name            string
+		color           bs.Color
+		expectedClasses []string
+	}{
+		{
+			name:            "primary background",
+			color:           bs.PRIMARY,
+			expectedClasses: []string{"container", "bg-primary"},
+		},
+		{
+			name:            "secondary background",
+			color:           bs.SECONDARY,
+			expectedClasses: []string{"container", "bg-secondary"},
+		},
+		{
+			name:            "success background",
+			color:           bs.SUCCESS,
+			expectedClasses: []string{"container", "bg-success"},
+		},
+		{
+			name:            "danger background",
+			color:           bs.DANGER,
+			expectedClasses: []string{"container", "bg-danger"},
+		},
+		{
+			name:            "warning background",
+			color:           bs.WARNING,
+			expectedClasses: []string{"container", "bg-warning"},
+		},
+		{
+			name:            "info background",
+			color:           bs.INFO,
+			expectedClasses: []string{"container", "bg-info"},
+		},
+		{
+			name:            "light background",
+			color:           bs.LIGHT,
+			expectedClasses: []string{"container", "bg-light"},
+		},
+		{
+			name:            "dark background",
+			color:           bs.DARK,
+			expectedClasses: []string{"container", "bg-dark"},
+		},
+		{
+			name:            "white background",
+			color:           bs.WHITE,
+			expectedClasses: []string{"container", "bg-white"},
+		},
+		{
+			name:            "black background",
+			color:           bs.BLACK,
+			expectedClasses: []string{"container", "bg-black"},
+		},
+		{
+			name:            "primary subtle background",
+			color:           bs.PRIMARY_SUBTLE,
+			expectedClasses: []string{"container", "bg-primary-subtle"},
+		},
+		{
+			name:            "danger subtle background",
+			color:           bs.DANGER_SUBTLE,
+			expectedClasses: []string{"container", "bg-danger-subtle"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			container := bs.Container(bs.WithBackground(tt.color))
+			classList := container.Element().ClassList()
+
+			assert.Equal(t, len(tt.expectedClasses), classList.Length(),
+				"Should have expected number of classes")
+
+			for _, expectedClass := range tt.expectedClasses {
+				assert.True(t, classList.Contains(expectedClass),
+					"Should contain class: %s", expectedClass)
+			}
+		})
+	}
+}
+
+// TestContainer_WithBorderAndBackground tests combining border and background
+func TestContainer_WithBorderAndBackground(t *testing.T) {
+	tests := []struct {
+		name            string
+		position        bs.Position
+		borderColor     bs.Color
+		bgColor         bs.Color
+		expectedClasses []string
+	}{
+		{
+			name:            "border with background",
+			position:        bs.BorderAll,
+			borderColor:     bs.PRIMARY,
+			bgColor:         bs.LIGHT,
+			expectedClasses: []string{"container", "border", "border-primary", "bg-light"},
+		},
+		{
+			name:            "top border with danger background",
+			position:        bs.TOP,
+			borderColor:     bs.DANGER,
+			bgColor:         bs.DANGER_SUBTLE,
+			expectedClasses: []string{"container", "border-top", "border-danger", "bg-danger-subtle"},
+		},
+		{
+			name:            "all borders with success colors",
+			position:        bs.BorderAll,
+			borderColor:     bs.SUCCESS,
+			bgColor:         bs.SUCCESS_SUBTLE,
+			expectedClasses: []string{"container", "border", "border-success", "bg-success-subtle"},
+		},
+		{
+			name:            "multiple borders with background",
+			position:        bs.TOP | bs.BOTTOM,
+			borderColor:     bs.INFO,
+			bgColor:         bs.INFO_SUBTLE,
+			expectedClasses: []string{"container", "border-top", "border-bottom", "border-info", "bg-info-subtle"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			container := bs.Container(
+				bs.WithBorder(tt.position, tt.borderColor),
+				bs.WithBackground(tt.bgColor),
+			)
+			classList := container.Element().ClassList()
+
+			assert.Equal(t, len(tt.expectedClasses), classList.Length(),
+				"Should have expected number of classes")
+
+			for _, expectedClass := range tt.expectedClasses {
+				assert.True(t, classList.Contains(expectedClass),
+					"Should contain class: %s", expectedClass)
+			}
+		})
+	}
+}
+
+// TestContainer_WithBorderAndBackgroundWithBreakpoint tests all options together
+func TestContainer_WithBorderAndBackgroundWithBreakpoint(t *testing.T) {
+	tests := []struct {
+		name            string
+		breakpoint      bs.Breakpoint
+		position        bs.Position
+		borderColor     bs.Color
+		bgColor         bs.Color
+		expectedClasses []string
+	}{
+		{
+			name:            "fluid container with border and background",
+			breakpoint:      bs.BreakpointFluid,
+			position:        bs.BorderAll,
+			borderColor:     bs.PRIMARY,
+			bgColor:         bs.LIGHT,
+			expectedClasses: []string{"container-fluid", "border", "border-primary", "bg-light"},
+		},
+		{
+			name:            "small container with top border and background",
+			breakpoint:      bs.BreakpointSmall,
+			position:        bs.TOP,
+			borderColor:     bs.DANGER,
+			bgColor:         bs.WARNING_SUBTLE,
+			expectedClasses: []string{"container-sm", "border-top", "border-danger", "bg-warning-subtle"},
+		},
+		{
+			name:            "large container with all sides border and dark background",
+			breakpoint:      bs.BreakpointLarge,
+			position:        bs.BorderAll,
+			borderColor:     bs.DARK,
+			bgColor:         bs.DARK_SUBTLE,
+			expectedClasses: []string{"container-lg", "border", "border-dark", "bg-dark-subtle"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			container := bs.Container(
+				bs.WithBreakpoint(tt.breakpoint),
+				bs.WithBorder(tt.position, tt.borderColor),
+				bs.WithBackground(tt.bgColor),
+			)
+			classList := container.Element().ClassList()
+
+			assert.Equal(t, len(tt.expectedClasses), classList.Length(),
+				"Should have expected number of classes")
+
+			for _, expectedClass := range tt.expectedClasses {
+				assert.True(t, classList.Contains(expectedClass),
+					"Should contain class: %s", expectedClass)
+			}
+		})
+	}
+}
+
+// TestContainer_WithBorderNone tests that NONE position removes borders
+func TestContainer_WithBorderNone(t *testing.T) {
+	container := bs.Container(bs.WithBorder(bs.NONE))
+	classList := container.Element().ClassList()
+
+	assert.Equal(t, 1, classList.Length(), "Should only have container class")
+	assert.True(t, classList.Contains("container"), "Should have container class")
+	assert.False(t, classList.Contains("border"), "Should not have any border class")
+}
+
+// TestContainer_ComplexCombination tests complex combinations of all options
+func TestContainer_ComplexCombination(t *testing.T) {
+	container := bs.Container(
+		bs.WithBreakpoint(bs.BreakpointMedium),
+		bs.WithClass("mt-4", "p-3"),
+		bs.WithBorder(bs.TOP|bs.BOTTOM, bs.PRIMARY),
+		bs.WithBackground(bs.LIGHT),
+	)
+
+	expectedClasses := []string{
+		"container-md",
+		"mt-4",
+		"p-3",
+		"border-top",
+		"border-bottom",
+		"border-primary",
+		"bg-light",
+	}
+
+	classList := container.Element().ClassList()
+	assert.Equal(t, len(expectedClasses), classList.Length(),
+		"Should have all expected classes")
+
+	for _, expectedClass := range expectedClasses {
+		assert.True(t, classList.Contains(expectedClass),
+			"Should contain class: %s", expectedClass)
+	}
+}

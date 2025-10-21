@@ -106,3 +106,98 @@ func WithBreakpoint(breakpoint Breakpoint) Opt {
 		return nil
 	}
 }
+
+func WithBorder(position Position, color ...Color) Opt {
+	return func(o *opts) error {
+		// WithBorder works with heading, container, and badge components
+		if o.name != HeadingComponent && o.name != ContainerComponent && o.name != BadgeComponent {
+			return ErrBadParameter.Withf("Cannot use WithBorder with component of type %q", o.name)
+		}
+
+		// Remove all existing border classes
+		o.classList.Remove(BorderAll.borderClassNames()...)
+
+		// Add new border classes
+		if pposition := position & BorderAll; pposition != 0 {
+			o.classList.Add(pposition.borderClassNames()...)
+		}
+
+		// TODO: Remove any existing border color classes
+
+		// Add border color
+		if len(color) == 1 {
+			o.classList.Add(color[0].className("border"))
+		} else if len(color) > 1 {
+			return ErrBadParameter.Withf("Only one color can be specified for borders")
+		}
+
+		// Return success
+		return nil
+	}
+}
+
+func WithBackground(color Color) Opt {
+	return func(o *opts) error {
+		// TODO: Remove any existing background color classes
+
+		// Add background color
+		o.classList.Add(color.className("bg"))
+
+		// Return success
+		return nil
+	}
+}
+
+// WithColor sets the color for badge components using the text-bg- prefix.
+// This ensures proper text contrast with the background color.
+// For badges: <span class="badge text-bg-primary">Primary</span>
+func WithColor(color Color) Opt {
+	return func(o *opts) error {
+		// WithColor is specifically for badge components
+		if o.name != BadgeComponent {
+			return ErrBadParameter.Withf("Cannot use WithColor with component of type %q", o.name)
+		}
+
+		// TODO: Remove any existing text-bg color classes
+
+		// Add text-bg color class
+		o.classList.Add(color.className("text-bg"))
+
+		// Return success
+		return nil
+	}
+}
+
+// WithMargin sets the margin for the specified position, where position can be one or more of
+// TOP, BOTTOM, START, END. Margin is an integer from -5 to 5, where negative values indicate
+// negative margins, 0 indicates no margin, and positive values indicate increasing margin sizes.
+func WithMargin(position Position, margin int) Opt {
+	return func(o *opts) error {
+		// TODO: Remove any existing margin classes
+
+		// Add margin classes
+		o.classList.Add(position.marginClassNames(margin)...)
+
+		// Return success
+		return nil
+	}
+}
+
+// WithPadding sets the padding for the specified position, where position can be one or more of
+// TOP, BOTTOM, START, END. Padding is an integer from 1 to 5, where negative or zero values are not allowed.
+func WithPadding(position Position, padding int) Opt {
+	return func(o *opts) error {
+		// Validate padding size (must be positive, no zero or negative)
+		if padding <= 0 {
+			return ErrBadParameter.Withf("Padding must be a positive value, got %d", padding)
+		}
+
+		// TODO: Remove any existing padding classes
+
+		// Add padding classes
+		o.classList.Add(position.paddingClassNames(padding)...)
+
+		// Return success
+		return nil
+	}
+}
