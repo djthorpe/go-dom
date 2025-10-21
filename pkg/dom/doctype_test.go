@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	// Modules
-	. "github.com/djthorpe/go-dom/pkg/dom"
+	. "github.com/djthorpe/go-wasmbuild/pkg/dom"
 )
 
 func Test_Doctype_001(t *testing.T) {

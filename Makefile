@@ -7,7 +7,7 @@ WASM = $(wildcard cmd/wasm/*)
 GOROOT = $(shell go env GOROOT)
 
 # All targets
-all: wasmserver $(WASM)
+all: wasmbuild $(WASM)
 	@cp ${GOROOT}/misc/wasm/wasm_exec.js ${BUILDDIR}
 
 # Rules for building
@@ -16,9 +16,9 @@ $(WASM): mkdir
 	@echo "Building $(BUILDDIR)/$(shell basename $@).html"
 	@GOOS=js GOARCH=wasm $(GO) build -o ${BUILDDIR}/$@.wasm -tags js ${GOFLAGS} ./$@
 
-.PHONY: wasmserver
-wasmserver: mkdir
-	$(GO) build -o $(BUILDDIR)/wasmserver ${GOFLAGS} ./cmd/wasmserver
+.PHONY: wasmbuild
+wasmbuild: mkdir
+	$(GO) build -o $(BUILDDIR)/wasmbuild ${GOFLAGS} ./cmd/wasmbuild
 
 .PHONY: test
 test:

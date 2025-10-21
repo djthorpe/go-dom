@@ -7,7 +7,7 @@ import (
 	"io"
 	"strconv"
 
-	dom "github.com/djthorpe/go-dom"
+	dom "github.com/djthorpe/go-wasmbuild"
 )
 
 ///////////////////////////////////////////////////////////////////////////////

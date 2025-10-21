@@ -1,4 +1,4 @@
-//go:build js
+//go:build wasm
 
 package dom
 
@@ -7,7 +7,7 @@ import (
 	"syscall/js"
 
 	// Packages
-	dom "github.com/djthorpe/go-dom"
+	dom "github.com/djthorpe/go-wasmbuild"
 )
 
 /////////////////////////////////////////////////////////////////////
@@ -21,6 +21,8 @@ type element struct {
 type style struct {
 	js.Value
 }
+
+var _ dom.Element = (*element)(nil)
 
 ///////////////////////////////////////////////////////////////////////////////
 // STRINGIFY
@@ -66,12 +68,11 @@ func (e *element) Style() dom.Style {
 
 func (e *element) SetAttribute(name string, value string) dom.Attr {
 	e.Call("setAttribute", name, value)
-	return e.GetAttribute(name)
+	return e.GetAttributeNode(name)
 }
 
-func (e *element) GetAttribute(name string) dom.Attr {
-	// Use getAttributeNode instead of getAttribute
-	// getAttribute returns a string, getAttributeNode returns an Attr object
+func (e *element) GetAttributeNode(name string) dom.Attr {
+	// Use getAttributeNode to get the Attr object
 	attrNode := e.Call("getAttributeNode", name)
 	if attrNode.IsNull() {
 		return nil
@@ -79,14 +80,25 @@ func (e *element) GetAttribute(name string) dom.Attr {
 	return NewNode(attrNode).(dom.Attr)
 }
 
-func (e *element) AddClass(className string) {
-	classList := e.Get("classList")
-	classList.Call("add", className)
+func (e *element) HasAttribute(name string) bool {
+	return e.Call("hasAttribute", name).Bool()
 }
 
-func (e *element) RemoveClass(className string) {
+func (e *element) ClassList() dom.TokenList {
+	// Return a tokenlist that wraps the real DOM element's classList
 	classList := e.Get("classList")
-	classList.Call("remove", className)
+	return &tokenlist{
+		classList: classList,
+	}
+}
+
+func (e *element) GetAttribute(name string) string {
+	// Use getAttribute which directly returns a string
+	result := e.Call("getAttribute", name)
+	if result.IsNull() {
+		return ""
+	}
+	return result.String()
 }
 
 func (e *element) AddEventListener(eventType string, callback func(dom.Node)) dom.Element {

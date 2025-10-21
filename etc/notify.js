@@ -51,9 +51,8 @@
         const eventSource = new EventSource('/_notify');
 
         eventSource.onmessage = function (event) {
-            console.log('wasmserver:', event.data);
             if (event.data === 'reload') {
-                console.log('Reloading page...');
+                console.log('wasmbuild: reloading page...');
                 // Hide any error overlay before reload
                 hideCompileError();
                 window.location.reload();
@@ -61,12 +60,12 @@
         };
 
         eventSource.addEventListener('compileerror', function (event) {
-            console.error('wasmserver compilation error:', event.data);
+            console.error('wasmbuild compilation error:', event.data);
             showCompileError(event.data);
         });
 
         eventSource.onerror = function (error) {
-            console.log('wasmserver connection error, will retry...');
+            console.log('wasmbuild: connection error, will retry...');
         };
     }
 

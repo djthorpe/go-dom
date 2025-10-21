@@ -1,11 +1,12 @@
-//go:build !js
+//go:build !wasm
 
 package dom
 
 import (
 	"fmt"
 
-	dom "github.com/djthorpe/go-dom"
+	// Packages
+	dom "github.com/djthorpe/go-wasmbuild"
 )
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -84,10 +85,7 @@ func (this *document) AppendChild(child dom.Node) dom.Node {
 	if child.NodeType() != dom.ELEMENT_NODE {
 		return nil
 	}
-	if this.HasChildNodes() {
-		return nil
-	}
-	return this.AppendChild(child)
+	return this.node.AppendChild(child)
 }
 
 func (this *document) CloneNode(deep bool) dom.Node {

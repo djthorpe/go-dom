@@ -52,15 +52,14 @@ type Element interface {
 	//RemoveAttributeNode(Attr) Attr
 	SetAttribute(string, string) Attr
 	//SetAttributeNode(Attr) Attr
-	GetAttribute(string) Attr
+	GetAttribute(string) string
 	//GetAttributeNames() []string
-	//GetAttributeNode(string) Attr
-	//HasAttribute(string) bool
+	GetAttributeNode(string) Attr
+	HasAttribute(string) bool
 	HasAttributes() bool
 
 	// Class Methods
-	AddClass(string)
-	RemoveClass(string)
+	ClassList() TokenList
 
 	// Event Methods
 	AddEventListener(string, func(Node)) Element
@@ -89,7 +88,7 @@ type Document interface {
 	CreateAttribute(string) Attr
 	CreateComment(string) Comment
 	CreateTextNode(string) Text
-	ActiveElement() Element
+	//ActiveElement() Element
 }
 
 type Text interface {
@@ -142,6 +141,20 @@ type Window interface {
 	// Methods
 	Write(io.Writer, Node) (int, error)
 	//Read(io.Reader, string) (Document, error)
+}
+
+// TokenList implements https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList
+type TokenList interface {
+	// Properties
+	Length() int
+	Value() string
+
+	// Methods
+	Values() []string
+	Contains(string) bool
+	Add(...string)
+	Remove(...string)
+	Toggle(value string, force ...bool) bool
 }
 
 ///////////////////////////////////////////////////////////////////////////////

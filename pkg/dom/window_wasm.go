@@ -8,7 +8,7 @@ import (
 	"syscall/js"
 
 	// Packages
-	"github.com/djthorpe/go-dom"
+	dom "github.com/djthorpe/go-wasmbuild"
 )
 
 ///////////////////////////////////////////////////////////////////////////////

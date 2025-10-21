@@ -7,7 +7,7 @@ import (
 	"html"
 	"io"
 
-	dom "github.com/djthorpe/go-dom"
+	dom "github.com/djthorpe/go-wasmbuild"
 )
 
 /////////////////////////////////////////////////////////////////////
