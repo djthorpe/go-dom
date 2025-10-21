@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"testing"
 
-	// Modules
-	. "github.com/djthorpe/go-dom/pkg/dom"
+	// Packages
+	. "github.com/djthorpe/go-wasmbuild/pkg/dom"
 )
 
 func Test_Attr_001(t *testing.T) {

@@ -1,4 +1,4 @@
-//go:build js
+//go:build wasm
 
 package dom
 
@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"syscall/js"
 
-	dom "github.com/djthorpe/go-dom"
+	// Packages
+	dom "github.com/djthorpe/go-wasmbuild"
 )
 
 ///////////////////////////////////////////////////////////////////////////////

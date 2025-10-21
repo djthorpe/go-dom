@@ -1,5 +1,4 @@
 //go:build !js
-// +build !js
 
 package dom
 
@@ -8,8 +7,8 @@ import (
 	"io"
 	"strconv"
 
-	dom "github.com/djthorpe/go-dom"
-	"golang.org/x/net/html"
+	dom "github.com/djthorpe/go-wasmbuild"
+	html "golang.org/x/net/html"
 )
 
 ///////////////////////////////////////////////////////////////////////////////

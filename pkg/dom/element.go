@@ -1,13 +1,15 @@
-//go:build !js
+//go:build !wasm
 
 package dom
 
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"strings"
 
-	dom "github.com/djthorpe/go-dom"
+	// Packages
+	dom "github.com/djthorpe/go-wasmbuild"
 )
 
 /////////////////////////////////////////////////////////////////////
@@ -15,8 +17,11 @@ import (
 
 type element struct {
 	*node
-	attrs map[string]dom.Attr
+	classlist *tokenlist
+	attrs     map[string]dom.Attr
 }
+
+var _ dom.Element = (*element)(nil)
 
 ///////////////////////////////////////////////////////////////////////////////
 // STRINGIFY
@@ -93,58 +98,34 @@ func (this *element) SetAttribute(name, value string) dom.Attr {
 	return attr
 }
 
-func (this *element) GetAttribute(name string) dom.Attr {
+func (this *element) GetAttribute(name string) string {
+	attr := this.attrs[name]
+	if attr == nil {
+		return ""
+	}
+	return attr.Value()
+}
+
+func (this *element) GetAttributeNode(name string) dom.Attr {
 	return this.attrs[name]
 }
 
-func (this *element) AddClass(className string) {
-	// Get current class attribute
-	classAttr := this.GetAttribute("class")
-	if classAttr == nil {
-		// No class attribute exists, create one
-		this.SetAttribute("class", className)
-		return
-	}
-
-	// Parse existing classes
-	classes := strings.Fields(classAttr.Value())
-
-	// Check if class already exists
-	for _, c := range classes {
-		if c == className {
-			return // Class already present
-		}
-	}
-
-	// Add the new class
-	classes = append(classes, className)
-	this.SetAttribute("class", strings.Join(classes, " "))
+func (this *element) HasAttribute(name string) bool {
+	_, exists := this.attrs[name]
+	return exists
 }
 
-func (this *element) RemoveClass(className string) {
-	// Get current class attribute
+func (this *element) ClassList() dom.TokenList {
+	// Sync classlist with class attribute if needed
 	classAttr := this.GetAttribute("class")
-	if classAttr == nil {
-		return // No classes to remove
+	if classAttr != "" {
+		// Parse class attribute and update classlist
+		classes := strings.Fields(classAttr)
+		this.classlist = NewTokenList(classes...)
+	} else if this.classlist == nil {
+		this.classlist = NewTokenList()
 	}
-
-	// Parse existing classes
-	classes := strings.Fields(classAttr.Value())
-
-	// Filter out the class to remove
-	filtered := make([]string, 0, len(classes))
-	for _, c := range classes {
-		if c != className {
-			filtered = append(filtered, c)
-		}
-	}
-
-	// Update or remove the class attribute
-	if len(filtered) == 0 {
-		delete(this.attrs, "class")
-	} else {
-		this.SetAttribute("class", strings.Join(filtered, " "))
-	}
+	return this.classlist
 }
 
 func (this *element) AddEventListener(eventType string, callback func(dom.Node)) dom.Element {
@@ -166,4 +147,43 @@ func (this *element) Focus() {
 
 func (this *element) v() *node {
 	return this.node
+}
+
+func (this *element) write(w io.Writer) (int, error) {
+	s := 0
+
+	// Write opening tag with attributes
+	tag := "<" + this.node.name
+
+	// Add attributes
+	if len(this.attrs) > 0 {
+		for _, attr := range this.attrs {
+			tag += fmt.Sprintf(" %s=%q", attr.Name(), attr.Value())
+		}
+	}
+
+	tag += ">"
+	if n, err := w.Write([]byte(tag)); err != nil {
+		return 0, err
+	} else {
+		s += n
+	}
+
+	// Write children
+	for _, child := range this.node.children {
+		if n, err := child.(nodevalue).write(w); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+	}
+
+	// Write closing tag
+	if n, err := w.Write([]byte("</" + this.node.name + ">")); err != nil {
+		return 0, err
+	} else {
+		s += n
+	}
+
+	return s, nil
 }

@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"syscall/js"
 
-	"github.com/djthorpe/go-dom"
+	// Packages
+	dom "github.com/djthorpe/go-wasmbuild"
 )
 
 ///////////////////////////////////////////////////////////////////////////////

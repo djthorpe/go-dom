@@ -3,9 +3,11 @@ package dom_test
 import (
 	"testing"
 
-	// Modules
-	"github.com/djthorpe/go-dom"
-	. "github.com/djthorpe/go-dom/pkg/dom"
+	// Packages
+	dom "github.com/djthorpe/go-wasmbuild"
+
+	// Namespace import
+	. "github.com/djthorpe/go-wasmbuild/pkg/dom"
 )
 
 func Test_Text_001(t *testing.T) {

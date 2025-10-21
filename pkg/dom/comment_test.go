@@ -4,8 +4,9 @@ import (
 	"testing"
 
 	// Modules
-	"github.com/djthorpe/go-dom"
-	. "github.com/djthorpe/go-dom/pkg/dom"
+
+	dom "github.com/djthorpe/go-wasmbuild"
+	. "github.com/djthorpe/go-wasmbuild/pkg/dom"
 )
 
 func Test_Comment_001(t *testing.T) {

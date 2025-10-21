@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"io"
 
-	dom "github.com/djthorpe/go-dom"
+	// Packages
+	dom "github.com/djthorpe/go-wasmbuild"
 )
 
 /////////////////////////////////////////////////////////////////////
@@ -40,7 +41,7 @@ func NewNode(doc dom.Document, name string, nodetype dom.NodeType, cdata string)
 	case dom.DOCUMENT_TYPE_NODE:
 		return &doctype{node, "", ""}
 	case dom.ELEMENT_NODE:
-		return &element{node, map[string]dom.Attr{}}
+		return &element{node, NewTokenList(), map[string]dom.Attr{}}
 	case dom.TEXT_NODE:
 		return &text{node}
 	case dom.COMMENT_NODE:
