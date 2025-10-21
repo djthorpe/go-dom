@@ -48,7 +48,7 @@ type Element interface {
 	Style() Style
 
 	// Attribute Methods
-	//RemoveAttrbute(string)
+	//RemoveAttribute(string)
 	//RemoveAttributeNode(Attr) Attr
 	SetAttribute(string, string) Attr
 	//SetAttributeNode(Attr) Attr

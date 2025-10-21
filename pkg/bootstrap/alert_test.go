@@ -463,3 +463,147 @@ func TestAlert_WithAlertColorExamples(t *testing.T) {
 		})
 	}
 }
+
+func TestAlert_Heading(t *testing.T) {
+	alert := bs.Alert(bs.WithColor(bs.SUCCESS))
+	alert.Heading("Well done!")
+	alert.Append("You successfully read this important alert message.")
+
+	element := alert.Element()
+	assert.True(t, element.HasChildNodes(), "Alert should have child nodes")
+
+	// The heading should be the first child
+	firstChild := element.FirstChild()
+	assert.NotNil(t, firstChild, "Alert should have a heading as first child")
+
+	if firstChild != nil {
+		headingElement, ok := firstChild.(dom.Element)
+		assert.True(t, ok, "First child should be an Element")
+		if ok {
+			assert.Equal(t, "H4", headingElement.TagName(), "Heading should be an H4 element")
+			assert.Equal(t, "alert-heading", headingElement.GetAttribute("class"), "Heading should have 'alert-heading' class")
+			assert.Equal(t, "Well done!", headingElement.TextContent(), "Heading should contain the text")
+		}
+	}
+
+	// Check that the alert text comes after the heading
+	assert.Contains(t, element.TextContent(), "Well done!")
+	assert.Contains(t, element.TextContent(), "You successfully read this important alert message.")
+}
+
+func TestAlert_HeadingWithMultipleChildren(t *testing.T) {
+	alert := bs.Alert(bs.WithColor(bs.INFO))
+	alert.Heading("Info: ", "Multiple parts")
+	alert.Append("Additional content")
+
+	element := alert.Element()
+	firstChild := element.FirstChild()
+	assert.NotNil(t, firstChild, "Alert should have a heading")
+
+	if firstChild != nil {
+		headingElement, ok := firstChild.(dom.Element)
+		assert.True(t, ok, "First child should be an Element")
+		if ok {
+			assert.Equal(t, "H4", headingElement.TagName())
+			assert.Equal(t, "alert-heading", headingElement.GetAttribute("class"))
+			assert.Equal(t, "Info: Multiple parts", headingElement.TextContent())
+		}
+	}
+}
+
+func TestAlert_HeadingWithComponent(t *testing.T) {
+	alert := bs.Alert(bs.WithColor(bs.WARNING))
+	icon := bs.Icon("exclamation-triangle-fill", bs.WithMargin(bs.END, 2))
+	alert.Heading(icon, "Warning!")
+	alert.Append("This is a warning message.")
+
+	element := alert.Element()
+	firstChild := element.FirstChild()
+	assert.NotNil(t, firstChild, "Alert should have a heading")
+
+	if firstChild != nil {
+		headingElement, ok := firstChild.(dom.Element)
+		assert.True(t, ok, "First child should be an Element")
+		if ok {
+			assert.Equal(t, "H4", headingElement.TagName())
+			assert.Equal(t, "alert-heading", headingElement.GetAttribute("class"))
+			assert.Contains(t, headingElement.TextContent(), "Warning!")
+		}
+	}
+}
+
+func TestAlert_DismissibleAlertWithHeading(t *testing.T) {
+	alert := bs.DismissibleAlert(bs.WithColor(bs.DANGER))
+	alert.Heading("Error!")
+	alert.Append("Something went wrong.")
+
+	element := alert.Element()
+	assert.True(t, element.HasChildNodes(), "Dismissible alert should have child nodes")
+
+	// The close button should be the first child
+	firstChild := element.FirstChild()
+	assert.NotNil(t, firstChild, "Dismissible alert should have a close button")
+
+	if firstChild != nil {
+		buttonElement, ok := firstChild.(dom.Element)
+		assert.True(t, ok, "First child should be the close button")
+		if ok {
+			assert.Equal(t, "BUTTON", buttonElement.TagName())
+		}
+	}
+
+	// The heading should be the second child (after close button)
+	secondChild := firstChild.NextSibling()
+	assert.NotNil(t, secondChild, "Dismissible alert should have a heading as second child")
+
+	if secondChild != nil {
+		headingElement, ok := secondChild.(dom.Element)
+		assert.True(t, ok, "Second child should be an Element (heading)")
+		if ok {
+			assert.Equal(t, "H4", headingElement.TagName())
+			assert.Equal(t, "alert-heading", headingElement.GetAttribute("class"))
+			assert.Equal(t, "Error!", headingElement.TextContent())
+		}
+	}
+}
+
+func TestAlert_HeadingMethodChaining(t *testing.T) {
+	alert := bs.Alert(bs.WithColor(bs.SUCCESS)).
+		Heading("Success!").
+		Append("Operation completed successfully.")
+
+	element := alert.Element()
+	assert.Contains(t, element.TextContent(), "Success!")
+	assert.Contains(t, element.TextContent(), "Operation completed successfully.")
+
+	// Verify the heading is present
+	firstChild := element.FirstChild()
+	assert.NotNil(t, firstChild)
+
+	if firstChild != nil {
+		headingElement, ok := firstChild.(dom.Element)
+		assert.True(t, ok)
+		if ok {
+			assert.Equal(t, "H4", headingElement.TagName())
+			assert.Equal(t, "alert-heading", headingElement.GetAttribute("class"))
+		}
+	}
+}
+
+func TestAlert_HeadingEmptyAlert(t *testing.T) {
+	alert := bs.Alert(bs.WithColor(bs.PRIMARY))
+	alert.Heading("Empty Alert")
+
+	element := alert.Element()
+	firstChild := element.FirstChild()
+	assert.NotNil(t, firstChild, "Alert should have a heading")
+
+	if firstChild != nil {
+		headingElement, ok := firstChild.(dom.Element)
+		assert.True(t, ok)
+		if ok {
+			assert.Equal(t, "H4", headingElement.TagName())
+			assert.Equal(t, "Empty Alert", headingElement.TextContent())
+		}
+	}
+}

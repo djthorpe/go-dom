@@ -17,6 +17,7 @@ type name string
 type component struct {
 	name name
 	root Element
+	body Element // Where content is appended; usually same as root
 }
 
 // Ensure that component implements Component interface
@@ -26,14 +27,21 @@ var _ Component = (*component)(nil)
 // GLOBALS
 
 const (
-	ContainerComponent name = "container"
-	HeadingComponent   name = "heading"
-	BadgeComponent     name = "badge"
-	AlertComponent     name = "alert"
-	SpanComponent      name = "span"
-	ParaComponent      name = "para"
-	RuleComponent      name = "rule"
-	ButtonComponent    name = "button"
+	ContainerComponent   name = "container"
+	HeadingComponent     name = "heading"
+	BadgeComponent       name = "badge"
+	AlertComponent       name = "alert"
+	SpanComponent        name = "span"
+	ParaComponent        name = "para"
+	RuleComponent        name = "rule"
+	ButtonComponent      name = "button"
+	ButtonGroupComponent name = "button-group"
+	IconComponent        name = "icon"
+	LinkComponent        name = "link"
+	CardComponent        name = "card"
+	ImageComponent       name = "image"
+	NavComponent         name = "nav"
+	ScrollspyComponent   name = "scrollspy"
 )
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -51,7 +59,12 @@ func (component *component) Element() Element {
 // METHODS
 
 func (component *component) Append(children ...any) Component {
-	// Append Component, Element or string children to the root element
+	// Append Component, Element or string children to the body element (or root if no body)
+	target := component.body
+	if target == nil {
+		target = component.root
+	}
+
 	for _, child := range children {
 		// Convert to Element if necessary
 		if component, ok := child.(Component); ok {
@@ -60,8 +73,8 @@ func (component *component) Append(children ...any) Component {
 			child = dom.GetWindow().Document().CreateTextNode(str)
 		}
 
-		// Append to root
-		component.root.AppendChild(child.(Node))
+		// Append to target
+		target.AppendChild(child.(Node))
 	}
 
 	// Return the component for chaining

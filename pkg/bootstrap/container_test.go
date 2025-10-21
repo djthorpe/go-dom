@@ -971,3 +971,104 @@ func TestContainer_ComplexCombination(t *testing.T) {
 			"Should contain class: %s", expectedClass)
 	}
 }
+
+// TestContainer_WithFlex_Center tests center alignment with WithFlex
+func TestContainer_WithFlex_Center(t *testing.T) {
+	container := bs.Container(bs.WithFlex(bs.CENTER))
+	classList := container.Element().ClassList()
+	assert.True(t, classList.Contains("d-flex"))
+	assert.True(t, classList.Contains("align-items-center"))
+}
+
+// TestContainer_WithFlex_Middle tests middle alignment with WithFlex
+func TestContainer_WithFlex_Middle(t *testing.T) {
+	container := bs.Container(bs.WithFlex(bs.MIDDLE))
+	classList := container.Element().ClassList()
+	assert.True(t, classList.Contains("d-flex"))
+	assert.True(t, classList.Contains("align-items-center"))
+}
+
+// TestContainer_WithFlex_Start tests start alignment with WithFlex
+func TestContainer_WithFlex_Start(t *testing.T) {
+	container := bs.Container(bs.WithFlex(bs.START))
+	classList := container.Element().ClassList()
+	assert.True(t, classList.Contains("d-flex"))
+	assert.True(t, classList.Contains("align-items-start"))
+}
+
+// TestContainer_WithFlex_Top tests top alignment with WithFlex
+func TestContainer_WithFlex_Top(t *testing.T) {
+	container := bs.Container(bs.WithFlex(bs.TOP))
+	classList := container.Element().ClassList()
+	assert.True(t, classList.Contains("d-flex"))
+	assert.True(t, classList.Contains("align-items-start"))
+}
+
+// TestContainer_WithFlex_End tests end alignment with WithFlex
+func TestContainer_WithFlex_End(t *testing.T) {
+	container := bs.Container(bs.WithFlex(bs.END))
+	classList := container.Element().ClassList()
+	assert.True(t, classList.Contains("d-flex"))
+	assert.True(t, classList.Contains("align-items-end"))
+}
+
+// TestContainer_WithFlex_Bottom tests bottom alignment with WithFlex
+func TestContainer_WithFlex_Bottom(t *testing.T) {
+	container := bs.Container(bs.WithFlex(bs.BOTTOM))
+	classList := container.Element().ClassList()
+	assert.True(t, classList.Contains("d-flex"))
+	assert.True(t, classList.Contains("align-items-end"))
+}
+
+// TestContainer_WithFlex_HorizontalFlow tests horizontal flow with WithFlex
+func TestContainer_WithFlex_HorizontalFlow(t *testing.T) {
+	// START | END means horizontal flow
+	container := bs.Container(bs.WithFlex(bs.START | bs.END))
+	classList := container.Element().ClassList()
+	assert.True(t, classList.Contains("d-flex"))
+	assert.True(t, classList.Contains("flex-row"))
+}
+
+// TestContainer_WithFlex_VerticalFlow tests vertical flow with WithFlex
+func TestContainer_WithFlex_VerticalFlow(t *testing.T) {
+	// TOP | BOTTOM means vertical flow
+	container := bs.Container(bs.WithFlex(bs.TOP | bs.BOTTOM))
+	classList := container.Element().ClassList()
+	assert.True(t, classList.Contains("d-flex"))
+	assert.True(t, classList.Contains("flex-column"))
+}
+
+// TestContainer_WithFlex_CenterWithHorizontalFlow tests center alignment with horizontal flow
+func TestContainer_WithFlex_CenterWithHorizontalFlow(t *testing.T) {
+	// CENTER with horizontal flow
+	container := bs.Container(bs.WithFlex(bs.CENTER | bs.START | bs.END))
+	classList := container.Element().ClassList()
+	assert.True(t, classList.Contains("d-flex"))
+	assert.True(t, classList.Contains("align-items-center"))
+	assert.True(t, classList.Contains("flex-row"))
+}
+
+// TestContainer_WithFlex_CenterWithVerticalFlow tests center alignment with vertical flow
+func TestContainer_WithFlex_CenterWithVerticalFlow(t *testing.T) {
+	// CENTER with vertical flow
+	container := bs.Container(bs.WithFlex(bs.CENTER | bs.TOP | bs.BOTTOM))
+	classList := container.Element().ClassList()
+	assert.True(t, classList.Contains("d-flex"))
+	assert.True(t, classList.Contains("align-items-center"))
+	assert.True(t, classList.Contains("flex-column"))
+}
+
+// TestContainer_WithFlex_WithOtherOptions tests WithFlex combined with other options
+func TestContainer_WithFlex_WithOtherOptions(t *testing.T) {
+	// Test that WithFlex works with other options
+	container := bs.Container(
+		bs.WithFlex(bs.CENTER),
+		bs.WithClass("gap-3"),
+		bs.WithMargin(bs.TOP, 4),
+	)
+	classList := container.Element().ClassList()
+	assert.True(t, classList.Contains("d-flex"))
+	assert.True(t, classList.Contains("align-items-center"))
+	assert.True(t, classList.Contains("gap-3"))
+	assert.True(t, classList.Contains("mt-4"))
+}

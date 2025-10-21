@@ -48,31 +48,3 @@ func Span(opt ...Opt) *span {
 		},
 	}
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// PROPERTIES
-
-func (span *span) Element() Element {
-	return span.root
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// METHODS
-
-func (span *span) Append(children ...any) Component {
-	// Append Component, Element or string children to the root element
-	for _, child := range children {
-		// Convert to Element if necessary
-		if component, ok := child.(Component); ok {
-			child = component.Element()
-		} else if str, ok := child.(string); ok {
-			child = dom.GetWindow().Document().CreateTextNode(str)
-		}
-
-		// Append to root
-		span.root.AppendChild(child.(Node))
-	}
-
-	// Return the span for chaining
-	return span
-}

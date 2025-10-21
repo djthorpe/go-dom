@@ -25,7 +25,7 @@ func BadgeExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3)).Append("Basic Badges"),
 	)
 
-	badgeRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
+	badgeRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("gap-2", "flex-wrap")).Append(
 		bs.Badge(bs.WithColor(bs.PRIMARY)).Append("Primary"),
 		bs.Badge(bs.WithColor(bs.SECONDARY)).Append("Secondary"),
 		bs.Badge(bs.WithColor(bs.SUCCESS)).Append("Success"),
@@ -42,7 +42,7 @@ func BadgeExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Pill Badges"),
 	)
 
-	pillRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
+	pillRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("gap-2", "flex-wrap")).Append(
 		bs.PillBadge(bs.WithColor(bs.PRIMARY)).Append("Primary"),
 		bs.PillBadge(bs.WithColor(bs.SECONDARY)).Append("Secondary"),
 		bs.PillBadge(bs.WithColor(bs.SUCCESS)).Append("Success"),
@@ -106,16 +106,16 @@ func BadgeExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Badges as Counters"),
 	)
 
-	buttonRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
-		bs.Span(bs.WithClass("btn", "btn-primary", "d-flex", "align-items-center", "gap-2")).Append(
+	buttonRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("gap-2", "flex-wrap")).Append(
+		bs.Button(bs.PRIMARY, bs.WithFlex(bs.CENTER), bs.WithClass("gap-2")).Append(
 			"Notifications ",
 			bs.PillBadge(bs.WithColor(bs.LIGHT)).Append("4"),
 		),
-		bs.Span(bs.WithClass("btn", "btn-secondary", "d-flex", "align-items-center", "gap-2")).Append(
+		bs.Button(bs.SECONDARY, bs.WithFlex(bs.CENTER), bs.WithClass("gap-2")).Append(
 			"Messages ",
 			bs.PillBadge(bs.WithColor(bs.LIGHT)).Append("7"),
 		),
-		bs.Span(bs.WithClass("btn", "btn-success", "d-flex", "align-items-center", "gap-2")).Append(
+		bs.Button(bs.SUCCESS, bs.WithFlex(bs.CENTER), bs.WithClass("gap-2")).Append(
 			"Updates ",
 			bs.PillBadge(bs.WithColor(bs.LIGHT)).Append("12"),
 		),
@@ -127,15 +127,15 @@ func BadgeExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Positioned Badges"),
 	)
 
-	positionedRow := bs.Container(bs.WithClass("d-flex", "gap-4", "flex-wrap")).Append(
+	positionedRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("gap-4", "flex-wrap")).Append(
 		bs.Span(bs.WithClass("position-relative")).Append(
-			bs.Span(bs.WithClass("btn", "btn-primary")).Append("Inbox"),
+			bs.Button(bs.PRIMARY).Append("Inbox"),
 			bs.Span(bs.WithClass("position-absolute", "top-0", "start-100", "translate-middle")).Append(
 				bs.PillBadge(bs.WithColor(bs.DANGER)).Append("99+"),
 			),
 		),
 		bs.Span(bs.WithClass("position-relative")).Append(
-			bs.Span(bs.WithClass("btn", "btn-primary")).Append("Profile"),
+			bs.Button(bs.PRIMARY).Append("Profile"),
 			bs.Span(bs.WithClass("position-absolute", "top-0", "start-100", "translate-middle", "p-2", "bg-danger", "border", "border-light", "rounded-circle")).Append(
 				bs.Span(bs.WithClass("visually-hidden")).Append("New alerts"),
 			),
@@ -148,7 +148,7 @@ func BadgeExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Badges with Custom Spacing"),
 	)
 
-	spacingRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
+	spacingRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("gap-2", "flex-wrap")).Append(
 		bs.Badge(bs.WithColor(bs.PRIMARY), bs.WithPadding(bs.PaddingAll, 3)).Append("Large Padding"),
 		bs.Badge(bs.WithColor(bs.SUCCESS), bs.WithPadding(bs.PaddingAll, 1)).Append("Small Padding"),
 		bs.PillBadge(bs.WithColor(bs.WARNING), bs.WithMargin(bs.START, 2)).Append("With Margin"),
@@ -160,7 +160,7 @@ func BadgeExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Badges with Borders"),
 	)
 
-	borderRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
+	borderRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("gap-2", "flex-wrap")).Append(
 		bs.Badge(bs.WithColor(bs.PRIMARY), bs.WithBorder(bs.BorderAll, bs.DARK)).Append("Primary"),
 		bs.Badge(bs.WithColor(bs.SUCCESS), bs.WithBorder(bs.BorderAll, bs.DARK)).Append("Success"),
 		bs.PillBadge(bs.WithColor(bs.WARNING), bs.WithBorder(bs.BorderAll, bs.DARK)).Append("Warning"),
@@ -174,19 +174,19 @@ func BadgeExamples() Component {
 	)
 
 	listGroup := bs.Container(bs.WithClass("list-group", "w-50")).Append(
-		bs.Span(bs.WithClass("list-group-item", "d-flex", "justify-content-between", "align-items-center")).Append(
+		bs.Span(bs.WithFlex(bs.CENTER), bs.WithClass("list-group-item", "justify-content-between")).Append(
 			"Inbox",
 			bs.PillBadge(bs.WithColor(bs.PRIMARY)).Append("14"),
 		),
-		bs.Span(bs.WithClass("list-group-item", "d-flex", "justify-content-between", "align-items-center")).Append(
+		bs.Span(bs.WithFlex(bs.CENTER), bs.WithClass("list-group-item", "justify-content-between")).Append(
 			"Drafts",
 			bs.PillBadge(bs.WithColor(bs.SECONDARY)).Append("2"),
 		),
-		bs.Span(bs.WithClass("list-group-item", "d-flex", "justify-content-between", "align-items-center")).Append(
+		bs.Span(bs.WithFlex(bs.CENTER), bs.WithClass("list-group-item", "justify-content-between")).Append(
 			"Sent",
 			bs.PillBadge(bs.WithColor(bs.SUCCESS)).Append("128"),
 		),
-		bs.Span(bs.WithClass("list-group-item", "d-flex", "justify-content-between", "align-items-center")).Append(
+		bs.Span(bs.WithFlex(bs.CENTER), bs.WithClass("list-group-item", "justify-content-between")).Append(
 			"Spam",
 			bs.PillBadge(bs.WithColor(bs.DANGER)).Append("3"),
 		),

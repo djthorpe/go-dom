@@ -73,17 +73,17 @@ func DismissibleAlert(opt ...Opt) *alert {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// PROPERTIES
-
-func (alert *alert) Element() Element {
-	return alert.root
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // METHODS
 
-func (alert *alert) Append(children ...any) Component {
-	// Append Component, Element or string children to the root element
+// Heading adds an alert heading at the beginning of the alert.
+// It creates a <h4 class="alert-heading"> element and accepts string, Component, or Element children.
+// Returns the alert for method chaining.
+func (a *alert) Heading(children ...any) *alert {
+	// Create h4 element with alert-heading class
+	heading := dom.GetWindow().Document().CreateElement("H4")
+	heading.SetAttribute("class", "alert-heading")
+
+	// Append children to the heading
 	for _, child := range children {
 		// Convert to Element if necessary
 		if component, ok := child.(Component); ok {
@@ -92,10 +92,36 @@ func (alert *alert) Append(children ...any) Component {
 			child = dom.GetWindow().Document().CreateTextNode(str)
 		}
 
-		// Append to root
-		alert.root.AppendChild(child.(Node))
+		// Append to heading
+		heading.AppendChild(child.(Node))
 	}
 
-	// Return the alert for chaining
-	return alert
+	// Insert the heading at the beginning of the alert
+	// If the alert has a close button (dismissible), insert after it
+	// Otherwise, insert as first child
+	firstChild := a.root.FirstChild()
+	if firstChild != nil {
+		// Check if first child is a close button
+		if elem, ok := firstChild.(Element); ok {
+			if elem.TagName() == "BUTTON" && elem.ClassList().Contains("btn-close") {
+				// Insert after the close button
+				if nextSibling := firstChild.NextSibling(); nextSibling != nil {
+					a.root.InsertBefore(heading, nextSibling)
+				} else {
+					a.root.AppendChild(heading)
+				}
+			} else {
+				// Insert as first child
+				a.root.InsertBefore(heading, firstChild)
+			}
+		} else {
+			// Insert as first child
+			a.root.InsertBefore(heading, firstChild)
+		}
+	} else {
+		// No children, just append
+		a.root.AppendChild(heading)
+	}
+
+	return a
 }

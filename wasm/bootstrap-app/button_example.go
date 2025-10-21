@@ -25,15 +25,15 @@ func ButtonExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3)).Append("Button Variants"),
 	)
 
-	buttonRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
-		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Primary"),
-		bs.Button(bs.WithColor(bs.SECONDARY)).Append("Secondary"),
-		bs.Button(bs.WithColor(bs.SUCCESS)).Append("Success"),
-		bs.Button(bs.WithColor(bs.DANGER)).Append("Danger"),
-		bs.Button(bs.WithColor(bs.WARNING)).Append("Warning"),
-		bs.Button(bs.WithColor(bs.INFO)).Append("Info"),
-		bs.Button(bs.WithColor(bs.LIGHT)).Append("Light"),
-		bs.Button(bs.WithColor(bs.DARK)).Append("Dark"),
+	buttonRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("gap-2", "flex-wrap")).Append(
+		bs.Button(bs.PRIMARY).Append("Primary"),
+		bs.Button(bs.SECONDARY).Append("Secondary"),
+		bs.Button(bs.SUCCESS).Append("Success"),
+		bs.Button(bs.DANGER).Append("Danger"),
+		bs.Button(bs.WARNING).Append("Warning"),
+		bs.Button(bs.INFO).Append("Info"),
+		bs.Button(bs.LIGHT).Append("Light"),
+		bs.Button(bs.DARK).Append("Dark"),
 	)
 	container.Append(buttonRow)
 
@@ -42,7 +42,7 @@ func ButtonExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Outline Buttons"),
 	)
 
-	outlineRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
+	outlineRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("gap-2", "flex-wrap")).Append(
 		bs.OutlineButton(bs.PRIMARY).Append("Primary"),
 		bs.OutlineButton(bs.SECONDARY).Append("Secondary"),
 		bs.OutlineButton(bs.SUCCESS).Append("Success"),
@@ -59,10 +59,10 @@ func ButtonExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Button Sizes"),
 	)
 
-	sizeRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap", "align-items-center")).Append(
-		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithSize(bs.SizeLarge)).Append("Large Button"),
-		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Default Button"),
-		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithSize(bs.SizeSmall)).Append("Small Button"),
+	sizeRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("gap-2", "flex-wrap")).Append(
+		bs.Button(bs.PRIMARY, bs.WithSize(bs.SizeLarge)).Append("Large Button"),
+		bs.Button(bs.PRIMARY).Append("Default Button"),
+		bs.Button(bs.PRIMARY, bs.WithSize(bs.SizeSmall)).Append("Small Button"),
 	)
 	container.Append(sizeRow)
 
@@ -70,7 +70,7 @@ func ButtonExamples() Component {
 		bs.Heading(6, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 3)).Append("Outline Button Sizes"),
 	)
 
-	outlineSizeRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap", "align-items-center")).Append(
+	outlineSizeRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("gap-2", "flex-wrap")).Append(
 		bs.OutlineButton(bs.SECONDARY, bs.WithSize(bs.SizeLarge)).Append("Large Outline"),
 		bs.OutlineButton(bs.SECONDARY).Append("Default Outline"),
 		bs.OutlineButton(bs.SECONDARY, bs.WithSize(bs.SizeSmall)).Append("Small Outline"),
@@ -82,16 +82,16 @@ func ButtonExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Buttons with Badges"),
 	)
 
-	badgeButtonRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
-		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithClass("d-flex", "align-items-center", "gap-2")).Append(
+	badgeButtonRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("gap-2", "flex-wrap")).Append(
+		bs.Button(bs.PRIMARY, bs.WithFlex(bs.CENTER), bs.WithClass("gap-2")).Append(
 			"Notifications ",
 			bs.Badge(bs.WithColor(bs.LIGHT)).Append("4"),
 		),
-		bs.Button(bs.WithColor(bs.SUCCESS), bs.WithClass("d-flex", "align-items-center", "gap-2")).Append(
+		bs.Button(bs.SUCCESS, bs.WithFlex(bs.CENTER), bs.WithClass("gap-2")).Append(
 			"Messages ",
 			bs.PillBadge(bs.WithColor(bs.LIGHT)).Append("12"),
 		),
-		bs.OutlineButton(bs.DANGER, bs.WithClass("d-flex", "align-items-center", "gap-2")).Append(
+		bs.OutlineButton(bs.DANGER, bs.WithFlex(bs.CENTER), bs.WithClass("gap-2")).Append(
 			"Alerts ",
 			bs.PillBadge(bs.WithColor(bs.DANGER)).Append("3"),
 		),
@@ -103,16 +103,16 @@ func ButtonExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Button Groups"),
 	)
 
-	buttonGroup := bs.Container(bs.WithClass("btn-group")).Append(
-		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Left"),
-		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Middle"),
-		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Right"),
+	buttonGroup := bs.ButtonGroup(bs.WithAriaLabel("Basic example")).Append(
+		bs.Button(bs.PRIMARY).Append("Left"),
+		bs.Button(bs.PRIMARY).Append("Middle"),
+		bs.Button(bs.PRIMARY).Append("Right"),
 	)
 	container.Append(buttonGroup)
 
 	container.Append(bs.Span(bs.WithMargin(bs.START, 3)))
 
-	outlineButtonGroup := bs.Container(bs.WithClass("btn-group")).Append(
+	outlineButtonGroup := bs.ButtonGroup(bs.WithAriaLabel("Outlined example")).Append(
 		bs.OutlineButton(bs.SECONDARY).Append("Option 1"),
 		bs.OutlineButton(bs.SECONDARY).Append("Option 2"),
 		bs.OutlineButton(bs.SECONDARY).Append("Option 3"),
@@ -124,23 +124,60 @@ func ButtonExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Button Toolbar"),
 	)
 
-	toolbar := bs.Container(bs.WithClass("btn-toolbar", "gap-2")).Append(
-		bs.Container(bs.WithClass("btn-group")).Append(
-			bs.Button(bs.WithColor(bs.PRIMARY)).Append("1"),
-			bs.Button(bs.WithColor(bs.PRIMARY)).Append("2"),
-			bs.Button(bs.WithColor(bs.PRIMARY)).Append("3"),
-			bs.Button(bs.WithColor(bs.PRIMARY)).Append("4"),
+	toolbar := bs.ButtonToolbar(bs.WithAriaLabel("Toolbar with button groups"), bs.WithClass("gap-2")).Append(
+		bs.ButtonGroup(bs.WithAriaLabel("First group"), bs.WithMargin(bs.END, 2)).Append(
+			bs.Button(bs.PRIMARY).Append("1"),
+			bs.Button(bs.PRIMARY).Append("2"),
+			bs.Button(bs.PRIMARY).Append("3"),
+			bs.Button(bs.PRIMARY).Append("4"),
 		),
-		bs.Container(bs.WithClass("btn-group")).Append(
-			bs.Button(bs.WithColor(bs.SECONDARY)).Append("5"),
-			bs.Button(bs.WithColor(bs.SECONDARY)).Append("6"),
-			bs.Button(bs.WithColor(bs.SECONDARY)).Append("7"),
+		bs.ButtonGroup(bs.WithAriaLabel("Second group"), bs.WithMargin(bs.END, 2)).Append(
+			bs.Button(bs.SECONDARY).Append("5"),
+			bs.Button(bs.SECONDARY).Append("6"),
+			bs.Button(bs.SECONDARY).Append("7"),
 		),
-		bs.Container(bs.WithClass("btn-group")).Append(
-			bs.Button(bs.WithColor(bs.SUCCESS)).Append("8"),
+		bs.ButtonGroup(bs.WithAriaLabel("Third group")).Append(
+			bs.Button(bs.SUCCESS).Append("8"),
 		),
 	)
 	container.Append(toolbar)
+
+	// Button group sizing
+	container.Append(
+		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Button Group Sizing"),
+	)
+
+	sizingContainer := bs.Container(bs.WithFlex(bs.TOP|bs.BOTTOM), bs.WithClass("gap-3")).Append(
+		bs.ButtonGroup(bs.WithAriaLabel("Large button group"), bs.WithSize(bs.SizeLarge)).Append(
+			bs.Button(bs.PRIMARY).Append("Left"),
+			bs.Button(bs.PRIMARY).Append("Middle"),
+			bs.Button(bs.PRIMARY).Append("Right"),
+		),
+		bs.ButtonGroup(bs.WithAriaLabel("Default button group")).Append(
+			bs.Button(bs.PRIMARY).Append("Left"),
+			bs.Button(bs.PRIMARY).Append("Middle"),
+			bs.Button(bs.PRIMARY).Append("Right"),
+		),
+		bs.ButtonGroup(bs.WithAriaLabel("Small button group"), bs.WithSize(bs.SizeSmall)).Append(
+			bs.Button(bs.PRIMARY).Append("Left"),
+			bs.Button(bs.PRIMARY).Append("Middle"),
+			bs.Button(bs.PRIMARY).Append("Right"),
+		),
+	)
+	container.Append(sizingContainer)
+
+	// Vertical button group
+	container.Append(
+		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Vertical Button Group"),
+	)
+
+	verticalGroup := bs.VerticalButtonGroup(bs.WithAriaLabel("Vertical button group")).Append(
+		bs.Button(bs.PRIMARY).Append("Button 1"),
+		bs.Button(bs.PRIMARY).Append("Button 2"),
+		bs.Button(bs.PRIMARY).Append("Button 3"),
+		bs.Button(bs.PRIMARY).Append("Button 4"),
+	)
+	container.Append(verticalGroup)
 
 	// Block buttons
 	container.Append(
@@ -148,8 +185,8 @@ func ButtonExamples() Component {
 	)
 
 	blockButtonContainer := bs.Container(bs.WithClass("d-grid", "gap-2")).Append(
-		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Block Level Button"),
-		bs.Button(bs.WithColor(bs.SECONDARY)).Append("Another Block Button"),
+		bs.Button(bs.PRIMARY).Append("Block Level Button"),
+		bs.Button(bs.SECONDARY).Append("Another Block Button"),
 	)
 	container.Append(blockButtonContainer)
 
@@ -158,11 +195,11 @@ func ButtonExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Buttons with Custom Spacing"),
 	)
 
-	spacingRow := bs.Container(bs.WithClass("d-flex", "flex-wrap")).Append(
-		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithMargin(bs.END, 2), bs.WithMargin(bs.BOTTOM, 2)).Append("Button 1"),
-		bs.Button(bs.WithColor(bs.SUCCESS), bs.WithMargin(bs.END, 2), bs.WithMargin(bs.BOTTOM, 2)).Append("Button 2"),
-		bs.Button(bs.WithColor(bs.WARNING), bs.WithMargin(bs.END, 2), bs.WithMargin(bs.BOTTOM, 2)).Append("Button 3"),
-		bs.Button(bs.WithColor(bs.DANGER), bs.WithMargin(bs.BOTTOM, 2)).Append("Button 4"),
+	spacingRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("flex-wrap")).Append(
+		bs.Button(bs.PRIMARY, bs.WithMargin(bs.END, 2), bs.WithMargin(bs.BOTTOM, 2)).Append("Button 1"),
+		bs.Button(bs.SUCCESS, bs.WithMargin(bs.END, 2), bs.WithMargin(bs.BOTTOM, 2)).Append("Button 2"),
+		bs.Button(bs.WARNING, bs.WithMargin(bs.END, 2), bs.WithMargin(bs.BOTTOM, 2)).Append("Button 3"),
+		bs.Button(bs.DANGER, bs.WithMargin(bs.BOTTOM, 2)).Append("Button 4"),
 	)
 	container.Append(spacingRow)
 
@@ -171,10 +208,10 @@ func ButtonExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Buttons with Extra Padding"),
 	)
 
-	paddingRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
-		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithPadding(bs.PaddingAll, 1)).Append("Small Padding"),
-		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Default Padding"),
-		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithPadding(bs.PaddingAll, 3)).Append("Large Padding"),
+	paddingRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("gap-2", "flex-wrap")).Append(
+		bs.Button(bs.PRIMARY, bs.WithPadding(bs.PaddingAll, 1)).Append("Small Padding"),
+		bs.Button(bs.PRIMARY).Append("Default Padding"),
+		bs.Button(bs.PRIMARY, bs.WithPadding(bs.PaddingAll, 3)).Append("Large Padding"),
 	)
 	container.Append(paddingRow)
 
@@ -183,10 +220,10 @@ func ButtonExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Mixed Button Styles"),
 	)
 
-	mixedRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
-		bs.Button(bs.WithColor(bs.SUCCESS), bs.WithSize(bs.SizeLarge), bs.WithClass("shadow")).Append("Large with Shadow"),
+	mixedRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("gap-2", "flex-wrap")).Append(
+		bs.Button(bs.SUCCESS, bs.WithSize(bs.SizeLarge), bs.WithClass("shadow")).Append("Large with Shadow"),
 		bs.OutlineButton(bs.DANGER, bs.WithSize(bs.SizeSmall), bs.WithClass("text-uppercase")).Append("Small Uppercase"),
-		bs.Button(bs.WithColor(bs.INFO), bs.WithClass("rounded-pill")).Append("Rounded Pill"),
+		bs.Button(bs.INFO, bs.WithClass("rounded-pill")).Append("Rounded Pill"),
 		bs.OutlineButton(bs.WARNING, bs.WithClass("rounded-0")).Append("No Border Radius"),
 	)
 	container.Append(mixedRow)
@@ -196,10 +233,10 @@ func ButtonExamples() Component {
 		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Button States (Visual)"),
 	)
 
-	statesRow := bs.Container(bs.WithClass("d-flex", "gap-2", "flex-wrap")).Append(
-		bs.Button(bs.WithColor(bs.PRIMARY)).Append("Normal State"),
-		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithClass("active")).Append("Active State"),
-		bs.Button(bs.WithColor(bs.PRIMARY), bs.WithClass("disabled")).Append("Disabled Appearance"),
+	statesRow := bs.Container(bs.WithFlex(bs.CENTER), bs.WithClass("gap-2", "flex-wrap")).Append(
+		bs.Button(bs.PRIMARY).Append("Normal State"),
+		bs.Button(bs.PRIMARY, bs.WithClass("active")).Append("Active State"),
+		bs.Button(bs.PRIMARY, bs.WithClass("disabled")).Append("Disabled Appearance"),
 	)
 	container.Append(statesRow)
 

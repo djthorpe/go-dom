@@ -56,7 +56,7 @@ func TestPara_WithPadding(t *testing.T) {
 func TestPara_OuterHTML(t *testing.T) {
 	para := bs.Para().Append("Test paragraph")
 	outerHTML := para.Element().OuterHTML()
-	assert.Equal(t, "<p>Test paragraph</p>", strings.ToLower(outerHTML))
+	assert.Equal(t, "<p>test paragraph</p>", strings.ToLower(outerHTML))
 }
 
 func TestPara_ComponentInterface(t *testing.T) {

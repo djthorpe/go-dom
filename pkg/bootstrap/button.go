@@ -17,17 +17,28 @@ type button struct {
 	component
 }
 
+type buttonGroup struct {
+	component
+}
+
 // Ensure that button implements Component interface
 var _ Component = (*button)(nil)
+
+// Ensure that buttonGroup implements Component interface
+var _ Component = (*buttonGroup)(nil)
 
 ///////////////////////////////////////////////////////////////////////////////
 // LIFECYCLE
 
 // Button creates a new button element with "btn" class
 // Use WithColor to set the button variant (e.g., btn-primary)
-func Button(opt ...Opt) *button {
+func Button(color Color, opt ...Opt) *button {
 	// Create a button element
 	root := dom.GetWindow().Document().CreateElement("BUTTON")
+
+	// Add color class
+	colorClass := "btn-" + string(color)
+	opt = append([]Opt{WithClass(colorClass)}, opt...)
 
 	// Apply options with base "btn" class
 	if opts, err := NewOpts(ButtonComponent, WithClass("btn")); err != nil {
@@ -57,39 +68,150 @@ func Button(opt ...Opt) *button {
 
 // OutlineButton creates a new button with outline styling (btn-outline-*)
 func OutlineButton(color Color, opt ...Opt) *button {
+	// Create a button element directly without the solid color class
+	root := dom.GetWindow().Document().CreateElement("BUTTON")
+
 	// Add outline class based on color
 	outlineClass := "btn-outline-" + string(color)
-	opt = append(opt, WithClass(outlineClass))
-	return Button(opt...)
+	opt = append([]Opt{WithClass(outlineClass)}, opt...)
+
+	// Apply options with base "btn" class
+	if opts, err := NewOpts(ButtonComponent, WithClass("btn")); err != nil {
+		panic(err)
+	} else if err := opts.apply(opt...); err != nil {
+		panic(err)
+	} else {
+		// Set class list
+		classes := opts.classList.Values()
+		if len(classes) > 0 {
+			root.SetAttribute("class", strings.Join(classes, " "))
+		}
+
+		// Set default type attribute
+		if !root.HasAttribute("type") {
+			root.SetAttribute("type", "button")
+		}
+	}
+
+	return &button{
+		component: component{
+			name: ButtonComponent,
+			root: root,
+		},
+	}
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// PROPERTIES
+// ButtonGroup creates a button group container with "btn-group" class
+// and appropriate ARIA attributes for accessibility
+func ButtonGroup(opt ...Opt) *buttonGroup {
+	// Create a div element
+	root := dom.GetWindow().Document().CreateElement("DIV")
 
-func (button *button) Element() Element {
-	return button.root
+	// Apply options with base "btn-group" class
+	if opts, err := NewOpts(ButtonGroupComponent, WithClass("btn-group")); err != nil {
+		panic(err)
+	} else if err := opts.apply(opt...); err != nil {
+		panic(err)
+	} else {
+		// Set class list
+		classes := opts.classList.Values()
+		if len(classes) > 0 {
+			root.SetAttribute("class", strings.Join(classes, " "))
+		}
+
+		// Set attributes
+		for key, value := range opts.attributes {
+			root.SetAttribute(key, value)
+		}
+
+		// Set default role attribute for accessibility
+		if !root.HasAttribute("role") {
+			root.SetAttribute("role", "group")
+		}
+	}
+
+	return &buttonGroup{
+		component: component{
+			name: ButtonGroupComponent,
+			root: root,
+		},
+	}
+}
+
+// VerticalButtonGroup creates a vertical button group with "btn-group-vertical" class
+func VerticalButtonGroup(opt ...Opt) *buttonGroup {
+	// Create a div element
+	root := dom.GetWindow().Document().CreateElement("DIV")
+
+	// Apply options with base "btn-group-vertical" class
+	if opts, err := NewOpts(ButtonGroupComponent, WithClass("btn-group-vertical")); err != nil {
+		panic(err)
+	} else if err := opts.apply(opt...); err != nil {
+		panic(err)
+	} else {
+		// Set class list
+		classes := opts.classList.Values()
+		if len(classes) > 0 {
+			root.SetAttribute("class", strings.Join(classes, " "))
+		}
+
+		// Set attributes
+		for key, value := range opts.attributes {
+			root.SetAttribute(key, value)
+		}
+
+		// Set default role attribute for accessibility
+		if !root.HasAttribute("role") {
+			root.SetAttribute("role", "group")
+		}
+	}
+
+	return &buttonGroup{
+		component: component{
+			name: ButtonGroupComponent,
+			root: root,
+		},
+	}
+}
+
+// ButtonToolbar creates a button toolbar container with "btn-toolbar" class
+func ButtonToolbar(opt ...Opt) *buttonGroup {
+	// Create a div element
+	root := dom.GetWindow().Document().CreateElement("DIV")
+
+	// Apply options with base "btn-toolbar" class
+	if opts, err := NewOpts(ButtonGroupComponent, WithClass("btn-toolbar")); err != nil {
+		panic(err)
+	} else if err := opts.apply(opt...); err != nil {
+		panic(err)
+	} else {
+		// Set class list
+		classes := opts.classList.Values()
+		if len(classes) > 0 {
+			root.SetAttribute("class", strings.Join(classes, " "))
+		}
+
+		// Set attributes
+		for key, value := range opts.attributes {
+			root.SetAttribute(key, value)
+		}
+
+		// Set default role attribute for accessibility
+		if !root.HasAttribute("role") {
+			root.SetAttribute("role", "toolbar")
+		}
+	}
+
+	return &buttonGroup{
+		component: component{
+			name: ButtonGroupComponent,
+			root: root,
+		},
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // METHODS
-
-func (button *button) Append(children ...any) Component {
-	// Append Component, Element or string children to the root element
-	for _, child := range children {
-		// Convert to Element if necessary
-		if component, ok := child.(Component); ok {
-			child = component.Element()
-		} else if str, ok := child.(string); ok {
-			child = dom.GetWindow().Document().CreateTextNode(str)
-		}
-
-		// Append to root
-		button.root.AppendChild(child.(Node))
-	}
-
-	// Return the button for chaining
-	return button
-}
 
 // SetDisabled sets or removes the disabled attribute
 func (button *button) SetDisabled(disabled bool) *button {

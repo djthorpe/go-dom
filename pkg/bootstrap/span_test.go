@@ -56,7 +56,7 @@ func TestSpan_WithPadding(t *testing.T) {
 func TestSpan_OuterHTML(t *testing.T) {
 	span := bs.Span().Append("Test")
 	outerHTML := span.Element().OuterHTML()
-	assert.Equal(t, "<span>Test</span>", strings.ToLower(outerHTML))
+	assert.Equal(t, "<span>test</span>", strings.ToLower(outerHTML))
 }
 
 func TestSpan_ComponentInterface(t *testing.T) {

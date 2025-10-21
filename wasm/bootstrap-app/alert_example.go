@@ -90,9 +90,8 @@ func AlertExamples() Component {
 		bs.WithMargin(bs.BOTTOM, 4),
 	)
 
-	successAlert.Append(
-		bs.Heading(4, bs.WithClass("alert-heading")).Append("Well done!"),
-	)
+	// Use the new Heading method instead of manually creating the heading
+	successAlert.Heading("Well done!")
 
 	successAlert.Append(
 		bs.Para().Append("Aww yeah, you successfully read this important alert message. This example text is going to run a bit longer so that you can see how spacing within an alert works with this kind of content."),
@@ -146,24 +145,72 @@ func AlertExamples() Component {
 	infoAlertWithBadge := bs.Alert(
 		bs.WithColor(bs.INFO),
 		bs.WithMargin(bs.BOTTOM, 2),
-		bs.WithClass("d-flex", "align-items-center", "justify-content-between"),
+		bs.WithFlex(bs.CENTER),
+		bs.WithClass("justify-content-between"),
 	)
 	infoAlertWithBadge.Append(bs.Span().Append("You have new notifications"))
 	infoAlertWithBadge.Append(
-		bs.Badge(bs.WithColor(bs.PRIMARY), bs.WithClass("rounded-pill")).Append("12"),
+		bs.PillBadge(bs.WithColor(bs.PRIMARY)).Append("12"),
 	)
 	container.Append(infoAlertWithBadge)
 
 	warningAlertWithBadge := bs.Alert(
 		bs.WithColor(bs.WARNING),
 		bs.WithMargin(bs.BOTTOM, 4),
-		bs.WithClass("d-flex", "align-items-center", "justify-content-between"),
+		bs.WithFlex(bs.CENTER),
+		bs.WithClass("justify-content-between"),
 	)
 	warningAlertWithBadge.Append(bs.Span().Append("Pending tasks require attention"))
 	warningAlertWithBadge.Append(
 		bs.PillBadge(bs.WithColor(bs.DANGER)).Append("3"),
 	)
 	container.Append(warningAlertWithBadge)
+
+	// Alerts with headings using Heading method
+	container.Append(
+		bs.Heading(4, bs.WithMargin(bs.BOTTOM, 3), bs.WithMargin(bs.TOP, 4)).Append("Alerts with Headings"),
+	)
+
+	// Basic alert with heading
+	container.Append(
+		bs.Alert(
+			bs.WithColor(bs.INFO),
+			bs.WithMargin(bs.BOTTOM, 2),
+		).Heading("Information").Append("This alert uses the Heading method to add a properly styled alert heading."),
+	)
+
+	// Alert with heading and icon
+	errorAlert := bs.Alert(
+		bs.WithColor(bs.DANGER),
+		bs.WithMargin(bs.BOTTOM, 2),
+	)
+	errorAlert.Heading(
+		bs.Icon("exclamation-triangle-fill", bs.WithMargin(bs.END, 2)),
+		"Error Occurred",
+	)
+	errorAlert.Append("An error occurred while processing your request. Please try again.")
+	container.Append(errorAlert)
+
+	// Dismissible alert with heading
+	dismissibleWithHeading := bs.DismissibleAlert(
+		bs.WithColor(bs.SUCCESS),
+		bs.WithMargin(bs.BOTTOM, 2),
+	)
+	dismissibleWithHeading.Heading(
+		bs.Icon("check-circle-fill", bs.WithMargin(bs.END, 2)),
+		"Success!",
+	)
+	dismissibleWithHeading.Append("Your changes have been saved successfully. You can now close this alert.")
+	container.Append(dismissibleWithHeading)
+
+	// Alert with heading using method chaining
+	container.Append(
+		bs.Alert(
+			bs.WithColor(bs.WARNING),
+			bs.WithMargin(bs.BOTTOM, 4),
+		).Heading("Warning: ").
+			Append("Please review your settings before continuing."),
+	)
 
 	return container
 }

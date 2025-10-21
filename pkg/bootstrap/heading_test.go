@@ -182,7 +182,8 @@ func TestHeading_ChainedAppends(t *testing.T) {
 	heading := bs.Heading(2)
 	result := heading.Append("First").Append(" Second").Append(" Third")
 
-	assert.Equal(t, heading, result, "Append should return heading for chaining")
+	// The Append method returns Component interface, but it should be the same underlying object
+	assert.Equal(t, heading.Element(), result.Element(), "Append should return same heading for chaining")
 	assert.Equal(t, "First Second Third", heading.Element().TextContent(),
 		"All appended text should be present")
 }
