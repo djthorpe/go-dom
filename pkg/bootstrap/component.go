@@ -28,6 +28,7 @@ var _ Component = (*component)(nil)
 const (
 	ContainerComponent name = "container"
 	HeadingComponent   name = "heading"
+	BadgeComponent     name = "badge"
 )
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -3,7 +3,7 @@ package bootstrap_test
 import (
 	"testing"
 
-	// Modules
+	// Packages
 	bs "github.com/djthorpe/go-wasmbuild/pkg/bootstrap"
 	assert "github.com/stretchr/testify/assert"
 )
