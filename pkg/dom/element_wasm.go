@@ -15,7 +15,6 @@ import (
 
 type element struct {
 	*node
-	eventListeners map[string][]js.Func // Store event listeners to prevent GC
 }
 
 type style struct {
@@ -101,39 +100,24 @@ func (e *element) GetAttribute(name string) string {
 	return result.String()
 }
 
-func (e *element) AddEventListener(eventType string, callback func(dom.Node)) dom.Element {
-	// Initialize event listeners map if needed
-	if e.eventListeners == nil {
-		e.eventListeners = make(map[string][]js.Func)
-	}
-
-	// Create a JS function wrapper
-	jsCallback := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		if len(args) > 0 {
-			// Create a Node from the event target
-			target := args[0].Get("target")
-			if !target.IsUndefined() && !target.IsNull() {
-				callback(NewNode(target))
-			}
-		}
-		return nil
-	})
-
-	// Store the callback to prevent garbage collection
-	e.eventListeners[eventType] = append(e.eventListeners[eventType], jsCallback)
-
-	// Add event listener
-	e.Call("addEventListener", eventType, jsCallback)
-
-	return e
-}
-
 func (e *element) Blur() {
 	e.Call("blur")
 }
 
 func (e *element) Focus() {
 	e.Call("focus")
+}
+
+func (this *element) GetElementsByClassName(className string) []dom.Element {
+	var elements []dom.Element
+	// Call getElementsByClassName on the underlying JS element
+	nodeList := this.Call("getElementsByClassName", className)
+	length := nodeList.Get("length").Int()
+	for i := 0; i < length; i++ {
+		element := nodeList.Call("item", i)
+		elements = append(elements, NewNode(element).(dom.Element))
+	}
+	return elements
 }
 
 ///////////////////////////////////////////////////////////////////////////////

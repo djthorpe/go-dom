@@ -39,6 +39,11 @@ func New() *app {
 	root.SetAttribute("id", string(AppComponent))
 	doc.Body().AppendChild(root)
 
+	// Listen for hashchange events
+	dom.GetWindow().AddEventListener("hashchange", func(evt dom.Event) {
+		// Handle the hash change event
+	})
+
 	// Return the document
 	return &app{
 		Document: doc,

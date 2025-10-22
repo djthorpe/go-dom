@@ -14,6 +14,10 @@ func main() {
 			bs.WithClass("border-top", "border-bottom", "border-left", "border-danger"),
 		).Append(
 			bs.Heading(1, bs.WithClass("text-primary")).Append("Hello, World"),
+			"This is a simple Hello World application using the ",
+			bs.Anchor("https://golang.org", bs.WithClass("text-primary")).Append(
+				"Go programming language",
+			),
 		),
 	)
 

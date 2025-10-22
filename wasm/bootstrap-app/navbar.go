@@ -9,59 +9,62 @@ import (
 
 // NavBar for the main application
 func NavBar() Component {
-	return bs.NavBar().Append(
-		bs.NavItem("#home", true, false, "Home"),
-		bs.NavItem("#nav", true, false, "Navigation").Append(
-			bs.NavItem("#navs", true, false, "Navs"),
-			bs.NavItem("#navbars", true, false, "Navbars"),
+	return bs.NavBar(bs.WithColor(bs.PRIMARY)).Brand(
+		bs.Icon("bootstrap-fill", bs.WithMargin(bs.START|bs.END, 2)),
+	).Append(
+		bs.NavItem("#home", "Home"),
+		bs.NavDropdown("Navigation").Append(
+			bs.NavItem("#navs", "Navs"),
+			bs.NavItem("#navbars", "Navbars"),
 		),
-		bs.NavItem("#page", true, false, "Page Elements").Append(
-			bs.NavItem("#alerts", true, false, "Spans"),
-			bs.NavItem("#alerts", true, false, "Paragraphs"),
-			bs.NavItem("#alerts", true, false, "Images"),
-			bs.NavItem("#alerts", true, false, "Headings"),
-			bs.NavItem("#alerts", true, false, "Blockquotes"),
+		bs.NavDropdown("Page Elements").Append(
+			bs.NavItem("#spans", "Spans"),
+			bs.NavItem("#paragraphs", "Paragraphs"),
+			bs.NavItem("#headings", "Headings"),
+			bs.NavItem("#blockquotes", "Blockquotes"),
+			bs.NavDivider(),
+			bs.NavItem("#images", "Images"),
 		),
-		bs.NavItem("#decorations", true, false, "Decorations").Append(
-			bs.NavItem("#badges", true, false, "Badges"),
-			bs.NavItem("#badges", true, false, "Links"),
-			bs.NavItem("#badges", true, false, "Buttons"),
-			bs.NavItem("#badges", true, false, "Icons"),
-			bs.NavItem("#badges", true, false, "Lists"),
-			bs.NavItem("#badges", true, false, "Rules"),
+		bs.NavDropdown("Decorations").Append(
+			bs.NavItem("#badges", "Badges"),
+			bs.NavItem("#links", "Links"),
+			bs.NavItem("#buttons", "Buttons"),
+			bs.NavItem("#icons", "Icons"),
+			bs.NavItem("#lists", "Lists"),
+			bs.NavItem("#rules", "Rules"),
 		),
-		bs.NavItem("#decorations", true, false, "Scaffolding").Append(
-			bs.NavItem("#badges", true, false, "Containers"),
-			bs.NavItem("#badges", true, false, "Cards"),
-			bs.NavItem("#badges", true, false, "Routers"),
-			bs.NavItem("#badges", true, false, "Grids"),
-			bs.NavItem("#badges", true, false, "Breadcrumbs"),
-			bs.NavItem("#badges", true, false, "Pagination"),
-			bs.NavItem("#badges", true, false, "Accordions"),
+		bs.NavDropdown("Scaffolding").Append(
+			bs.NavItem("#containers", "Containers"),
+			bs.NavItem("#cards", "Cards"),
+			bs.NavItem("#routers", "Routers"),
+			bs.NavItem("#grids", "Grids"),
+			bs.NavItem("#breadcrumbs", "Breadcrumbs"),
+			bs.NavItem("#pagination", "Pagination"),
+			bs.NavItem("#accordions", "Accordions"),
 		),
-		bs.NavItem("#decorations", true, false, "Windows").Append(
-			bs.NavItem("#badges", true, false, "Modals"),
-			bs.NavItem("#badges", true, false, "Offcanvas"),
-			bs.NavItem("#badges", true, false, "Toasts"),
-			bs.NavItem("#badges", true, false, "Tooltips"),
+		bs.NavDropdown("Windows").Append(
+			bs.NavItem("#modals", "Modals"),
+			bs.NavItem("#offcanvas", "Offcanvas"),
+			bs.NavItem("#toasts", "Toasts"),
+			bs.NavItem("#tooltips", "Tooltips"),
 		),
-		bs.NavItem("#decorations", true, false, "Forms").Append(
-			bs.NavItem("#badges", true, false, "Form"),
-			bs.NavItem("#badges", true, false, "Input"),
-			bs.NavItem("#badges", true, false, "Textarea"),
-			bs.NavItem("#badges", true, false, "Select"),
-			bs.NavItem("#badges", true, false, "Radio"),
-			bs.NavItem("#badges", true, false, "Checkbox"),
-			bs.NavItem("#badges", true, false, "Range"),
-			bs.NavItem("#badges", true, false, "Color"),
-			bs.NavItem("#badges", true, false, "Date"),
+		bs.NavDropdown("Forms").Append(
+			bs.NavItem("#form", "Form"),
+			bs.NavItem("#input", "Input"),
+			bs.NavItem("#textarea", "Textarea"),
+			bs.NavItem("#select", "Select"),
+			bs.NavItem("#radio", "Radio"),
+			bs.NavItem("#checkbox", "Checkbox"),
+			bs.NavItem("#range", "Range"),
+			bs.NavItem("#color", "Color"),
+			bs.NavItem("#date", "Date"),
 		),
-		bs.NavItem("#decorations", true, false, "Alignment").Append(
-			bs.NavItem("#badges", true, false, "Flex"),
-			bs.NavItem("#badges", true, false, "Grid"),
-			bs.NavItem("#badges", true, false, "Spacing"),
-			bs.NavItem("#badges", true, false, "Sizing"),
-			bs.NavItem("#badges", true, false, "Display"),
+		bs.NavDropdown("Alignment").Append(
+			bs.NavItem("#flex", "Flex"),
+			bs.NavItem("#grid", "Grid"),
+			bs.NavItem("#spacing", "Spacing"),
+			bs.NavItem("#sizing", "Sizing"),
+			bs.NavItem("#display", "Display"),
 		),
 	)
 }

@@ -252,6 +252,12 @@ func (this *node) ReplaceChild(dom.Node, dom.Node) {
 	// TODO
 }
 
+func (this *node) AddEventListener(eventType string, callback func(dom.Node)) dom.Node {
+	// Event listeners are not supported in non-WASM builds
+	// This is a no-op since there's no event loop outside the browser
+	return this
+}
+
 /////////////////////////////////////////////////////////////////////
 // PRIVATE METHODS
 

@@ -29,12 +29,15 @@ type Node interface {
 	PreviousSibling() Node
 	TextContent() string
 
-	// Methods
+	// Node Methods
 	AppendChild(Node) Node
 	CloneNode(bool) Node
 	InsertBefore(Node, Node) Node
 	RemoveChild(Node)
 	ReplaceChild(Node, Node)
+
+	// Event Methods
+	AddEventListener(string, func(Node)) Node
 }
 
 type Element interface {
@@ -60,13 +63,22 @@ type Element interface {
 
 	// Class Methods
 	ClassList() TokenList
-
-	// Event Methods
-	AddEventListener(string, func(Node)) Element
+	GetElementsByClassName(string) []Element
 
 	// Focus Methods
 	Blur()
 	Focus()
+}
+
+type Window interface {
+	Node
+
+	// Properties
+	Document() Document
+
+	// Methods
+	Write(io.Writer, Node) (int, error)
+	//Read(io.Reader, string) (Document, error)
 }
 
 // Document implements https://developer.mozilla.org/en-US/docs/Web/API/Document
@@ -132,15 +144,6 @@ type DocumentType interface {
 	Name() string
 	PublicId() string
 	SystemId() string
-}
-
-type Window interface {
-	// Properties
-	Document() Document
-
-	// Methods
-	Write(io.Writer, Node) (int, error)
-	//Read(io.Reader, string) (Document, error)
 }
 
 // TokenList implements https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList
