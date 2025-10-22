@@ -543,3 +543,226 @@ func Test_Element_003(t *testing.T) {
 		t.Error("OuterHTML() failed: ", parent.OuterHTML())
 	}
 }
+
+func TestElement_GetElementsByClassName(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+
+	t.Run("empty_container", func(t *testing.T) {
+		container := doc.CreateElement("div")
+		elements := container.GetElementsByClassName("test-class")
+		assert.Empty(t, elements, "Should return empty slice for container with no children")
+	})
+
+	t.Run("no_matching_elements", func(t *testing.T) {
+		container := doc.CreateElement("div")
+
+		// Add some elements without the target class
+		child1 := doc.CreateElement("p")
+		child1.SetAttribute("class", "other-class")
+		container.AppendChild(child1)
+
+		child2 := doc.CreateElement("span")
+		child2.SetAttribute("class", "different-class")
+		container.AppendChild(child2)
+
+		elements := container.GetElementsByClassName("test-class")
+		assert.Empty(t, elements, "Should return empty slice when no elements have the class")
+	})
+
+	t.Run("single_matching_element", func(t *testing.T) {
+		container := doc.CreateElement("div")
+
+		child := doc.CreateElement("p")
+		child.SetAttribute("class", "test-class")
+		container.AppendChild(child)
+
+		elements := container.GetElementsByClassName("test-class")
+		assert.Len(t, elements, 1, "Should return one element")
+		assert.Equal(t, "P", elements[0].TagName(), "Should return the correct element")
+		assert.True(t, elements[0].ClassList().Contains("test-class"), "Element should have the class")
+	})
+
+	t.Run("multiple_matching_elements", func(t *testing.T) {
+		container := doc.CreateElement("div")
+
+		// Add multiple elements with the same class
+		child1 := doc.CreateElement("p")
+		child1.SetAttribute("class", "test-class")
+		container.AppendChild(child1)
+
+		child2 := doc.CreateElement("span")
+		child2.SetAttribute("class", "test-class")
+		container.AppendChild(child2)
+
+		child3 := doc.CreateElement("div")
+		child3.SetAttribute("class", "test-class")
+		container.AppendChild(child3)
+
+		elements := container.GetElementsByClassName("test-class")
+		assert.Len(t, elements, 3, "Should return three elements")
+
+		expectedTags := []string{"P", "SPAN", "DIV"}
+		for i, element := range elements {
+			assert.Equal(t, expectedTags[i], element.TagName(), "Should return elements in document order")
+			assert.True(t, element.ClassList().Contains("test-class"), "Each element should have the class")
+		}
+	})
+
+	t.Run("elements_with_multiple_classes", func(t *testing.T) {
+		container := doc.CreateElement("div")
+
+		// Element with multiple classes including target
+		child1 := doc.CreateElement("p")
+		child1.SetAttribute("class", "first-class test-class last-class")
+		container.AppendChild(child1)
+
+		// Element with only target class
+		child2 := doc.CreateElement("span")
+		child2.SetAttribute("class", "test-class")
+		container.AppendChild(child2)
+
+		elements := container.GetElementsByClassName("test-class")
+		assert.Len(t, elements, 2, "Should find elements regardless of other classes")
+		assert.Equal(t, "P", elements[0].TagName(), "First element should be p")
+		assert.Equal(t, "SPAN", elements[1].TagName(), "Second element should be span")
+	})
+
+	t.Run("nested_elements", func(t *testing.T) {
+		container := doc.CreateElement("div")
+
+		// Direct child with class
+		directChild := doc.CreateElement("p")
+		directChild.SetAttribute("class", "test-class")
+		container.AppendChild(directChild)
+
+		// Nested structure
+		nestedParent := doc.CreateElement("section")
+		container.AppendChild(nestedParent)
+
+		nestedChild := doc.CreateElement("span")
+		nestedChild.SetAttribute("class", "test-class")
+		nestedParent.AppendChild(nestedChild)
+
+		// Deeply nested
+		deepParent := doc.CreateElement("article")
+		nestedParent.AppendChild(deepParent)
+
+		deepChild := doc.CreateElement("em")
+		deepChild.SetAttribute("class", "test-class")
+		deepParent.AppendChild(deepChild)
+
+		elements := container.GetElementsByClassName("test-class")
+		assert.Len(t, elements, 3, "Should find elements at all nesting levels")
+
+		expectedTags := []string{"P", "SPAN", "EM"}
+		for i, element := range elements {
+			assert.Equal(t, expectedTags[i], element.TagName(), "Should return elements in document order")
+		}
+	})
+
+	t.Run("mixed_elements_some_matching", func(t *testing.T) {
+		container := doc.CreateElement("div")
+
+		// Mix of elements with and without the class
+		elements := []struct {
+			tag   string
+			class string
+		}{
+			{"p", "test-class"},
+			{"span", "other-class"},
+			{"div", "test-class another-class"},
+			{"article", "unrelated"},
+			{"section", "test-class"},
+		}
+
+		for _, elem := range elements {
+			child := doc.CreateElement(elem.tag)
+			child.SetAttribute("class", elem.class)
+			container.AppendChild(child)
+		}
+
+		matches := container.GetElementsByClassName("test-class")
+		assert.Len(t, matches, 3, "Should find only elements with the target class")
+
+		expectedTags := []string{"P", "DIV", "SECTION"}
+		for i, element := range matches {
+			assert.Equal(t, expectedTags[i], element.TagName(), "Should return correct elements in order")
+		}
+	})
+
+	t.Run("case_sensitive_class_names", func(t *testing.T) {
+		container := doc.CreateElement("div")
+
+		child1 := doc.CreateElement("p")
+		child1.SetAttribute("class", "Test-Class")
+		container.AppendChild(child1)
+
+		child2 := doc.CreateElement("span")
+		child2.SetAttribute("class", "test-class")
+		container.AppendChild(child2)
+
+		// Search for lowercase - should only find exact match
+		elements := container.GetElementsByClassName("test-class")
+		assert.Len(t, elements, 1, "Class name matching should be case-sensitive")
+		assert.Equal(t, "SPAN", elements[0].TagName(), "Should find only exact case match")
+
+		// Search for uppercase
+		elementsUpper := container.GetElementsByClassName("Test-Class")
+		assert.Len(t, elementsUpper, 1, "Should find uppercase variant")
+		assert.Equal(t, "P", elementsUpper[0].TagName(), "Should find exact case match")
+	})
+
+	t.Run("empty_class_name", func(t *testing.T) {
+		container := doc.CreateElement("div")
+
+		child := doc.CreateElement("p")
+		child.SetAttribute("class", "test-class")
+		container.AppendChild(child)
+
+		elements := container.GetElementsByClassName("")
+		assert.Empty(t, elements, "Empty class name should return no elements")
+	})
+
+	t.Run("recursive_depth_first_order", func(t *testing.T) {
+		// Create a more complex tree to test traversal order
+		container := doc.CreateElement("div")
+
+		// Level 1: first branch
+		branch1 := doc.CreateElement("section")
+		branch1.SetAttribute("class", "target")
+		container.AppendChild(branch1)
+
+		// Level 2: first branch children
+		leaf1 := doc.CreateElement("p")
+		leaf1.SetAttribute("class", "target")
+		branch1.AppendChild(leaf1)
+
+		leaf2 := doc.CreateElement("span") // no class
+		branch1.AppendChild(leaf2)
+
+		// Level 3: deeply nested in first branch
+		deepLeaf := doc.CreateElement("em")
+		deepLeaf.SetAttribute("class", "target")
+		leaf2.AppendChild(deepLeaf)
+
+		// Level 1: second branch (should come after all first branch descendants)
+		branch2 := doc.CreateElement("article")
+		branch2.SetAttribute("class", "target")
+		container.AppendChild(branch2)
+
+		// Level 2: second branch child
+		leaf3 := doc.CreateElement("strong")
+		leaf3.SetAttribute("class", "target")
+		branch2.AppendChild(leaf3)
+
+		elements := container.GetElementsByClassName("target")
+		assert.Len(t, elements, 5, "Should find all elements with target class")
+
+		// Verify depth-first order: section, p, em, article, strong
+		expectedTags := []string{"SECTION", "P", "EM", "ARTICLE", "STRONG"}
+		for i, element := range elements {
+			assert.Equal(t, expectedTags[i], element.TagName(),
+				"Should return elements in depth-first document order")
+		}
+	})
+}

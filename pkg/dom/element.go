@@ -128,18 +128,36 @@ func (this *element) ClassList() dom.TokenList {
 	return this.classlist
 }
 
-func (this *element) AddEventListener(eventType string, callback func(dom.Node)) dom.Element {
-	// Event listeners are not supported in non-WASM builds
-	// This is a no-op since there's no event loop outside the browser
-	return this
-}
-
 func (this *element) Blur() {
 	// Not supported in non-WASM builds
 }
 
 func (this *element) Focus() {
 	// Not supported in non-WASM builds
+}
+
+func (this *element) GetElementsByClassName(className string) []dom.Element {
+	var elements []dom.Element
+	// Helper function to recursively search through all descendants
+	var searchElements func(node dom.Node)
+	searchElements = func(node dom.Node) {
+		for child := node.FirstChild(); child != nil; child = child.NextSibling() {
+			element, ok := child.(dom.Element)
+			if !ok {
+				continue
+			}
+			// Check if this element has the class
+			if element.ClassList().Contains(className) {
+				elements = append(elements, element)
+			}
+			// Recursively search this element's children
+			searchElements(element)
+		}
+	}
+
+	// Start the recursive search from this element
+	searchElements(this)
+	return elements
 }
 
 ///////////////////////////////////////////////////////////////////////////////

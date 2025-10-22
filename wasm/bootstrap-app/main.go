@@ -9,8 +9,8 @@ func main() {
 	// Create the bootstrap app
 	bs.New().Append(
 		NavBar(),
-		NavExamples(),
-		NavBarExamples(),
+		//NavExamples(),
+		//NavBarExamples(),
 		BadgeExamples(),
 		ButtonExamples(),
 		AlertExamples(),

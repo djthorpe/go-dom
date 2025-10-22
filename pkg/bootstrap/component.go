@@ -41,6 +41,10 @@ const (
 	CardComponent        name = "card"
 	ImageComponent       name = "image"
 	NavComponent         name = "nav"
+	NavBarComponent      name = "nav-bar"
+	NavItemComponent     name = "nav-item"
+	NavDropdownComponent name = "nav-dropdown"
+	NavDividerComponent  name = "nav-divider"
 )
 
 ///////////////////////////////////////////////////////////////////////////////

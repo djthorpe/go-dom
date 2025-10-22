@@ -84,6 +84,20 @@ func (o *opts) apply(opts ...Opt) error {
 ///////////////////////////////////////////////////////////////////////////////
 // PUBLIC FUNCTIONS
 
+func WithTheme(theme Color) Opt {
+	return func(o *opts) error {
+		switch theme {
+		case LIGHT:
+			o.attributes["data-bs-theme"] = "light"
+		case DARK:
+			o.attributes["data-bs-theme"] = "dark"
+		default:
+			return ErrBadParameter.Withf("Invalid theme color: %q", theme)
+		}
+		return nil
+	}
+}
+
 func WithClass(class ...string) Opt {
 	return func(o *opts) error {
 		o.classList.Add(class...)
@@ -163,34 +177,28 @@ func WithBackground(color Color) Opt {
 }
 
 // WithColor sets the color for badge, alert, button, icon, link, and card components.
-// For badges: <span class="badge text-bg-primary">Primary</span>
-// For alerts: <div class="alert alert-primary" role="alert">Primary</div>
-// For buttons: <button class="btn btn-primary">Primary</button>
-// For icons: <i class="bi bi-icon text-primary"></i>
-// For links: <a class="link-primary">Link</a>
-// For cards: <div class="card text-bg-primary">Card</div>
 func WithColor(color Color) Opt {
 	return func(o *opts) error {
-		// WithColor works with badge, alert, button, icon, link, and card components
-		if o.name != BadgeComponent && o.name != AlertComponent && o.name != ButtonComponent && o.name != IconComponent && o.name != LinkComponent && o.name != CardComponent {
-			return ErrBadParameter.Withf("Cannot use WithColor with component of type %q", o.name)
-		}
-
 		// TODO: Remove any existing color classes
 
 		// Add appropriate color class based on component type
-		if o.name == BadgeComponent {
+		switch o.name {
+		case NavBarComponent:
+			o.classList.Add(color.className("bg"))
+		case BadgeComponent:
 			o.classList.Add(color.className("text-bg"))
-		} else if o.name == AlertComponent {
+		case AlertComponent:
 			o.classList.Add(color.className("alert"))
-		} else if o.name == ButtonComponent {
+		case ButtonComponent:
 			o.classList.Add(color.className("btn"))
-		} else if o.name == IconComponent {
+		case IconComponent:
 			o.classList.Add(color.className("text"))
-		} else if o.name == LinkComponent {
+		case LinkComponent:
 			o.classList.Add(color.className("link"))
-		} else if o.name == CardComponent {
+		case CardComponent:
 			o.classList.Add(color.className("text-bg"))
+		default:
+			return ErrBadParameter.Withf("Cannot use WithColor with component of type %q", o.name)
 		}
 
 		// Return success

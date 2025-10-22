@@ -1,6 +1,7 @@
 package bootstrap
 
 import (
+	"fmt"
 	"strings"
 
 	// Packages
@@ -17,17 +18,192 @@ type nav struct {
 	component
 }
 
-type navItem struct {
+type navbar struct {
 	component
 }
 
-type navbar struct {
+type navitem struct {
 	component
-	container Element
+}
+
+type navdropdown struct {
+	component
+}
+
+type navdivider struct {
+	component
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // LIFECYCLE
+
+// NavBar creates a new bootstrap navbar component (<nav class="navbar">).
+// Unlike Nav, NavBar is a more complex component with built-in container support,
+// brand, toggler, and collapse functionality for responsive navigation.
+//
+// Structure: <nav class="navbar"> → <div class="container-fluid">
+//
+// Expand variants: WithClass("navbar-expand-lg") - expands at lg breakpoint
+// Color schemes: WithAttribute("data-bs-theme", "dark") + bg-* utilities
+// Placement: WithClass("fixed-top"), WithClass("sticky-top")
+//
+// Example:
+//
+//	NavBar(WithClass("navbar-expand-lg"), WithClass("bg-body-tertiary")).
+//	    Append(brandElement, navLinks, searchForm)
+func NavBar(opt ...Opt) *navbar {
+	// Create a nav element with navbar class
+	root := dom.GetWindow().Document().CreateElement("NAV")
+
+	// Create container-fluid div
+	container := dom.GetWindow().Document().CreateElement("DIV")
+	container.SetAttribute("class", "container-fluid")
+	root.AppendChild(container)
+
+	// Create a body div (which can be used for collapse content)
+	bodydiv := dom.GetWindow().Document().CreateElement("DIV")
+	bodydiv.ClassList().Add("collapse", "navbar-collapse")
+	container.AppendChild(bodydiv)
+
+	// Create a UL element for nav items
+	body := dom.GetWindow().Document().CreateElement("UL")
+	body.SetAttribute("class", "navbar-nav")
+	bodydiv.AppendChild(body)
+
+	// Apply options
+	if opts, err := NewOpts(NavBarComponent, WithClass("navbar", "navbar-expand"), WithAttribute("role", "navigation"), WithTheme(DARK)); err != nil {
+		panic(err)
+	} else if err := opts.apply(opt...); err != nil {
+		panic(err)
+	} else {
+		// Set class list
+		classes := opts.classList.Values()
+		if len(classes) > 0 {
+			root.SetAttribute("class", strings.Join(classes, " "))
+		}
+
+		// Set attributes
+		for key, value := range opts.attributes {
+			root.SetAttribute(key, value)
+		}
+	}
+
+	return &navbar{
+		component: component{
+			name: NavBarComponent,
+			root: root,
+			body: body, // Content goes into the navbar-body (NavItem, NavMenu, NavDivider, NavSpacer)
+		},
+	}
+}
+
+// NavItem creates a navigation link item for use in navbars or navs.
+// Creates <ul><a class="nav-link"></a></ul> element with proper Bootstrap styling.
+// Can be appended to a navbar or nav component.
+//
+// Accepts any combination of text strings, components, and nodes as children.
+// Examples:
+//
+//	NavItem("#", "Home")             // Simple active link
+//	NavItem("/about","About")        // Regular link
+//	NavItem("#",  icon, "Dashboard") // Link with icon
+func NavItem(href string, children ...any) *navitem {
+	root := dom.GetWindow().Document().CreateElement("LI")
+	root.SetAttribute("class", "nav-item")
+
+	// Create link element
+	link := dom.GetWindow().Document().CreateElement("A")
+	root.AppendChild(link)
+
+	// Set attributes
+	link.SetAttribute("class", "nav-link")
+	link.SetAttribute("href", href)
+
+	// Append children
+	for _, child := range children {
+		if component, ok := child.(Component); ok {
+			link.AppendChild(component.Element())
+		} else if str, ok := child.(string); ok {
+			link.AppendChild(dom.GetWindow().Document().CreateTextNode(str))
+		} else if node, ok := child.(Node); ok {
+			link.AppendChild(node)
+		}
+	}
+
+	return &navitem{
+		component: component{
+			name: NavItemComponent,
+			root: root,
+			body: link,
+		},
+	}
+}
+
+// NavDropdown creates a navigation dropdown item for use in navbars or navs.
+// Can be appended to a navbar or nav component.
+//
+// Accepts any combination of text strings, components, and nodes as children.
+// Examples:
+//
+//	NavItem("#", "Home")             // Simple active link
+//	NavItem("/about","About")        // Regular link
+//	NavItem("#",  icon, "Dashboard") // Link with icon
+func NavDropdown(children ...any) *navdropdown {
+	root := dom.GetWindow().Document().CreateElement("LI")
+	root.ClassList().Add("nav-item", "dropdown")
+
+	// Create link element
+	link := dom.GetWindow().Document().CreateElement("A")
+	link.ClassList().Add("nav-link", "dropdown-toggle")
+	link.SetAttribute("role", "button")
+	link.SetAttribute("data-bs-toggle", "dropdown")
+	link.SetAttribute("aria-expanded", "false")
+
+	root.AppendChild(link)
+
+	// Set attributes
+	link.SetAttribute("href", "#")
+
+	// Create the dropdown list
+	dropdown := dom.GetWindow().Document().CreateElement("UL")
+	dropdown.ClassList().Add("dropdown-menu")
+	root.AppendChild(dropdown)
+
+	// Append children
+	for _, child := range children {
+		if component, ok := child.(Component); ok {
+			link.AppendChild(component.Element())
+		} else if str, ok := child.(string); ok {
+			link.AppendChild(dom.GetWindow().Document().CreateTextNode(str))
+		} else if node, ok := child.(Node); ok {
+			link.AppendChild(node)
+		}
+	}
+
+	return &navdropdown{
+		component: component{
+			name: NavDropdownComponent,
+			root: root,
+			body: dropdown,
+		},
+	}
+}
+
+// NavDivider creates a divider (horizonal or vertical) for use in nav, nav-bar or nav-dropdown.
+func NavDivider() Component {
+	li := dom.GetWindow().Document().CreateElement("LI")
+	hr := dom.GetWindow().Document().CreateElement("HR")
+	hr.SetAttribute("class", "dropdown-divider")
+	li.AppendChild(hr)
+
+	return &navdivider{
+		component: component{
+			name: NavDividerComponent,
+			root: li,
+			body: li,
+		},
+	}
+}
 
 // Nav creates a new bootstrap navigation component (nav element with class="nav")
 // By default creates a <nav> element, but can be customized with options.
@@ -75,98 +251,149 @@ func Nav(opt ...Opt) *nav {
 	}
 }
 
-// NavBar creates a new bootstrap navbar component (<nav class="navbar">).
-// Unlike Nav, NavBar is a more complex component with built-in container support,
-// brand, toggler, and collapse functionality for responsive navigation.
-//
-// Structure: <nav class="navbar"> → <div class="container-fluid">
-//
-// Expand variants: WithClass("navbar-expand-lg") - expands at lg breakpoint
-// Color schemes: WithAttribute("data-bs-theme", "dark") + bg-* utilities
-// Placement: WithClass("fixed-top"), WithClass("sticky-top")
-//
-// Example:
-//
-//	NavBar(WithClass("navbar-expand-lg"), WithClass("bg-body-tertiary")).
-//	    Append(brandElement, navLinks, searchForm)
-func NavBar(opt ...Opt) *navbar {
-	// Create a nav element with navbar class
-	root := dom.GetWindow().Document().CreateElement("NAV")
-
-	// Create container-fluid div
-	container := dom.GetWindow().Document().CreateElement("DIV")
-	container.SetAttribute("class", "container-fluid")
-	root.AppendChild(container)
-
-	// Apply options
-	if opts, err := NewOpts(NavComponent, WithClass("navbar")); err != nil {
-		panic(err)
-	} else if err := opts.apply(opt...); err != nil {
-		panic(err)
-	} else {
-		// Set class list
-		classes := opts.classList.Values()
-		if len(classes) > 0 {
-			root.SetAttribute("class", strings.Join(classes, " "))
-		}
-
-		// Set attributes
-		for key, value := range opts.attributes {
-			root.SetAttribute(key, value)
-		}
-	}
-
-	return &navbar{
-		component: component{
-			name: NavComponent,
-			root: root,
-			body: container, // Content goes into the container-fluid
-		},
-		container: container,
-	}
-}
-
 ///////////////////////////////////////////////////////////////////////////////
-// OPTIONS
+// PUBLIC METHODS - OPTIONS
 
 // WithTabs applies the nav-tabs style (tabbed interface).
 func WithTabs() Opt {
-	return WithClass("nav-tabs")
+	return func(o *opts) error {
+		if o.name != NavComponent {
+			return ErrBadParameter.Withf("WithTabs can only be used with Nav component, not %q", o.name)
+		}
+		return WithClass("nav-tabs")(o)
+	}
 }
 
 // WithPills applies the nav-pills style (pill-shaped items).
 func WithPills() Opt {
-	return WithClass("nav-pills")
+	return func(o *opts) error {
+		if o.name != NavComponent {
+			return ErrBadParameter.Withf("WithPills can only be used with Nav component, not %q", o.name)
+		}
+		return WithClass("nav-pills")(o)
+	}
 }
 
 // WithUnderline applies the nav-underline style (underlined items).
 func WithUnderline() Opt {
-	return WithClass("nav-underline")
+	return func(o *opts) error {
+		if o.name != NavComponent {
+			return ErrBadParameter.Withf("WithUnderline can only be used with Nav component, not %q", o.name)
+		}
+		return WithClass("nav-underline")(o)
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// NAVBAR METHODS
+// PUBLIC METHODS
 
-// Brand adds a navbar brand element (navbar-brand).
-// Creates <a class="navbar-brand" href="#">text</a>
-// Returns the navbar for method chaining.
-func (n *navbar) Brand(text string, href string) *navbar {
-	brand := dom.GetWindow().Document().CreateElement("A")
-	brand.SetAttribute("class", "navbar-brand")
-	brand.SetAttribute("href", href)
-	brand.AppendChild(dom.GetWindow().Document().CreateTextNode(text))
+// Append appends one or more child components to the navbar body.
+func (nav *navbar) Append(children ...any) Component {
+	for _, child := range children {
+		// We can append NavItem, NavDropdown, NavSpacer, NavDivider to the body
+		child, ok := child.(Component)
+		if !ok {
+			panic(fmt.Errorf("cannot append %T to %s", child, nav.Name()))
+		}
+		switch name(child.Name()) {
+		case NavItemComponent:
+			nav.body.AppendChild(child.Element())
+		case NavDropdownComponent:
+			nav.body.AppendChild(child.Element())
+		default:
+			panic(fmt.Errorf("cannot append %q to %q", child.Name(), nav.Name()))
+		}
+	}
 
-	n.container.AppendChild(brand)
-	return n
+	// Return nav for chaining
+	return nav
 }
 
-// BrandWithContent adds a navbar brand with custom content (e.g., logo + text).
-// Creates <a class="navbar-brand" href="#"> and appends children.
+// Append appends one or more child components to the navbar body.
+func (nav *navdropdown) Append(children ...any) Component {
+	for _, child := range children {
+		// We can append NavItem, NavDivider to the body
+		child, ok := child.(Component)
+		if !ok {
+			panic(fmt.Errorf("cannot append %T to %s", child, nav.Name()))
+		}
+		switch child.Name() {
+		case string(NavDividerComponent):
+			nav.body.AppendChild(child.Element())
+		case string(NavItemComponent):
+			// Replace nav-link with dropdown-item for dropdown menu items
+			elements := child.Element().GetElementsByClassName("nav-link")
+			for _, element := range elements {
+				element.ClassList().Remove("nav-link")
+				element.ClassList().Add("dropdown-item")
+			}
+			nav.body.AppendChild(child.Element())
+		default:
+			panic(fmt.Errorf("cannot append %q to %q", child.Name(), nav.Name()))
+		}
+	}
+
+	// Return nav for chaining
+	return nav
+}
+
+// Append appends one or more child components to the navdropdown body.
+func (nav *navitem) Append(children ...any) Component {
+	for _, child := range children {
+		// We can append NavItem, NavDropdown, NavSpacer, NavDivider to the body
+		child, ok := child.(Component)
+		if !ok {
+			panic(fmt.Errorf("cannot append %T to %s", child, nav.Name()))
+		}
+		switch child.Name() {
+		case string(NavItemComponent):
+			nav.body.AppendChild(child.Element())
+		default:
+			panic(fmt.Errorf("cannot append %q to %q", child, nav.Name()))
+		}
+	}
+
+	// Return nav for chaining
+	return nav
+}
+
+// Disabled adds the disabled class to a navitem, making it appear disabled.
+func (navitem *navitem) Disabled() *navitem {
+	navitem.root.ClassList().Add("disabled")
+	navitem.root.SetAttribute("aria-disabled", "true")
+	return navitem
+}
+
+// Active adds the active class to a navitem, making it appear active.
+func (navitem *navitem) Active() *navitem {
+	navitem.root.ClassList().Add("active")
+	navitem.root.SetAttribute("aria-current", "page")
+	return navitem
+}
+
+// Brand adds a navbar brand with custom content (e.g., logo + text).
 // Returns the navbar for method chaining.
-func (n *navbar) BrandWithContent(href string, children ...any) *navbar {
+func (navbar *navbar) Brand(children ...any) *navbar {
+	// Container is the first child of the navbar root
+	container, ok := navbar.root.FirstChild().(Element)
+	if !ok {
+		panic("invalid navbar structure")
+	}
+
+	// Create brand element
 	brand := dom.GetWindow().Document().CreateElement("A")
 	brand.SetAttribute("class", "navbar-brand")
-	brand.SetAttribute("href", href)
+	brand.SetAttribute("href", "#")
+
+	// If there is a navbar-brand already, replace it
+	existing := container.GetElementsByClassName("navbar-brand")
+	if len(existing) == 1 {
+		// Replace existing brand element
+		container.ReplaceChild(existing[0], brand)
+	} else {
+		// Set as the first node of the container
+		container.InsertBefore(brand, container.FirstChild())
+	}
 
 	// Append children
 	for _, child := range children {
@@ -179,8 +406,7 @@ func (n *navbar) BrandWithContent(href string, children ...any) *navbar {
 		}
 	}
 
-	n.container.AppendChild(brand)
-	return n
+	return navbar
 }
 
 // Toggler adds a navbar toggler button for responsive collapse.
@@ -202,215 +428,8 @@ func (n *navbar) Toggler(targetId string) *navbar {
 	icon.SetAttribute("class", "navbar-toggler-icon")
 	button.AppendChild(icon)
 
-	n.container.AppendChild(button)
+	n.root.AppendChild(button)
 	return n
-}
-
-// Collapse creates a collapsible container for navbar content.
-// Creates <div class="collapse navbar-collapse" id="targetId">
-// Content should be added to this collapse element.
-// Returns the collapse element for adding nav items, forms, etc.
-func (n *navbar) Collapse(targetId string) Element {
-	collapse := dom.GetWindow().Document().CreateElement("DIV")
-	collapse.SetAttribute("class", "collapse navbar-collapse")
-	collapse.SetAttribute("id", targetId)
-
-	n.container.AppendChild(collapse)
-	return collapse
-}
-
-// NavContent creates a navbar-nav container for navigation links.
-// Creates <ul class="navbar-nav"> or <div class="navbar-nav"> based on useList.
-// Returns the nav container element for adding items.
-func (n *navbar) NavContent(useList bool, classes ...string) Element {
-	var navEl Element
-	if useList {
-		navEl = dom.GetWindow().Document().CreateElement("UL")
-	} else {
-		navEl = dom.GetWindow().Document().CreateElement("DIV")
-	}
-
-	classList := append([]string{"navbar-nav"}, classes...)
-	navEl.SetAttribute("class", strings.Join(classList, " "))
-
-	return navEl
-}
-
-// NavItem creates a navigation link item for use in navbars or navs.
-// Creates <a class="nav-link"> element with proper Bootstrap styling.
-// Can be used inside navbar-nav containers or regular nav components.
-// Accepts any combination of text strings, components, and nodes as children.
-//
-// Examples:
-//
-//	NavItem("#", true, false, "Home")                 // Simple active link
-//	NavItem("/about", false, false, "About")          // Regular link
-//	NavItem("#", false, false, icon, "Dashboard")     // Link with icon
-//	NavItem("#", true, false, "Profile ", badge)      // Active link with badge
-//	NavItem("#", false, true, "Disabled")             // Disabled link
-func NavItem(href string, active bool, disabled bool, children ...any) *navItem {
-	// Create link element
-	link := dom.GetWindow().Document().CreateElement("A")
-
-	// Build classes
-	classes := []string{"nav-link"}
-
-	if active {
-		classes = append(classes, "active")
-		link.SetAttribute("aria-current", "page")
-	}
-
-	if disabled {
-		classes = append(classes, "disabled")
-		link.SetAttribute("aria-disabled", "true")
-	}
-
-	// Set attributes
-	link.SetAttribute("class", strings.Join(classes, " "))
-	link.SetAttribute("href", href)
-
-	// Append children
-	for _, child := range children {
-		if component, ok := child.(Component); ok {
-			link.AppendChild(component.Element())
-		} else if str, ok := child.(string); ok {
-			link.AppendChild(dom.GetWindow().Document().CreateTextNode(str))
-		} else if node, ok := child.(Node); ok {
-			link.AppendChild(node)
-		}
-	}
-
-	return &navItem{
-		component: component{
-			name: NavComponent,
-			root: link,
-			body: link,
-		},
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// NAVDROPDOWN
-
-// NavDropdown creates a navigation dropdown item with a toggleable menu.
-// Creates a dropdown structure with proper Bootstrap classes and attributes.
-//
-// Parameters:
-//   - text: The dropdown toggle button text
-//   - active: Whether the dropdown is in active state
-//   - children: NavDropdownItem components for the dropdown menu
-//
-// Example usage:
-//
-//	nav := Nav().
-//	    Append(NavItem("#", false, false, "Home")).
-//	    Append(NavDropdown("More", false,
-//	        NavDropdownItem("#", false, "Action"),
-//	        NavDropdownItem("#", false, "Another action"),
-//	        NavDropdownDivider(),
-//	        NavDropdownItem("#", false, "Something else"),
-//	    )).
-//	    Append(NavItem("#", false, false, "Contact"))
-func NavDropdown(text string, active bool, children ...Component) *navItem {
-	// Create dropdown container (li for navbar-nav or div for regular nav)
-	container := dom.GetWindow().Document().CreateElement("DIV")
-	container.SetAttribute("class", "nav-item dropdown")
-
-	// Create dropdown toggle link
-	toggle := dom.GetWindow().Document().CreateElement("A")
-	toggleClasses := []string{"nav-link", "dropdown-toggle"}
-
-	if active {
-		toggleClasses = append(toggleClasses, "active")
-		toggle.SetAttribute("aria-current", "page")
-	}
-
-	toggle.SetAttribute("class", strings.Join(toggleClasses, " "))
-	toggle.SetAttribute("href", "#")
-	toggle.SetAttribute("role", "button")
-	toggle.SetAttribute("data-bs-toggle", "dropdown")
-	toggle.SetAttribute("aria-expanded", "false")
-	toggle.AppendChild(dom.GetWindow().Document().CreateTextNode(text))
-
-	// Create dropdown menu
-	menu := dom.GetWindow().Document().CreateElement("UL")
-	menu.SetAttribute("class", "dropdown-menu")
-
-	// Add children to dropdown menu
-	for _, child := range children {
-		menu.AppendChild(child.Element())
-	}
-
-	container.AppendChild(toggle)
-	container.AppendChild(menu)
-
-	return &navItem{
-		component: component{
-			name: NavComponent,
-			root: container,
-			body: menu, // New dropdown items get added to the menu
-		},
-	}
-}
-
-// NavDropdownItem creates a dropdown menu item.
-// Creates <li><a class="dropdown-item"> structure.
-//
-// Parameters:
-//   - href: The link URL
-//   - active: Whether the item is active
-//   - children: Text or other content for the item
-//
-// Example: NavDropdownItem("/profile", false, "My Profile")
-func NavDropdownItem(href string, active bool, children ...any) Component {
-	// Create list item
-	li := dom.GetWindow().Document().CreateElement("LI")
-
-	// Create dropdown item link
-	link := dom.GetWindow().Document().CreateElement("A")
-	itemClasses := []string{"dropdown-item"}
-
-	if active {
-		itemClasses = append(itemClasses, "active")
-		link.SetAttribute("aria-current", "true")
-	}
-
-	link.SetAttribute("class", strings.Join(itemClasses, " "))
-	link.SetAttribute("href", href)
-
-	// Append children to link
-	for _, child := range children {
-		if component, ok := child.(Component); ok {
-			link.AppendChild(component.Element())
-		} else if str, ok := child.(string); ok {
-			link.AppendChild(dom.GetWindow().Document().CreateTextNode(str))
-		} else if node, ok := child.(Node); ok {
-			link.AppendChild(node)
-		}
-	}
-
-	li.AppendChild(link)
-
-	return &component{
-		name: NavComponent,
-		root: li,
-		body: li,
-	}
-}
-
-// NavDropdownDivider creates a divider in the dropdown menu.
-// Creates <li><hr class="dropdown-divider"></li>
-func NavDropdownDivider() Component {
-	li := dom.GetWindow().Document().CreateElement("LI")
-	hr := dom.GetWindow().Document().CreateElement("HR")
-	hr.SetAttribute("class", "dropdown-divider")
-	li.AppendChild(hr)
-
-	return &component{
-		name: NavComponent,
-		root: li,
-		body: li,
-	}
 }
 
 // NavDropdownHeader creates a header in the dropdown menu.
@@ -426,116 +445,5 @@ func NavDropdownHeader(text string) Component {
 		name: NavComponent,
 		root: li,
 		body: li,
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// NAVSPACER
-
-// NavSpacer creates a flexible spacer for navigation components that pushes
-// subsequent nav items to the opposite end. Commonly used in navbars to
-// separate left-aligned items from right-aligned items.
-//
-// Uses Bootstrap's flex utilities (me-auto or ms-auto) to create flexible spacing.
-//
-// Parameters:
-//   - opt: Optional styling options (WithClass, etc.)
-//
-// Example usage:
-//
-//	nav := Nav().
-//	    Append(NavItem("#", false, false, "Home")).
-//	    Append(NavItem("#", false, false, "About")).
-//	    Append(NavSpacer()).
-//	    Append(NavItem("#", false, false, "Login"))
-func NavSpacer(opt ...Opt) Component {
-	// Create a div element with flexible margin
-	spacer := dom.GetWindow().Document().CreateElement("DIV")
-
-	// Apply options with default margin-end auto class
-	if opts, err := NewOpts(NavComponent, WithClass("me-auto")); err != nil {
-		panic(err)
-	} else if err := opts.apply(opt...); err != nil {
-		panic(err)
-	} else {
-		// Set class list
-		classes := opts.classList.Values()
-		if len(classes) > 0 {
-			spacer.SetAttribute("class", strings.Join(classes, " "))
-		}
-
-		// Set attributes
-		for key, value := range opts.attributes {
-			spacer.SetAttribute(key, value)
-		}
-	}
-
-	return &component{
-		name: NavComponent,
-		root: spacer,
-		body: spacer,
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// NAVDIVIDER
-
-// NavDivider creates a visual separator for navigation components.
-// Creates a vertical line (pipe) or horizontal rule depending on nav orientation.
-//
-// For horizontal navs, creates a vertical divider using Bootstrap's vr class.
-// For vertical navs, creates a horizontal divider using hr element.
-//
-// Parameters:
-//   - vertical: true for vertical divider (default), false for horizontal divider
-//   - opt: Optional styling options (WithClass, etc.)
-//
-// Example usage:
-//
-//	nav := Nav().
-//	    Append(NavItem("#", false, false, "Home")).
-//	    Append(NavDivider(true)).  // Vertical divider
-//	    Append(NavItem("#", false, false, "About"))
-//
-//	verticalNav := Nav(WithClass("flex-column")).
-//	    Append(NavItem("#", false, false, "Home")).
-//	    Append(NavDivider(false)). // Horizontal divider
-//	    Append(NavItem("#", false, false, "About"))
-func NavDivider(vertical bool, opt ...Opt) Component {
-	var defaultClass string
-	var divider Element
-
-	if vertical {
-		// Vertical divider - use div with Bootstrap's vr class
-		divider = dom.GetWindow().Document().CreateElement("DIV")
-		defaultClass = "vr"
-	} else {
-		// Horizontal divider - use hr element
-		divider = dom.GetWindow().Document().CreateElement("HR")
-		defaultClass = "my-2"
-	}
-
-	// Apply options with appropriate default class
-	if opts, err := NewOpts(NavComponent, WithClass(defaultClass)); err != nil {
-		panic(err)
-	} else if err := opts.apply(opt...); err != nil {
-		panic(err)
-	} else {
-		// Set class list
-		classes := opts.classList.Values()
-		if len(classes) > 0 {
-			divider.SetAttribute("class", strings.Join(classes, " "))
-		}
-
-		// Set attributes
-		for key, value := range opts.attributes {
-			divider.SetAttribute(key, value)
-		}
-	}
-
-	return &component{
-		name: NavComponent,
-		root: divider,
-		body: divider,
 	}
 }

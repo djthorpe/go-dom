@@ -2,6 +2,9 @@ package dom
 
 // Component interface
 type Component interface {
+	// Return the component name
+	Name() string
+
 	// Return the component's root element
 	Element() Element
 

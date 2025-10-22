@@ -15,12 +15,15 @@ import (
 
 type node struct {
 	js.Value
+	eventListeners map[string][]js.Func // Store event listeners to prevent GC
 }
 
 type nodevalue interface {
 	dom.Node
 	v() js.Value
 }
+
+var _ dom.Node = (*node)(nil)
 
 ///////////////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
@@ -65,20 +68,22 @@ func NewNode(v js.Value) dom.Node {
 		// For custom elements, we check the prototype itself, not its constructor
 		switch {
 		case proto.Equal(cDocument.Get("prototype")):
-			return &document{node: &node{v}}
+			return &document{node: &node{v, make(map[string][]js.Func)}}
 		case proto.Equal(cElement.Get("prototype")):
-			return &element{node: &node{v}}
+			return &element{node: &node{v, make(map[string][]js.Func)}}
 		case proto.Equal(cText.Get("prototype")):
-			return &text{node: &node{v}}
+			return &text{node: &node{v, make(map[string][]js.Func)}}
 		case proto.Equal(cComment.Get("prototype")):
-			return &comment{node: &node{v}}
+			return &comment{node: &node{v, make(map[string][]js.Func)}}
 		case proto.Equal(cDocumentType.Get("prototype")):
-			return &doctype{node: &node{v}}
+			return &doctype{node: &node{v, make(map[string][]js.Func)}}
 		case proto.Equal(cAttr.Get("prototype")):
-			return &attr{node: &node{v}}
+			return &attr{node: &node{v, make(map[string][]js.Func)}}
 		case proto.Equal(cNode.Get("prototype")):
-			return &node{v}
-		} // Also check constructor for compatibility (legacy behavior)
+			return &node{v, make(map[string][]js.Func)}
+		}
+
+		// Also check constructor for compatibility (legacy behavior)
 		c := constructor(proto)
 		if c.IsNull() || c.IsUndefined() {
 			panic("NewNode failed for " + constructor(cObject.Call("getPrototypeOf", v)).Get("name").String())
@@ -204,6 +209,33 @@ func (this *node) RemoveChild(child dom.Node) {
 
 func (this *node) ReplaceChild(new, old dom.Node) {
 	this.Call("replaceChild", new.(nodevalue).v(), old.(nodevalue).v())
+}
+
+func (this *node) AddEventListener(eventType string, callback func(dom.Node)) dom.Node {
+	// Initialize event listeners map if needed
+	if this.eventListeners == nil {
+		this.eventListeners = make(map[string][]js.Func)
+	}
+
+	// Create a JS function wrapper
+	jsCallback := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		if len(args) > 0 {
+			// Create a Node from the event target
+			target := args[0].Get("target")
+			if !target.IsUndefined() && !target.IsNull() {
+				callback(NewNode(target))
+			}
+		}
+		return nil
+	})
+
+	// Store the callback to prevent garbage collection
+	this.eventListeners[eventType] = append(this.eventListeners[eventType], jsCallback)
+
+	// Add event listener
+	this.Call("addEventListener", eventType, jsCallback)
+
+	return this
 }
 
 ///////////////////////////////////////////////////////////////////////////////
