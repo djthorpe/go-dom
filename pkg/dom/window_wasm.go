@@ -15,7 +15,7 @@ import (
 // TYPES
 
 type window struct {
-	js.Value
+	*node
 }
 
 var _ dom.Window = (*window)(nil)
@@ -25,14 +25,16 @@ var _ dom.Window = (*window)(nil)
 
 // GetWindow returns a global window object
 func GetWindow() dom.Window {
-	return &window{js.Global()}
+	w := &window{}
+	w.node = &node{Value: js.Global(), eventListeners: make(map[string][]js.Func)}
+	return w
 }
 
 // GetWindowWithTitle returns a global window object with the specified title
 func GetWindowWithTitle(title string) dom.Window {
-	w := js.Global()
-	w.Get("document").Set("title", title)
-	return &window{w}
+	w := GetWindow()
+	//	TOOD: w.Document().Set("title", title)
+	return w
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -53,6 +55,10 @@ func (this *window) Document() dom.Document {
 	return NewNode(this.Get("document")).(dom.Document)
 }
 
+func (this *window) Location() dom.Location {
+	return NewLocation(this.Get("location"))
+}
+
 // Write the HTML inside a node
 func (this *window) Write(w io.Writer, node dom.Node) (int, error) {
 	var s int
@@ -69,6 +75,3 @@ func (this *window) Write(w io.Writer, node dom.Node) (int, error) {
 	}
 	return s, nil
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// PUBLIC METHODS

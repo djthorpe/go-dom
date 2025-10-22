@@ -2,6 +2,8 @@ package bootstrap
 
 import (
 	// Packages
+	"fmt"
+
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
 
 	// Namespace import for interfaces
@@ -40,8 +42,9 @@ func New() *app {
 	doc.Body().AppendChild(root)
 
 	// Listen for hashchange events
-	dom.GetWindow().AddEventListener("hashchange", func(evt dom.Event) {
+	dom.GetWindow().AddEventListener("hashchange", func(event Event) {
 		// Handle the hash change event
+		fmt.Println("Hash changed", dom.GetWindow().Location().Hash())
 	})
 
 	// Return the document

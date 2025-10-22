@@ -16,6 +16,7 @@ import (
 
 type window struct {
 	*document
+	location dom.Location
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -23,12 +24,18 @@ type window struct {
 
 // GetWindow returns a global window object
 func GetWindow() dom.Window {
-	return &window{NewHTMLDocument("")}
+	return &window{
+		document: NewHTMLDocument(""),
+		location: NewLocation(),
+	}
 }
 
 // GetWindowWithTitle returns a global window object
 func GetWindowWithTitle(title string) dom.Window {
-	return &window{NewHTMLDocument(title)}
+	return &window{
+		document: NewHTMLDocument(title),
+		location: NewLocation(),
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -46,6 +53,11 @@ func (w *window) String() string {
 // Document returns window document
 func (this *window) Document() dom.Document {
 	return this.document
+}
+
+// Location returns window location
+func (this *window) Location() dom.Location {
+	return this.location
 }
 
 // Write the nodes inside a document, or the node itself otherwise

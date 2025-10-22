@@ -9,10 +9,12 @@ import (
 
 // NavBar for the main application
 func NavBar() Component {
-	return bs.NavBar(bs.WithColor(bs.PRIMARY)).Brand(
+	return bs.NavBar(
+		bs.WithColor(bs.PRIMARY),
+		bs.WithBorder(bs.BOTTOM, bs.BLACK),
+	).Brand(
 		bs.Icon("bootstrap-fill", bs.WithMargin(bs.START|bs.END, 2)),
 	).Append(
-		bs.NavItem("#home", "Home"),
 		bs.NavDropdown("Navigation").Append(
 			bs.NavItem("#navs", "Navs"),
 			bs.NavItem("#navbars", "Navbars"),

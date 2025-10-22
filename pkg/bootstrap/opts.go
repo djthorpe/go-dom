@@ -137,11 +137,6 @@ func WithBreakpoint(breakpoint Breakpoint) Opt {
 
 func WithBorder(position Position, color ...Color) Opt {
 	return func(o *opts) error {
-		// WithBorder works with heading, container, badge, and alert components
-		if o.name != HeadingComponent && o.name != ContainerComponent && o.name != BadgeComponent && o.name != AlertComponent {
-			return ErrBadParameter.Withf("Cannot use WithBorder with component of type %q", o.name)
-		}
-
 		// Remove all existing border classes
 		o.classList.Remove(BorderAll.borderClassNames()...)
 

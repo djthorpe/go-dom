@@ -238,7 +238,7 @@ func (item *PaginationItem) SetDisabled(disabled bool) *PaginationItem {
 }
 
 // AddEventListener adds an event listener to the pagination item's link
-func (item *PaginationItem) AddEventListener(eventType string, callback func(dom.Node)) *PaginationItem {
+func (item *PaginationItem) AddEventListener(eventType string, callback func(dom.Event)) *PaginationItem {
 	if item.link != nil {
 		item.link.AddEventListener(eventType, callback)
 	}

@@ -47,6 +47,7 @@ var (
 	cDocumentType = js.Global().Get("DocumentType")
 	cElement      = js.Global().Get("HTMLElement")
 	cAttr         = js.Global().Get("Attr")
+	cEvent        = js.Global().Get("Event")
 )
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -61,7 +62,7 @@ func NewNode(v js.Value) dom.Node {
 	for {
 		proto = cObject.Call("getPrototypeOf", proto)
 		if proto.IsNull() || proto.IsUndefined() {
-			panic(fmt.Sprint("Unknown constructor"))
+			panic(fmt.Sprintf("unknown constructor: %v", v))
 		}
 
 		// Check if this prototype matches any known types
@@ -211,30 +212,23 @@ func (this *node) ReplaceChild(new, old dom.Node) {
 	this.Call("replaceChild", new.(nodevalue).v(), old.(nodevalue).v())
 }
 
-func (this *node) AddEventListener(eventType string, callback func(dom.Node)) dom.Node {
-	// Initialize event listeners map if needed
-	if this.eventListeners == nil {
-		this.eventListeners = make(map[string][]js.Func)
-	}
+///////////////////////////////////////////////////////////////////////////////
+// NODE EVENT METHODS
 
-	// Create a JS function wrapper
-	jsCallback := js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+func (this *node) AddEventListener(eventType string, callback func(dom.Event)) dom.Node {
+	if this.Value.IsNull() || this.Value.IsUndefined() {
+		return this
+	}
+	f := js.FuncOf(func(_ js.Value, args []js.Value) interface{} {
 		if len(args) > 0 {
-			// Create a Node from the event target
-			target := args[0].Get("target")
-			if !target.IsUndefined() && !target.IsNull() {
-				callback(NewNode(target))
+			evt := args[0]
+			if !evt.IsNull() && !evt.IsUndefined() {
+				callback(NewEvent(evt))
 			}
 		}
 		return nil
 	})
-
-	// Store the callback to prevent garbage collection
-	this.eventListeners[eventType] = append(this.eventListeners[eventType], jsCallback)
-
-	// Add event listener
-	this.Call("addEventListener", eventType, jsCallback)
-
+	this.Value.Call("addEventListener", eventType, f)
 	return this
 }
 

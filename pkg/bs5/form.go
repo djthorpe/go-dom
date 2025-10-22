@@ -264,7 +264,7 @@ func (fi *FormInput) MakePlaintext() *FormInput {
 }
 
 // AddEventListener adds an event listener
-func (fi *FormInput) AddEventListener(eventType string, callback func(dom.Node)) *FormInput {
+func (fi *FormInput) AddEventListener(eventType string, callback func(dom.Event)) *FormInput {
 	fi.Element.AddEventListener(eventType, callback)
 	return fi
 }
@@ -311,7 +311,7 @@ func (ft *FormTextarea) SetRequired(required bool) *FormTextarea {
 }
 
 // AddEventListener adds an event listener
-func (ft *FormTextarea) AddEventListener(eventType string, callback func(dom.Node)) *FormTextarea {
+func (ft *FormTextarea) AddEventListener(eventType string, callback func(dom.Event)) *FormTextarea {
 	ft.Element.AddEventListener(eventType, callback)
 	return ft
 }
@@ -364,7 +364,7 @@ func (fs *FormSelect) SetMultiple(multiple bool) *FormSelect {
 }
 
 // AddEventListener adds an event listener
-func (fs *FormSelect) AddEventListener(eventType string, callback func(dom.Node)) *FormSelect {
+func (fs *FormSelect) AddEventListener(eventType string, callback func(dom.Event)) *FormSelect {
 	fs.Element.AddEventListener(eventType, callback)
 	return fs
 }
@@ -429,7 +429,7 @@ func (fc *FormCheck) SetValue(value string) *FormCheck {
 }
 
 // AddEventListener adds an event listener to the input
-func (fc *FormCheck) AddEventListener(eventType string, callback func(dom.Node)) *FormCheck {
+func (fc *FormCheck) AddEventListener(eventType string, callback func(dom.Event)) *FormCheck {
 	fc.input.AddEventListener(eventType, callback)
 	return fc
 }

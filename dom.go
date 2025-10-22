@@ -37,7 +37,23 @@ type Node interface {
 	ReplaceChild(Node, Node)
 
 	// Event Methods
-	AddEventListener(string, func(Node)) Node
+	AddEventListener(string, func(Event)) Node
+}
+
+// Event implements https://developer.mozilla.org/en-US/docs/Web/API/Event
+type Event interface {
+	// Properties
+	Type() string
+	Target() Node
+	CurrentTarget() Node
+	Bubbles() bool
+	Cancelable() bool
+	DefaultPrevented() bool
+
+	// Methods
+	PreventDefault()
+	StopPropagation()
+	StopImmediatePropagation()
 }
 
 type Element interface {
@@ -75,10 +91,30 @@ type Window interface {
 
 	// Properties
 	Document() Document
+	Location() Location
 
 	// Methods
 	Write(io.Writer, Node) (int, error)
 	//Read(io.Reader, string) (Document, error)
+}
+
+// Location implements https://developer.mozilla.org/en-US/docs/Web/API/Location
+type Location interface {
+	// Properties
+	Hash() string
+	SetHash(string)
+	Href() string
+	SetHref(string)
+	Hostname() string
+	Pathname() string
+	Port() string
+	Protocol() string
+	Search() string
+	SetSearch(string)
+
+	// Methods
+	Reload()
+	Replace(string)
 }
 
 // Document implements https://developer.mozilla.org/en-US/docs/Web/API/Document
