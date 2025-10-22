@@ -320,3 +320,111 @@ func WithFlex(position Position) Opt {
 		return nil
 	}
 }
+
+// WithAction sets the form action attribute (URL to submit to).
+// Only valid for form components.
+func WithAction(url string) Opt {
+	return func(o *opts) error {
+		if o.name != ContainerComponent {
+			return ErrBadParameter.Withf("Cannot use WithAction with component of type %q", o.name)
+		}
+		o.attributes["action"] = url
+		return nil
+	}
+}
+
+// WithMethod sets the form method attribute (GET or POST).
+// Only valid for form components.
+func WithMethod(method string) Opt {
+	return func(o *opts) error {
+		if o.name != ContainerComponent {
+			return ErrBadParameter.Withf("Cannot use WithMethod with component of type %q", o.name)
+		}
+		o.attributes["method"] = method
+		return nil
+	}
+}
+
+// WithEnctype sets the form enctype attribute for file uploads.
+// Common values: "multipart/form-data", "application/x-www-form-urlencoded"
+// Only valid for form components.
+func WithEnctype(enctype string) Opt {
+	return func(o *opts) error {
+		if o.name != ContainerComponent {
+			return ErrBadParameter.Withf("Cannot use WithEnctype with component of type %q", o.name)
+		}
+		o.attributes["enctype"] = enctype
+		return nil
+	}
+}
+
+// WithoutValidation allows browser's native HTML5 validation.
+// By default, forms use novalidate attribute and Bootstrap's custom validation.
+// Use this option to enable browser validation instead.
+// Only valid for form components.
+func WithoutValidation() Opt {
+	return func(o *opts) error {
+		if o.name != ContainerComponent {
+			return ErrBadParameter.Withf("Cannot use WithoutValidation with component of type %q", o.name)
+		}
+		// Use a special marker to indicate browser validation should be enabled
+		o.attributes["_enable_browser_validation"] = "true"
+		return nil
+	}
+}
+
+// WithValue sets the value attribute for form elements (inputs, options, etc).
+func WithValue(value string) Opt {
+	return func(o *opts) error {
+		o.attributes["value"] = value
+		return nil
+	}
+}
+
+// WithSelected marks an option as selected by default.
+// Only valid for option components.
+func WithSelected() Opt {
+	return func(o *opts) error {
+		if o.name != OptionComponent {
+			return ErrBadParameter.Withf("Cannot use WithSelected with component of type %q", o.name)
+		}
+		o.attributes["selected"] = ""
+		return nil
+	}
+}
+
+// WithDisabled marks a form element as disabled.
+func WithDisabled() Opt {
+	return func(o *opts) error {
+		o.attributes["disabled"] = ""
+		return nil
+	}
+}
+
+// WithMultiple allows multiple selections in a select element.
+// Only valid for select components.
+func WithMultiple() Opt {
+	return func(o *opts) error {
+		if o.name != SelectComponent {
+			return ErrBadParameter.Withf("Cannot use WithMultiple with component of type %q", o.name)
+		}
+		o.attributes["multiple"] = ""
+		return nil
+	}
+}
+
+// WithName sets the name attribute for form elements.
+func WithName(name string) Opt {
+	return func(o *opts) error {
+		o.attributes["name"] = name
+		return nil
+	}
+}
+
+// WithRequired marks a form element as required.
+func WithRequired() Opt {
+	return func(o *opts) error {
+		o.attributes["required"] = ""
+		return nil
+	}
+}

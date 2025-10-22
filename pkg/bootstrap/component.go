@@ -45,6 +45,8 @@ const (
 	NavItemComponent     name = "nav-item"
 	NavDropdownComponent name = "nav-dropdown"
 	NavDividerComponent  name = "nav-divider"
+	SelectComponent      name = "select"
+	OptionComponent      name = "option"
 )
 
 ///////////////////////////////////////////////////////////////////////////////

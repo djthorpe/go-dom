@@ -34,9 +34,7 @@ func main() {
 	navigationRoute := bs.Route("^navs$", "^navbars$")
 	navigationRoute.Append(
 		bs.Heading(1).Append("Navigation"),
-		bs.Para().Append("Navigation components including navs and navbars."),
-		// NavExamples(),
-		// NavBarExamples(),
+		NavExamples(),
 	)
 	router.AddRoute(navigationRoute)
 
@@ -79,7 +77,7 @@ func main() {
 	formsRoute := bs.Route("^form$", "^input$", "^textarea$", "^select$", "^radio$", "^checkbox$", "^range$", "^color$", "^date$")
 	formsRoute.Append(
 		bs.Heading(1).Append("Forms"),
-		bs.Para().Append("Form components including inputs, textareas, selects, and more."),
+		FormExamples(),
 	)
 	router.AddRoute(formsRoute)
 
