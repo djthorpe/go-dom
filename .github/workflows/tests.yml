@@ -48,13 +48,14 @@ jobs:
 
       - name: Create Chrome wrapper with --no-sandbox
         run: |
-          cat > /tmp/chrome-wrapper.sh << 'EOF'
+          sudo mv /usr/bin/google-chrome /usr/bin/google-chrome-original
+          cat > /tmp/chrome-wrapper << 'EOF'
           #!/bin/bash
-          exec /usr/bin/google-chrome --no-sandbox "$@"
+          exec /usr/bin/google-chrome-original --no-sandbox "$@"
           EOF
-          chmod +x /tmp/chrome-wrapper.sh
+          sudo mv /tmp/chrome-wrapper /usr/bin/google-chrome
+          sudo chmod +x /usr/bin/google-chrome
+          google-chrome --version
 
       - name: Run WASM tests
         run: make jstest
-        env:
-          CHROME_BIN: /tmp/chrome-wrapper.sh
