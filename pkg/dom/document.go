@@ -1,9 +1,11 @@
-//go:build !wasm
+//go:build !js
 
 package dom
 
 import (
 	"fmt"
+	"io"
+	"strings"
 
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild"
@@ -75,7 +77,13 @@ func (doc *document) Title() string {
 	if doc.head == nil {
 		return ""
 	}
-	return fmt.Sprint(doc.node.v())
+	// Find the title element in the head
+	for child := doc.head.FirstChild(); child != nil; child = child.NextSibling() {
+		if child.NodeType() == dom.ELEMENT_NODE && child.NodeName() == "title" {
+			return child.TextContent()
+		}
+	}
+	return ""
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -141,11 +149,73 @@ func (this *document) v() *node {
 	return this.node
 }
 
+func (this *document) write(w io.Writer) (int, error) {
+	s := 0
+
+	// Write doctype if present
+	if this.doctype != nil {
+		if n, err := writeNode(w, this.doctype); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+		// Add newline after doctype
+		if n, err := w.Write([]byte("\n")); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+	}
+
+	// Write root element (usually <html>)
+	if root := this.FirstChild(); root != nil {
+		if n, err := writeNode(w, root); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+	}
+
+	return s, nil
+}
+
+func (this *document) writeIndented(w io.Writer, level int, indent string) (int, error) {
+	s := 0
+
+	// Write doctype if present (no indentation)
+	if this.doctype != nil {
+		if n, err := writeNode(w, this.doctype); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+		// Add newline after doctype
+		if n, err := w.Write([]byte("\n")); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+	}
+
+	// Write root element with indentation
+	if root := this.FirstChild(); root != nil {
+		if n, err := writeNodeIndented(w, root, level, indent); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+	}
+
+	return s, nil
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // STRINGIFY
 
 func (this *document) String() string {
-	str := "<DOMDocument"
-	str += fmt.Sprint(" ", this.node)
-	return str + ">"
+	var b strings.Builder
+	b.WriteString("<DOMDocument")
+	fmt.Fprint(&b, " ", this.node)
+	b.WriteString(">")
+	return b.String()
 }

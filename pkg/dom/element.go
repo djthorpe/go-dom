@@ -1,4 +1,4 @@
-//go:build !wasm
+//go:build !js
 
 package dom
 
@@ -27,34 +27,20 @@ var _ dom.Element = (*element)(nil)
 // STRINGIFY
 
 func (this *element) String() string {
-	str := "<DOMElement"
-	str += fmt.Sprint(" ", this.node)
-	return str + ">"
+	var b strings.Builder
+	b.WriteString("<DOMElement")
+	fmt.Fprint(&b, " ", this.node)
+	b.WriteString(">")
+	return b.String()
 }
 
 /////////////////////////////////////////////////////////////////////
 // PROPERTIES
 
-func (this *element) NextSibling() dom.Node {
-	if this.parent == nil {
-		return nil
-	} else {
-		return this.parent.(nodevalue).nextChild(this)
-	}
-}
-
-func (this *element) PreviousSibling() dom.Node {
-	if this.parent == nil {
-		return nil
-	} else {
-		return this.parent.(nodevalue).previousChild(this)
-	}
-}
-
 func (this *element) InnerHTML() string {
 	buf := new(bytes.Buffer)
 	for child := this.FirstChild(); child != nil; child = child.NextSibling() {
-		child.(nodevalue).write(buf)
+		writeNode(buf, child)
 	}
 	return buf.String()
 }
@@ -93,7 +79,7 @@ func (this *element) Style() dom.Style {
 func (this *element) SetAttribute(name, value string) dom.Attr {
 	attr := this.document.CreateAttribute(name)
 	attr.SetValue(value)
-	attr.(nodevalue).v().parent = this
+	getNode(attr).parent = this
 	this.attrs[name] = attr
 	return attr
 }
@@ -171,7 +157,7 @@ func (this *element) write(w io.Writer) (int, error) {
 
 	// Write children
 	for _, child := range this.node.children {
-		if n, err := child.(nodevalue).write(w); err != nil {
+		if n, err := writeNode(w, child); err != nil {
 			return 0, err
 		} else {
 			s += n
@@ -183,6 +169,79 @@ func (this *element) write(w io.Writer) (int, error) {
 		return 0, err
 	} else {
 		s += n
+	}
+
+	return s, nil
+}
+
+func (this *element) writeIndented(w io.Writer, level int, indent string) (int, error) {
+	s := 0
+	indentStr := strings.Repeat(indent, level)
+
+	// Write opening tag with indent
+	tag := indentStr + "<" + this.node.name
+
+	// Add attributes
+	if len(this.attrs) > 0 {
+		for _, attr := range this.attrs {
+			tag += fmt.Sprintf(" %s=%q", attr.Name(), attr.Value())
+		}
+	}
+	tag += ">"
+
+	if n, err := w.Write([]byte(tag)); err != nil {
+		return 0, err
+	} else {
+		s += n
+	}
+
+	// Check if element has children
+	hasChildren := len(this.node.children) > 0
+	hasTextOnly := hasChildren && len(this.node.children) == 1 && this.node.children[0].NodeType() == dom.TEXT_NODE
+
+	if hasChildren && !hasTextOnly {
+		// Newline before children
+		if n, err := w.Write([]byte("\n")); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+	}
+
+	// Write children
+	for _, child := range this.node.children {
+		if hasTextOnly {
+			// Inline text, no indent
+			if n, err := writeNode(w, child); err != nil {
+				return 0, err
+			} else {
+				s += n
+			}
+		} else {
+			// Indented children
+			if n, err := writeNodeIndented(w, child, level+1, indent); err != nil {
+				return 0, err
+			} else {
+				s += n
+			}
+		}
+	}
+
+	// Write closing tag
+	if hasChildren && !hasTextOnly {
+		// Indent closing tag
+		if n, err := w.Write([]byte(indentStr + "</" + this.node.name + ">\n")); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+	} else {
+		// Inline closing tag
+		if n, err := w.Write([]byte("</" + this.node.name + ">\n")); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
 	}
 
 	return s, nil

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html"
 	"io"
+	"strings"
 
 	dom "github.com/djthorpe/go-wasmbuild"
 )
@@ -21,29 +22,15 @@ type text struct {
 // STRINGIFY
 
 func (this *text) String() string {
-	str := "<DOMText"
-	str += fmt.Sprintf(" data=%q length=%v", this.Data(), this.Length())
-	return str + ">"
+	var b strings.Builder
+	b.WriteString("<DOMText")
+	fmt.Fprintf(&b, " data=%q length=%v", this.Data(), this.Length())
+	b.WriteString(">")
+	return b.String()
 }
 
 /////////////////////////////////////////////////////////////////////
 // PROPERTIES
-
-func (this *text) NextSibling() dom.Node {
-	if this.parent == nil {
-		return nil
-	} else {
-		return this.parent.(nodevalue).nextChild(this)
-	}
-}
-
-func (this *text) PreviousSibling() dom.Node {
-	if this.parent == nil {
-		return nil
-	} else {
-		return this.parent.(nodevalue).previousChild(this)
-	}
-}
 
 func (this *text) Data() string {
 	return this.cdata
@@ -60,22 +47,19 @@ func (this *text) CloneNode(bool) dom.Node {
 	return NewNode(this.document, this.name, this.nodetype, this.cdata)
 }
 
+// Child manipulation methods are no-ops for text nodes (leaf nodes)
 func (this *text) AppendChild(child dom.Node) dom.Node {
-	// NO-OP
 	return nil
 }
 
 func (this *text) InsertBefore(new dom.Node, ref dom.Node) dom.Node {
-	// NO-OP
 	return nil
 }
 
 func (this *text) RemoveChild(child dom.Node) {
-	// NO-OP
 }
 
 func (this *text) ReplaceChild(dom.Node, dom.Node) {
-	// NO-OP
 }
 
 ///////////////////////////////////////////////////////////////////////////////

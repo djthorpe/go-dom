@@ -5,6 +5,7 @@ package dom
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild"
@@ -20,14 +21,6 @@ type node struct {
 	nodetype dom.NodeType
 	children []dom.Node
 	cdata    string
-}
-
-type nodevalue interface {
-	dom.Node
-	v() *node
-	nextChild(dom.Node) dom.Node
-	previousChild(dom.Node) dom.Node
-	write(io.Writer) (int, error)
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -57,24 +50,27 @@ func NewNode(doc dom.Document, name string, nodetype dom.NodeType, cdata string)
 // STRINGIFY
 
 func (this *node) String() string {
-	str := "<DOMNode"
+	var b strings.Builder
+	b.WriteString("<DOMNode")
 	if this.name != "" {
-		str += fmt.Sprintf(" name=%q", this.name)
+		fmt.Fprintf(&b, " name=%q", this.name)
 	}
 	if this.nodetype != dom.UNKNOWN_NODE {
-		str += fmt.Sprint(" type=", this.nodetype)
+		fmt.Fprint(&b, " type=", this.nodetype)
 	}
 	if this.parent != nil {
-		str += " parent=<DOMNode"
+		b.WriteString(" parent=<DOMNode")
 		if name := this.parent.NodeName(); name != "" {
-			str += fmt.Sprintf(" name=%q", name)
+			fmt.Fprintf(&b, " name=%q", name)
 		}
-		return str + ">"
+		b.WriteString(">")
+		return b.String()
 	}
 	for c := this.FirstChild(); c != nil; c = c.NextSibling() {
-		str += fmt.Sprint(" child=", c)
+		fmt.Fprint(&b, " child=", c)
 	}
-	return str + ">"
+	b.WriteString(">")
+	return b.String()
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -95,7 +91,7 @@ func (this *node) Contains(child dom.Node) bool {
 }
 
 func (this *node) Equals(other dom.Node) bool {
-	return this.v() == other.(nodevalue).v()
+	return this == getNode(other)
 }
 
 func (this *node) ChildNodes() []dom.Node {
@@ -131,7 +127,7 @@ func (this *node) NextSibling() dom.Node {
 	if this.parent == nil {
 		return nil
 	} else {
-		return this.parent.(nodevalue).nextChild(this)
+		return findNextChild(getNode(this.parent), this)
 	}
 }
 
@@ -163,7 +159,7 @@ func (this *node) PreviousSibling() dom.Node {
 	if this.parent == nil {
 		return nil
 	} else {
-		return this.parent.(nodevalue).previousChild(this)
+		return findPreviousChild(getNode(this.parent), this)
 	}
 }
 
@@ -182,7 +178,7 @@ func (this *node) TextContent() string {
 // PUBLIC METHODS
 
 func (this *node) AppendChild(child dom.Node) dom.Node {
-	node := child.(nodevalue).v()
+	node := getNode(child)
 	if node.parent != nil {
 		node.parent.RemoveChild(child)
 	}
@@ -192,12 +188,12 @@ func (this *node) AppendChild(child dom.Node) dom.Node {
 }
 
 func (this *node) CloneNode(deep bool) dom.Node {
-	clone := NewNode(this.document, this.name, this.nodetype, this.cdata).(nodevalue)
+	clone := NewNode(this.document, this.name, this.nodetype, this.cdata)
 	if deep {
-		clone.v().children = make([]dom.Node, len(this.children))
+		getNode(clone).children = make([]dom.Node, len(this.children))
 		for i := range this.children {
 			child := this.children[i].CloneNode(deep)
-			child.(*node).parent = clone
+			getNode(child).parent = clone
 		}
 	}
 	return clone
@@ -218,7 +214,7 @@ func (this *node) InsertBefore(new dom.Node, ref dom.Node) dom.Node {
 		return this.AppendChild(new)
 	}
 	// insert node before ref
-	node := new.(nodevalue).v()
+	node := getNode(new)
 	for i := range this.children {
 		if this.children[i] != ref {
 			continue
@@ -241,7 +237,7 @@ func (this *node) RemoveChild(child dom.Node) {
 			continue
 		}
 		// Deattach child from parent
-		child.(nodevalue).v().parent = nil
+		getNode(child).parent = nil
 		// Remove child from parent
 		this.children = append(this.children[:i], this.children[i+1:]...)
 		return
@@ -259,6 +255,119 @@ func (this *node) v() *node {
 	return this
 }
 
+// getNode returns the internal *node from any node type
+// This replaces the nodevalue interface v() method
+func getNode(n dom.Node) *node {
+	switch v := n.(type) {
+	case *node:
+		return v
+	case *element:
+		return v.node
+	case *attr:
+		return v.node
+	case *text:
+		return v.node
+	case *comment:
+		return v.node
+	case *doctype:
+		return v.node
+	case *document:
+		return v.node
+	default:
+		panic("getNode: unknown node type")
+	}
+}
+
+// writeNode serializes any node type to HTML
+// This replaces the nodevalue interface write() method
+func writeNode(w io.Writer, n dom.Node) (int, error) {
+	switch v := n.(type) {
+	case *element:
+		return v.write(w)
+	case *attr:
+		return v.write(w)
+	case *text:
+		return v.write(w)
+	case *comment:
+		return v.write(w)
+	case *doctype:
+		return v.write(w)
+	case *node:
+		return v.write(w)
+	case *document:
+		return v.write(w)
+	default:
+		panic("writeNode: unknown node type")
+	}
+}
+
+// writeNodeIndented serializes any node type to HTML with indentation
+// level is the current indent level, indent is the string to use (e.g., "  " or "\t")
+func writeNodeIndented(w io.Writer, n dom.Node, level int, indent string) (int, error) {
+	switch v := n.(type) {
+	case *element:
+		return v.writeIndented(w, level, indent)
+	case *text:
+		return v.write(w) // Text nodes don't get indented
+	case *comment:
+		return v.writeIndented(w, level, indent)
+	case *doctype:
+		return v.write(w) // Doctype doesn't get indented
+	case *document:
+		return v.writeIndented(w, level, indent)
+	case *node:
+		return v.writeIndented(w, level, indent)
+	default:
+		return writeNode(w, n) // Fallback to non-indented
+	}
+}
+
+// findNextChild finds the next sibling of child in parent's children
+// This replaces the nodevalue interface nextChild() method
+func findNextChild(parent *node, child dom.Node) dom.Node {
+	if child == nil {
+		return nil
+	}
+	for i, c := range parent.children {
+		// Note: We use c.Equals(child) instead of c != child to properly compare
+		// the underlying *node pointers. Equals() is safe here - it only calls
+		// getNode() (a pure type switch) and does pointer comparison with ==.
+		// No recursion occurs.
+		if !c.Equals(child) {
+			continue
+		}
+		if i < len(parent.children)-1 {
+			return parent.children[i+1]
+		} else {
+			return nil
+		}
+	}
+	return nil
+}
+
+// findPreviousChild finds the previous sibling of child in parent's children
+// This replaces the nodevalue interface previousChild() method
+func findPreviousChild(parent *node, child dom.Node) dom.Node {
+	if child == nil {
+		return nil
+	}
+	for i, c := range parent.children {
+		// Note: We use c.Equals(child) instead of c != child to properly compare
+		// the underlying *node pointers. Equals() is safe here - it only calls
+		// getNode() (a pure type switch) and does pointer comparison with ==.
+		// No recursion occurs.
+		if !c.Equals(child) {
+			continue
+		}
+		if i > 0 {
+			return parent.children[i-1]
+		} else {
+			return nil
+		}
+	}
+	return nil
+}
+
 func (this *node) write(w io.Writer) (int, error) {
 	s := 0
 	if n, err := w.Write([]byte("<" + this.name + ">")); err != nil {
@@ -267,7 +376,7 @@ func (this *node) write(w io.Writer) (int, error) {
 		s += n
 	}
 	for _, child := range this.children {
-		if n, err := child.(nodevalue).write(w); err != nil {
+		if n, err := writeNode(w, child); err != nil {
 			return 0, err
 		} else {
 			s += n
@@ -281,38 +390,29 @@ func (this *node) write(w io.Writer) (int, error) {
 	return s, nil
 }
 
-// Return next child node for a child
-func (parent *node) nextChild(child dom.Node) dom.Node {
-	if child == nil {
-		return nil
-	}
-	for i, c := range parent.children {
-		if c != child {
-			continue
-		}
-		if i < len(parent.children)-1 {
-			return parent.children[i+1]
-		} else {
-			return nil
-		}
-	}
-	return nil
-}
+func (this *node) writeIndented(w io.Writer, level int, indent string) (int, error) {
+	s := 0
+	indentStr := strings.Repeat(indent, level)
 
-// Return previous child node
-func (parent *node) previousChild(child dom.Node) dom.Node {
-	if child == nil {
-		return nil
+	if n, err := w.Write([]byte(indentStr + "<" + this.name + ">\n")); err != nil {
+		return 0, err
+	} else {
+		s += n
 	}
-	for i, c := range parent.children {
-		if c != child {
-			continue
-		}
-		if i > 0 {
-			return parent.children[i-1]
+
+	for _, child := range this.children {
+		if n, err := writeNodeIndented(w, child, level+1, indent); err != nil {
+			return 0, err
 		} else {
-			return nil
+			s += n
 		}
 	}
-	return nil
+
+	if n, err := w.Write([]byte(indentStr + "</" + this.name + ">\n")); err != nil {
+		return 0, err
+	} else {
+		s += n
+	}
+
+	return s, nil
 }

@@ -140,6 +140,7 @@ type Window interface {
 
 	// Methods
 	Write(io.Writer, Node) (int, error)
+	WriteIndented(io.Writer, Node, string) (int, error)
 	//Read(io.Reader, string) (Document, error)
 }
 

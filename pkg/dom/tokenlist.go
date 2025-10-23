@@ -1,4 +1,4 @@
-//go:build !wasm
+//go:build !js
 
 package dom
 
@@ -118,10 +118,12 @@ func (tokenlist *tokenlist) Toggle(value string, force ...bool) bool {
 // STRINGIFY
 
 func (tokenlist *tokenlist) String() string {
-	str := "<DOMTokenList"
+	var b strings.Builder
+	b.WriteString("<DOMTokenList")
 	values := tokenlist.Values()
 	if len(values) > 0 {
-		str += fmt.Sprint(" ", strings.Join(values, ","))
+		fmt.Fprint(&b, " ", strings.Join(values, ","))
 	}
-	return str + ">"
+	b.WriteString(">")
+	return b.String()
 }

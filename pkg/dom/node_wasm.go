@@ -17,9 +17,35 @@ type node struct {
 	js.Value
 }
 
-type nodevalue interface {
-	dom.Node
-	v() js.Value
+///////////////////////////////////////////////////////////////////////////////
+// PRIVATE HELPERS
+
+// toJSValue returns the underlying js.Value from any node type
+// This replaces the nodevalue interface v() method
+func toJSValue(n dom.Node) js.Value {
+	if n == nil {
+		return js.Undefined()
+	}
+	// All node types embed *node which embeds js.Value
+	// So we can use a type assertion to access it
+	switch v := n.(type) {
+	case *node:
+		return v.Value
+	case *element:
+		return v.node.Value
+	case *attr:
+		return v.node.Value
+	case *text:
+		return v.node.Value
+	case *comment:
+		return v.node.Value
+	case *doctype:
+		return v.node.Value
+	case *document:
+		return v.node.Value
+	default:
+		panic("toJSValue: unknown node type")
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -122,7 +148,7 @@ func (this *node) ChildNodes() []dom.Node {
 }
 
 func (this *node) Contains(other dom.Node) bool {
-	return this.Call("contains", other.(nodevalue).v()).Bool()
+	return this.Call("contains", toJSValue(other)).Bool()
 }
 
 func (this *node) FirstChild() dom.Node {
@@ -177,11 +203,11 @@ func (this *node) TextContent() string {
 // PUBLIC METHODS
 
 func (this *node) Equals(other dom.Node) bool {
-	return this.Equal(other.(nodevalue).v())
+	return this.Equal(toJSValue(other))
 }
 
 func (this *node) AppendChild(child dom.Node) dom.Node {
-	this.Call("appendChild", child.(nodevalue).v())
+	this.Call("appendChild", toJSValue(child))
 	return child
 }
 
@@ -193,17 +219,17 @@ func (this *node) InsertBefore(child dom.Node, before dom.Node) dom.Node {
 	if before == nil {
 		return this.AppendChild(child)
 	} else {
-		this.Call("insertBefore", child.(nodevalue).v(), before.(nodevalue).v())
+		this.Call("insertBefore", toJSValue(child), toJSValue(before))
 		return child
 	}
 }
 
 func (this *node) RemoveChild(child dom.Node) {
-	this.Call("removeChild", child.(nodevalue).v())
+	this.Call("removeChild", toJSValue(child))
 }
 
 func (this *node) ReplaceChild(new, old dom.Node) {
-	this.Call("replaceChild", new.(nodevalue).v(), old.(nodevalue).v())
+	this.Call("replaceChild", toJSValue(new), toJSValue(old))
 }
 
 ///////////////////////////////////////////////////////////////////////////////

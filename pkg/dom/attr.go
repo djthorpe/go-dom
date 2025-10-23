@@ -7,6 +7,7 @@ import (
 	"html"
 	"io"
 	"strconv"
+	"strings"
 
 	dom "github.com/djthorpe/go-wasmbuild"
 )
@@ -22,31 +23,17 @@ type attr struct {
 // STRINGIFY
 
 func (this *attr) String() string {
-	str := "<DOMAttribute"
+	var b strings.Builder
+	b.WriteString("<DOMAttribute")
 	if name := this.Name(); name != "" {
-		str += fmt.Sprintf(" %v=%q", name, this.Value())
+		fmt.Fprintf(&b, " %v=%q", name, this.Value())
 	}
-	return str + ">"
+	b.WriteString(">")
+	return b.String()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // PROPERTIES
-
-func (this *attr) NextSibling() dom.Node {
-	if this.parent == nil {
-		return nil
-	} else {
-		return this.parent.(nodevalue).nextChild(this)
-	}
-}
-
-func (this *attr) PreviousSibling() dom.Node {
-	if this.parent == nil {
-		return nil
-	} else {
-		return this.parent.(nodevalue).previousChild(this)
-	}
-}
 
 func (this *attr) Name() string {
 	return this.name
@@ -67,25 +54,23 @@ func (this *attr) OwnerElement() dom.Element {
 /////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
 
-func (this *attr) AppendChild(child dom.Node) dom.Node {
-	return nil
-}
-
 func (this *attr) CloneNode(bool) dom.Node {
 	return NewNode(this.document, this.name, this.nodetype, this.cdata)
 }
 
+// Child manipulation methods are no-ops for attribute nodes (leaf nodes)
+func (this *attr) AppendChild(child dom.Node) dom.Node {
+	return nil
+}
+
 func (this *attr) InsertBefore(new dom.Node, ref dom.Node) dom.Node {
-	// NO-OP
 	return nil
 }
 
 func (this *attr) RemoveChild(child dom.Node) {
-	// NO-OP
 }
 
 func (this *attr) ReplaceChild(dom.Node, dom.Node) {
-	// NO-OP
 }
 
 ///////////////////////////////////////////////////////////////////////////////
