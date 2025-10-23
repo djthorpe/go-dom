@@ -48,34 +48,21 @@ jobs:
 
       - name: Create Chrome wrapper with --no-sandbox
         run: |
-          # Check what google-chrome is
-          ls -la /usr/bin/google-chrome || true
-          file /usr/bin/google-chrome || true
-
-          # Find all Chrome-related binaries
-          find /opt/google/chrome /usr/bin -name "*chrome*" -type f 2>/dev/null | head -20 || true
-
-          # Create wrapper for the actual Chrome binary
-          sudo mv /opt/google/chrome/chrome /opt/google/chrome/chrome-original || true
-          cat > /tmp/chrome-binary-wrapper << 'EOF'
+          # Wrap the actual Chrome binary
+          sudo mv /opt/google/chrome/chrome /opt/google/chrome/chrome-original
+          cat > /tmp/chrome-wrapper << 'EOF'
           #!/bin/bash
           exec /opt/google/chrome/chrome-original --no-sandbox "$@"
           EOF
-          sudo mv /tmp/chrome-binary-wrapper /opt/google/chrome/chrome
+          sudo mv /tmp/chrome-wrapper /opt/google/chrome/chrome
           sudo chmod +x /opt/google/chrome/chrome
 
-          # Also wrap the google-chrome launcher
-          if [ -f /usr/bin/google-chrome ]; then
-            sudo mv /usr/bin/google-chrome /usr/bin/google-chrome-original
-            cat > /tmp/chrome-launcher-wrapper << 'EOF'
-          #!/bin/bash
-          exec /usr/bin/google-chrome-original --no-sandbox "$@"
-          EOF
-            sudo mv /tmp/chrome-launcher-wrapper /usr/bin/google-chrome
-            sudo chmod +x /usr/bin/google-chrome
-          fi
-
-          google-chrome --version
+          # Verify the wrapper
+          echo "=== Wrapper contents ==="
+          cat /opt/google/chrome/chrome
+          echo "=== Testing wrapper ==="
+          /opt/google/chrome/chrome --version
+          echo "=== Wrapper test complete ==="
 
       - name: Run WASM tests
         run: make jstest
