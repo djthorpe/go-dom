@@ -19,9 +19,10 @@ type Context struct {
 var CLI struct {
 	Go       string `default:"go" help:"Path to go tool"`
 	WasmExec string `default:"lib/wasm/wasm_exec.js" help:"Path to wasm_exec.js relative to GOROOT"`
-	Output   string `short:"o" help:"Output directory (uses temp dir if not specified)"`
-	GoFlags  string `short:"f" help:"Additional flags to pass to go build"`
+	Output   string `help:"Output directory (uses temp dir if not specified)"`
+	GoFlags  string `help:"Additional flags to pass to go build"`
 	Verbose  bool   `short:"v" help:"Enable verbose output"`
+	Config   string `default:"wasmbuild.yaml" help:"Path to configuration file"`
 
 	Compile CompileCmd `cmd:"" help:"Compile a WASM application"`
 	Serve   ServeCmd   `cmd:"" help:"Serve a WASM application"`
@@ -125,6 +126,14 @@ func (c *CompileCmd) Run(ctx *Context) error {
 
 	// Get the directory name for the output filename
 	dirName := filepath.Base(absPath)
+
+	// Parse the configuration file
+	config, err := ParseYAMLPath(CLI.Config, absPath)
+	if err != nil {
+		return fmt.Errorf("failed to parse config: %w", err)
+	}
+
+	fmt.Println(config)
 
 	// Compile application
 	compile := &CompileCommand{
