@@ -55,3 +55,5 @@ jobs:
         run: make jstest
         env:
           CHROME_BIN: /usr/bin/google-chrome
+          CHROMEDP_NO_SANDBOX: true
+          CHROMEDP_DISABLE_GPU: true
