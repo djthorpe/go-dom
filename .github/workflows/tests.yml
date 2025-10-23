@@ -20,6 +20,9 @@ jobs:
         with:
           go-version: '1.24'
 
+      - name: Download dependencies
+        run: go mod tidy
+
       - name: Run tests
         run: make test
 
@@ -34,6 +37,9 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.24'
+
+      - name: Download dependencies
+        run: go mod tidy
 
       - name: Install Chrome
         uses: browser-actions/setup-chrome@latest

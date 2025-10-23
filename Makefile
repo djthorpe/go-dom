@@ -21,11 +21,12 @@ wasmbuild: mkdir
 	@$(GO) build -o $(BUILDDIR)/wasmbuild ${GOFLAGS} ./cmd/wasmbuild
 
 .PHONY: test
-test:
-	$(GO) test -v ./pkg/...
+test: tidy
+	@$(GO) test -v ./pkg/dom
+	@$(GO) test -v ./pkg/bootstrap
 
 .PHONY: jstest
-jstest: clean
+jstest: tidy
 	@$(GO) install github.com/agnivade/wasmbrowsertest@latest
 	@GOOS=js GOARCH=wasm $(GO) test -v -exec="wasmbrowsertest" ./pkg/dom
 	@GOOS=js GOARCH=wasm $(GO) test -v -exec="wasmbrowsertest" ./pkg/bootstrap
