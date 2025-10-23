@@ -46,23 +46,21 @@ jobs:
         with:
           chrome-version: stable
 
-      - name: Create Chrome wrapper with --no-sandbox
+      - name: Patch Chrome launcher to add --no-sandbox
         run: |
-          # Wrap the actual Chrome binary
-          sudo mv /opt/google/chrome/chrome /opt/google/chrome/chrome-original
-          cat > /tmp/chrome-wrapper << 'EOF'
-          #!/bin/bash
-          exec /opt/google/chrome/chrome-original --no-sandbox "$@"
-          EOF
-          sudo mv /tmp/chrome-wrapper /opt/google/chrome/chrome
-          sudo chmod +x /opt/google/chrome/chrome
+          # Backup the original launcher
+          sudo cp /opt/google/chrome/google-chrome /opt/google/chrome/google-chrome.bak
 
-          # Verify the wrapper
-          echo "=== Wrapper contents ==="
-          cat /opt/google/chrome/chrome
-          echo "=== Testing wrapper ==="
-          /opt/google/chrome/chrome --version
-          echo "=== Wrapper test complete ==="
+          # Modify the launcher to inject --no-sandbox
+          # This adds --no-sandbox to the exec line at the end of the script
+          sudo sed -i 's/exec -a "$0" "$HERE\/chrome" "$@"/exec -a "$0" "$HERE\/chrome" --no-sandbox "$@"/' /opt/google/chrome/google-chrome
+
+          echo "=== Modified launcher (last 5 lines) ==="
+          tail -5 /opt/google/chrome/google-chrome
+
+          echo "=== Testing modified launcher ==="
+          google-chrome --version
+          echo "=== Test complete ==="
 
       - name: Run WASM tests
         run: make jstest
