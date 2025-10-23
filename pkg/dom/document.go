@@ -4,6 +4,7 @@ package dom
 
 import (
 	"fmt"
+	"io"
 	"strings"
 
 	// Packages
@@ -146,6 +147,66 @@ func (this *document) ActiveElement() dom.Element {
 
 func (this *document) v() *node {
 	return this.node
+}
+
+func (this *document) write(w io.Writer) (int, error) {
+	s := 0
+
+	// Write doctype if present
+	if this.doctype != nil {
+		if n, err := writeNode(w, this.doctype); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+		// Add newline after doctype
+		if n, err := w.Write([]byte("\n")); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+	}
+
+	// Write root element (usually <html>)
+	if root := this.FirstChild(); root != nil {
+		if n, err := writeNode(w, root); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+	}
+
+	return s, nil
+}
+
+func (this *document) writeIndented(w io.Writer, level int, indent string) (int, error) {
+	s := 0
+
+	// Write doctype if present (no indentation)
+	if this.doctype != nil {
+		if n, err := writeNode(w, this.doctype); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+		// Add newline after doctype
+		if n, err := w.Write([]byte("\n")); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+	}
+
+	// Write root element with indentation
+	if root := this.FirstChild(); root != nil {
+		if n, err := writeNodeIndented(w, root, level, indent); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+	}
+
+	return s, nil
 }
 
 ///////////////////////////////////////////////////////////////////////////////

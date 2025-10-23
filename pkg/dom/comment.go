@@ -96,3 +96,40 @@ func (this *comment) write(w io.Writer) (int, error) {
 	}
 	return s, nil
 }
+
+func (this *comment) writeIndented(w io.Writer, level int, indent string) (int, error) {
+	s := 0
+	indentStr := strings.Repeat(indent, level)
+
+	if n, err := w.Write([]byte(indentStr)); err != nil {
+		return 0, err
+	} else {
+		s += n
+	}
+
+	if n, err := w.Write(startcomment); err != nil {
+		return 0, err
+	} else {
+		s += n
+	}
+
+	if n, err := w.Write([]byte(html.EscapeString(this.cdata))); err != nil {
+		return 0, err
+	} else {
+		s += n
+	}
+
+	if n, err := w.Write(endcomment); err != nil {
+		return 0, err
+	} else {
+		s += n
+	}
+
+	if n, err := w.Write([]byte("\n")); err != nil {
+		return 0, err
+	} else {
+		s += n
+	}
+
+	return s, nil
+}

@@ -72,6 +72,18 @@ func (this *window) Write(w io.Writer, node dom.Node) (int, error) {
 	}
 }
 
+// WriteIndented writes the node with indentation for better readability
+// indent is the string to use for each level (e.g., "  " or "\t")
+func (this *window) WriteIndented(w io.Writer, node dom.Node, indent string) (int, error) {
+	if node == nil {
+		return 0, dom.ErrBadParameter
+	}
+	if indent == "" {
+		indent = "  " // Default to 2 spaces
+	}
+	return writeNodeIndented(w, node, 0, indent)
+}
+
 // Read in a document from a string, and set mimetype
 func (this *window) Read(r io.Reader, mimetype string) (dom.Document, error) {
 	var node dom.Element

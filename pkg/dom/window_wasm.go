@@ -68,5 +68,13 @@ func (this *window) Write(w io.Writer, node dom.Node) (int, error) {
 	return s, nil
 }
 
+// WriteIndented writes the node's HTML with indentation (for wasm, just uses outerHTML)
+// The browser's outerHTML doesn't support custom indentation, so this is the same as Write
+func (this *window) WriteIndented(w io.Writer, node dom.Node, indent string) (int, error) {
+	// For WASM, we rely on the browser's HTML serialization
+	// which doesn't support custom indentation
+	return this.Write(w, node)
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
