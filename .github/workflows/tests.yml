@@ -46,23 +46,29 @@ jobs:
         with:
           chrome-version: stable
 
-      - name: Create Chrome wrapper with --no-sandbox
+      - name: Patch Chrome launcher to add --no-sandbox
         run: |
-          # Wrap the actual Chrome binary
-          sudo mv /opt/google/chrome/chrome /opt/google/chrome/chrome-original
-          cat > /tmp/chrome-wrapper << 'EOF'
-          #!/bin/bash
-          exec /opt/google/chrome/chrome-original --no-sandbox "$@"
-          EOF
-          sudo mv /tmp/chrome-wrapper /opt/google/chrome/chrome
-          sudo chmod +x /opt/google/chrome/chrome
+          echo "=== Original google-chrome launcher script ==="
+          cat /opt/google/chrome/google-chrome
+          echo "=== End of original script ==="
 
-          # Verify the wrapper
-          echo "=== Wrapper contents ==="
-          cat /opt/google/chrome/chrome
-          echo "=== Testing wrapper ==="
-          /opt/google/chrome/chrome --version
-          echo "=== Wrapper test complete ==="
+          # Backup the original launcher
+          sudo cp /opt/google/chrome/google-chrome /opt/google/chrome/google-chrome.bak
+
+          # Modify the launcher to inject --no-sandbox before "$@"
+          # Try multiple patterns to catch different launcher formats
+          sudo sed -i -e 's/exec -a "$0" "$HERE\/chrome" "$@"/exec -a "$0" "$HERE\/chrome" --no-sandbox "$@"/' \
+                      -e 's/"$HERE\/chrome" "$@"/"$HERE\/chrome" --no-sandbox "$@"/' \
+                      -e 's/exec "$HERE\/chrome" "$@"/exec "$HERE\/chrome" --no-sandbox "$@"/' \
+                      /opt/google/chrome/google-chrome
+
+          echo "=== Modified google-chrome launcher script ==="
+          cat /opt/google/chrome/google-chrome
+          echo "=== End of modified script ==="
+
+          echo "=== Testing modified launcher ==="
+          google-chrome --version
+          echo "=== Test complete ==="
 
       - name: Run WASM tests
         run: make jstest
