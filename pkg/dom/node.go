@@ -23,17 +23,6 @@ type node struct {
 	cdata    string
 }
 
-// nodevalue is an internal interface for non-JS builds that extends dom.Node
-// with implementation-specific methods for tree traversal and serialization.
-// This interface is different from the JS build's nodevalue interface.
-type nodevalue interface {
-	dom.Node
-	v() *node
-	nextChild(dom.Node) dom.Node
-	previousChild(dom.Node) dom.Node
-	write(io.Writer) (int, error)
-}
-
 /////////////////////////////////////////////////////////////////////
 // LIFECYCLE
 
@@ -102,7 +91,7 @@ func (this *node) Contains(child dom.Node) bool {
 }
 
 func (this *node) Equals(other dom.Node) bool {
-	return this.v() == other.(nodevalue).v()
+	return this == getNode(other)
 }
 
 func (this *node) ChildNodes() []dom.Node {
@@ -138,7 +127,7 @@ func (this *node) NextSibling() dom.Node {
 	if this.parent == nil {
 		return nil
 	} else {
-		return this.parent.(nodevalue).nextChild(this)
+		return findNextChild(getNode(this.parent), this)
 	}
 }
 
@@ -170,7 +159,7 @@ func (this *node) PreviousSibling() dom.Node {
 	if this.parent == nil {
 		return nil
 	} else {
-		return this.parent.(nodevalue).previousChild(this)
+		return findPreviousChild(getNode(this.parent), this)
 	}
 }
 
@@ -189,7 +178,7 @@ func (this *node) TextContent() string {
 // PUBLIC METHODS
 
 func (this *node) AppendChild(child dom.Node) dom.Node {
-	node := child.(nodevalue).v()
+	node := getNode(child)
 	if node.parent != nil {
 		node.parent.RemoveChild(child)
 	}
@@ -199,12 +188,12 @@ func (this *node) AppendChild(child dom.Node) dom.Node {
 }
 
 func (this *node) CloneNode(deep bool) dom.Node {
-	clone := NewNode(this.document, this.name, this.nodetype, this.cdata).(nodevalue)
+	clone := NewNode(this.document, this.name, this.nodetype, this.cdata)
 	if deep {
-		clone.v().children = make([]dom.Node, len(this.children))
+		getNode(clone).children = make([]dom.Node, len(this.children))
 		for i := range this.children {
 			child := this.children[i].CloneNode(deep)
-			child.(*node).parent = clone
+			getNode(child).parent = clone
 		}
 	}
 	return clone
@@ -225,7 +214,7 @@ func (this *node) InsertBefore(new dom.Node, ref dom.Node) dom.Node {
 		return this.AppendChild(new)
 	}
 	// insert node before ref
-	node := new.(nodevalue).v()
+	node := getNode(new)
 	for i := range this.children {
 		if this.children[i] != ref {
 			continue
@@ -248,7 +237,7 @@ func (this *node) RemoveChild(child dom.Node) {
 			continue
 		}
 		// Deattach child from parent
-		child.(nodevalue).v().parent = nil
+		getNode(child).parent = nil
 		// Remove child from parent
 		this.children = append(this.children[:i], this.children[i+1:]...)
 		return
@@ -266,30 +255,55 @@ func (this *node) v() *node {
 	return this
 }
 
-func (this *node) write(w io.Writer) (int, error) {
-	s := 0
-	if n, err := w.Write([]byte("<" + this.name + ">")); err != nil {
-		return 0, err
-	} else {
-		s += n
+// getNode returns the internal *node from any node type
+// This replaces the nodevalue interface v() method
+func getNode(n dom.Node) *node {
+	switch v := n.(type) {
+	case *node:
+		return v
+	case *element:
+		return v.node
+	case *attr:
+		return v.node
+	case *text:
+		return v.node
+	case *comment:
+		return v.node
+	case *doctype:
+		return v.node
+	case *document:
+		return v.node
+	default:
+		panic("getNode: unknown node type")
 	}
-	for _, child := range this.children {
-		if n, err := child.(nodevalue).write(w); err != nil {
-			return 0, err
-		} else {
-			s += n
-		}
-	}
-	if n, err := w.Write([]byte("</" + this.name + ">")); err != nil {
-		return 0, err
-	} else {
-		s += n
-	}
-	return s, nil
 }
 
-// Return next child node for a child
-func (parent *node) nextChild(child dom.Node) dom.Node {
+// writeNode serializes any node type to HTML
+// This replaces the nodevalue interface write() method
+func writeNode(w io.Writer, n dom.Node) (int, error) {
+	switch v := n.(type) {
+	case *element:
+		return v.write(w)
+	case *attr:
+		return v.write(w)
+	case *text:
+		return v.write(w)
+	case *comment:
+		return v.write(w)
+	case *doctype:
+		return v.write(w)
+	case *node:
+		return v.write(w)
+	case *document:
+		return v.write(w)
+	default:
+		panic("writeNode: unknown node type")
+	}
+}
+
+// findNextChild finds the next sibling of child in parent's children
+// This replaces the nodevalue interface nextChild() method
+func findNextChild(parent *node, child dom.Node) dom.Node {
 	if child == nil {
 		return nil
 	}
@@ -306,8 +320,9 @@ func (parent *node) nextChild(child dom.Node) dom.Node {
 	return nil
 }
 
-// Return previous child node
-func (parent *node) previousChild(child dom.Node) dom.Node {
+// findPreviousChild finds the previous sibling of child in parent's children
+// This replaces the nodevalue interface previousChild() method
+func findPreviousChild(parent *node, child dom.Node) dom.Node {
 	if child == nil {
 		return nil
 	}
@@ -322,4 +337,26 @@ func (parent *node) previousChild(child dom.Node) dom.Node {
 		}
 	}
 	return nil
+}
+
+func (this *node) write(w io.Writer) (int, error) {
+	s := 0
+	if n, err := w.Write([]byte("<" + this.name + ">")); err != nil {
+		return 0, err
+	} else {
+		s += n
+	}
+	for _, child := range this.children {
+		if n, err := writeNode(w, child); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+	}
+	if n, err := w.Write([]byte("</" + this.name + ">")); err != nil {
+		return 0, err
+	} else {
+		s += n
+	}
+	return s, nil
 }

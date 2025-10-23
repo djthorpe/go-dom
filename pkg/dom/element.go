@@ -40,7 +40,7 @@ func (this *element) String() string {
 func (this *element) InnerHTML() string {
 	buf := new(bytes.Buffer)
 	for child := this.FirstChild(); child != nil; child = child.NextSibling() {
-		child.(nodevalue).write(buf)
+		writeNode(buf, child)
 	}
 	return buf.String()
 }
@@ -79,7 +79,7 @@ func (this *element) Style() dom.Style {
 func (this *element) SetAttribute(name, value string) dom.Attr {
 	attr := this.document.CreateAttribute(name)
 	attr.SetValue(value)
-	attr.(nodevalue).v().parent = this
+	getNode(attr).parent = this
 	this.attrs[name] = attr
 	return attr
 }
@@ -157,7 +157,7 @@ func (this *element) write(w io.Writer) (int, error) {
 
 	// Write children
 	for _, child := range this.node.children {
-		if n, err := child.(nodevalue).write(w); err != nil {
+		if n, err := writeNode(w, child); err != nil {
 			return 0, err
 		} else {
 			s += n

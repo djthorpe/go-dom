@@ -60,7 +60,7 @@ func (this *window) Write(w io.Writer, node dom.Node) (int, error) {
 	case dom.DOCUMENT_TYPE_NODE:
 		var s int
 		for child := node.FirstChild(); child != nil; child = child.NextSibling() {
-			if n, err := child.(nodevalue).write(w); err != nil {
+			if n, err := writeNode(w, child); err != nil {
 				return 0, err
 			} else {
 				s += n
@@ -68,7 +68,7 @@ func (this *window) Write(w io.Writer, node dom.Node) (int, error) {
 		}
 		return s, nil
 	default:
-		return node.(nodevalue).write(w)
+		return writeNode(w, node)
 	}
 }
 

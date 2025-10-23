@@ -58,7 +58,7 @@ func (this *window) Write(w io.Writer, node dom.Node) (int, error) {
 		return 0, dom.ErrBadParameter
 	}
 	for child := node.FirstChild(); child != nil; child = child.NextSibling() {
-		html := child.(nodevalue).v().Get("outerHTML").String()
+		html := toJSValue(child).Get("outerHTML").String()
 		if n, err := w.Write([]byte(html)); err != nil {
 			return 0, err
 		} else {
