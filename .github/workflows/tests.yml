@@ -48,15 +48,23 @@ jobs:
 
       - name: Patch Chrome launcher to add --no-sandbox
         run: |
+          echo "=== Original google-chrome launcher script ==="
+          cat /opt/google/chrome/google-chrome
+          echo "=== End of original script ==="
+
           # Backup the original launcher
           sudo cp /opt/google/chrome/google-chrome /opt/google/chrome/google-chrome.bak
 
-          # Modify the launcher to inject --no-sandbox
-          # This adds --no-sandbox to the exec line at the end of the script
-          sudo sed -i 's/exec -a "$0" "$HERE\/chrome" "$@"/exec -a "$0" "$HERE\/chrome" --no-sandbox "$@"/' /opt/google/chrome/google-chrome
+          # Modify the launcher to inject --no-sandbox before "$@"
+          # Try multiple patterns to catch different launcher formats
+          sudo sed -i -e 's/exec -a "$0" "$HERE\/chrome" "$@"/exec -a "$0" "$HERE\/chrome" --no-sandbox "$@"/' \
+                      -e 's/"$HERE\/chrome" "$@"/"$HERE\/chrome" --no-sandbox "$@"/' \
+                      -e 's/exec "$HERE\/chrome" "$@"/exec "$HERE\/chrome" --no-sandbox "$@"/' \
+                      /opt/google/chrome/google-chrome
 
-          echo "=== Modified launcher (last 5 lines) ==="
-          tail -5 /opt/google/chrome/google-chrome
+          echo "=== Modified google-chrome launcher script ==="
+          cat /opt/google/chrome/google-chrome
+          echo "=== End of modified script ==="
 
           echo "=== Testing modified launcher ==="
           google-chrome --version
