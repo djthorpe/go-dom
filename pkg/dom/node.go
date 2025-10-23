@@ -329,6 +329,10 @@ func findNextChild(parent *node, child dom.Node) dom.Node {
 		return nil
 	}
 	for i, c := range parent.children {
+		// Note: We use c.Equals(child) instead of c != child to properly compare
+		// the underlying *node pointers. Equals() is safe here - it only calls
+		// getNode() (a pure type switch) and does pointer comparison with ==.
+		// No recursion occurs.
 		if !c.Equals(child) {
 			continue
 		}
@@ -348,6 +352,10 @@ func findPreviousChild(parent *node, child dom.Node) dom.Node {
 		return nil
 	}
 	for i, c := range parent.children {
+		// Note: We use c.Equals(child) instead of c != child to properly compare
+		// the underlying *node pointers. Equals() is safe here - it only calls
+		// getNode() (a pure type switch) and does pointer comparison with ==.
+		// No recursion occurs.
 		if !c.Equals(child) {
 			continue
 		}
