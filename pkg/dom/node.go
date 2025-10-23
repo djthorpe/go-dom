@@ -5,6 +5,7 @@ package dom
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild"
@@ -22,6 +23,9 @@ type node struct {
 	cdata    string
 }
 
+// nodevalue is an internal interface for non-JS builds that extends dom.Node
+// with implementation-specific methods for tree traversal and serialization.
+// This interface is different from the JS build's nodevalue interface.
 type nodevalue interface {
 	dom.Node
 	v() *node
@@ -57,24 +61,27 @@ func NewNode(doc dom.Document, name string, nodetype dom.NodeType, cdata string)
 // STRINGIFY
 
 func (this *node) String() string {
-	str := "<DOMNode"
+	var b strings.Builder
+	b.WriteString("<DOMNode")
 	if this.name != "" {
-		str += fmt.Sprintf(" name=%q", this.name)
+		fmt.Fprintf(&b, " name=%q", this.name)
 	}
 	if this.nodetype != dom.UNKNOWN_NODE {
-		str += fmt.Sprint(" type=", this.nodetype)
+		fmt.Fprint(&b, " type=", this.nodetype)
 	}
 	if this.parent != nil {
-		str += " parent=<DOMNode"
+		b.WriteString(" parent=<DOMNode")
 		if name := this.parent.NodeName(); name != "" {
-			str += fmt.Sprintf(" name=%q", name)
+			fmt.Fprintf(&b, " name=%q", name)
 		}
-		return str + ">"
+		b.WriteString(">")
+		return b.String()
 	}
 	for c := this.FirstChild(); c != nil; c = c.NextSibling() {
-		str += fmt.Sprint(" child=", c)
+		fmt.Fprint(&b, " child=", c)
 	}
-	return str + ">"
+	b.WriteString(">")
+	return b.String()
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -287,7 +294,7 @@ func (parent *node) nextChild(child dom.Node) dom.Node {
 		return nil
 	}
 	for i, c := range parent.children {
-		if c != child {
+		if !c.Equals(child) {
 			continue
 		}
 		if i < len(parent.children)-1 {
@@ -305,7 +312,7 @@ func (parent *node) previousChild(child dom.Node) dom.Node {
 		return nil
 	}
 	for i, c := range parent.children {
-		if c != child {
+		if !c.Equals(child) {
 			continue
 		}
 		if i > 0 {

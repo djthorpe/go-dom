@@ -1,4 +1,4 @@
-//go:build !wasm
+//go:build !js
 
 package dom
 
@@ -27,29 +27,15 @@ var _ dom.Element = (*element)(nil)
 // STRINGIFY
 
 func (this *element) String() string {
-	str := "<DOMElement"
-	str += fmt.Sprint(" ", this.node)
-	return str + ">"
+	var b strings.Builder
+	b.WriteString("<DOMElement")
+	fmt.Fprint(&b, " ", this.node)
+	b.WriteString(">")
+	return b.String()
 }
 
 /////////////////////////////////////////////////////////////////////
 // PROPERTIES
-
-func (this *element) NextSibling() dom.Node {
-	if this.parent == nil {
-		return nil
-	} else {
-		return this.parent.(nodevalue).nextChild(this)
-	}
-}
-
-func (this *element) PreviousSibling() dom.Node {
-	if this.parent == nil {
-		return nil
-	} else {
-		return this.parent.(nodevalue).previousChild(this)
-	}
-}
 
 func (this *element) InnerHTML() string {
 	buf := new(bytes.Buffer)

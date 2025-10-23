@@ -17,6 +17,9 @@ type node struct {
 	js.Value
 }
 
+// nodevalue is an internal interface for JS builds that extends dom.Node
+// with a method to access the underlying js.Value for JavaScript interop.
+// This interface is different from the non-JS build's nodevalue interface.
 type nodevalue interface {
 	dom.Node
 	v() js.Value

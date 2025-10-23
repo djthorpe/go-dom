@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html"
 	"io"
+	"strings"
 
 	dom "github.com/djthorpe/go-wasmbuild"
 )
@@ -29,29 +30,15 @@ var (
 // STRINGIFY
 
 func (this *comment) String() string {
-	str := "<DOMComment"
-	str += fmt.Sprintf(" data=%q length=%v", this.Data(), this.Length())
-	return str + ">"
+	var b strings.Builder
+	b.WriteString("<DOMComment")
+	fmt.Fprintf(&b, " data=%q length=%v", this.Data(), this.Length())
+	b.WriteString(">")
+	return b.String()
 }
 
 /////////////////////////////////////////////////////////////////////
 // PROPERTIES
-
-func (this *comment) NextSibling() dom.Node {
-	if this.parent == nil {
-		return nil
-	} else {
-		return this.parent.(nodevalue).nextChild(this)
-	}
-}
-
-func (this *comment) PreviousSibling() dom.Node {
-	if this.parent == nil {
-		return nil
-	} else {
-		return this.parent.(nodevalue).previousChild(this)
-	}
-}
 
 func (this *comment) Data() string {
 	return this.cdata
@@ -64,26 +51,23 @@ func (this *comment) Length() int {
 /////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
 
-func (this *comment) AppendChild(child dom.Node) dom.Node {
-	// NO-OP
-	return nil
-}
-
 func (this *comment) CloneNode(bool) dom.Node {
 	return NewNode(this.document, this.name, this.nodetype, this.cdata)
 }
 
+// Child manipulation methods are no-ops for comment nodes (leaf nodes)
+func (this *comment) AppendChild(child dom.Node) dom.Node {
+	return nil
+}
+
 func (this *comment) InsertBefore(new dom.Node, ref dom.Node) dom.Node {
-	// NO-OP
 	return nil
 }
 
 func (this *comment) RemoveChild(child dom.Node) {
-	// NO-OP
 }
 
 func (this *comment) ReplaceChild(dom.Node, dom.Node) {
-	// NO-OP
 }
 
 ///////////////////////////////////////////////////////////////////////////////

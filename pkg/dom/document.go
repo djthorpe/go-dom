@@ -1,9 +1,10 @@
-//go:build !wasm
+//go:build !js
 
 package dom
 
 import (
 	"fmt"
+	"strings"
 
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild"
@@ -75,7 +76,13 @@ func (doc *document) Title() string {
 	if doc.head == nil {
 		return ""
 	}
-	return fmt.Sprint(doc.node.v())
+	// Find the title element in the head
+	for child := doc.head.FirstChild(); child != nil; child = child.NextSibling() {
+		if child.NodeType() == dom.ELEMENT_NODE && child.NodeName() == "title" {
+			return child.TextContent()
+		}
+	}
+	return ""
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -145,7 +152,9 @@ func (this *document) v() *node {
 // STRINGIFY
 
 func (this *document) String() string {
-	str := "<DOMDocument"
-	str += fmt.Sprint(" ", this.node)
-	return str + ">"
+	var b strings.Builder
+	b.WriteString("<DOMDocument")
+	fmt.Fprint(&b, " ", this.node)
+	b.WriteString(">")
+	return b.String()
 }

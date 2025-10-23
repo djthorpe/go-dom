@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 
 	dom "github.com/djthorpe/go-wasmbuild"
 	html "golang.org/x/net/html"
@@ -35,9 +36,11 @@ func GetWindowWithTitle(title string) dom.Window {
 // STRINGIFY
 
 func (w *window) String() string {
-	str := "<DOMWindow"
-	str += fmt.Sprint(" document=", w.document)
-	return str + ">"
+	var b strings.Builder
+	b.WriteString("<DOMWindow")
+	fmt.Fprint(&b, " document=", w.document)
+	b.WriteString(">")
+	return b.String()
 }
 
 ///////////////////////////////////////////////////////////////////////////////

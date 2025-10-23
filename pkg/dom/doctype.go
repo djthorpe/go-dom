@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 
 	dom "github.com/djthorpe/go-wasmbuild"
 )
@@ -31,17 +32,19 @@ var (
 // STRINGIFY
 
 func (this *doctype) String() string {
-	str := "<DOMDocumentType"
+	var b strings.Builder
+	b.WriteString("<DOMDocumentType")
 	if name := this.Name(); name != "" {
-		str += fmt.Sprintf(" name=%q", name)
+		fmt.Fprintf(&b, " name=%q", name)
 	}
 	if publicid := this.PublicId(); publicid != "" {
-		str += fmt.Sprintf(" publicId=%q", publicid)
+		fmt.Fprintf(&b, " publicId=%q", publicid)
 	}
 	if systemid := this.SystemId(); systemid != "" {
-		str += fmt.Sprintf(" systemId=%q", systemid)
+		fmt.Fprintf(&b, " systemId=%q", systemid)
 	}
-	return str + ">"
+	b.WriteString(">")
+	return b.String()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -71,11 +74,6 @@ func (this *doctype) SystemId() string {
 /////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
 
-func (this *doctype) AppendChild(child dom.Node) dom.Node {
-	// NO-OP
-	return nil
-}
-
 func (this *doctype) CloneNode(bool) dom.Node {
 	clone := NewNode(this.document, this.name, this.nodetype, this.cdata).(*doctype)
 	clone.publicid = this.publicid
@@ -83,17 +81,19 @@ func (this *doctype) CloneNode(bool) dom.Node {
 	return clone
 }
 
+// Child manipulation methods are no-ops for doctype nodes (leaf nodes)
+func (this *doctype) AppendChild(child dom.Node) dom.Node {
+	return nil
+}
+
 func (this *doctype) InsertBefore(new dom.Node, ref dom.Node) dom.Node {
-	// NO-OP
 	return nil
 }
 
 func (this *doctype) RemoveChild(child dom.Node) {
-	// NO-OP
 }
 
 func (this *doctype) ReplaceChild(dom.Node, dom.Node) {
-	// NO-OP
 }
 
 ///////////////////////////////////////////////////////////////////////////////
