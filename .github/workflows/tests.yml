@@ -46,14 +46,15 @@ jobs:
         with:
           chrome-version: stable
 
-      - name: Verify Chrome installation
+      - name: Create Chrome wrapper with --no-sandbox
         run: |
-          which google-chrome || which chromium-browser || which chromium
-          google-chrome --version || chromium-browser --version || chromium --version
+          cat > /tmp/chrome-wrapper.sh << 'EOF'
+          #!/bin/bash
+          exec /usr/bin/google-chrome --no-sandbox "$@"
+          EOF
+          chmod +x /tmp/chrome-wrapper.sh
 
       - name: Run WASM tests
         run: make jstest
         env:
-          CHROME_BIN: /usr/bin/google-chrome
-          CHROMEDP_NO_SANDBOX: true
-          CHROMEDP_DISABLE_GPU: true
+          CHROME_BIN: /tmp/chrome-wrapper.sh
