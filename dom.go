@@ -37,6 +37,7 @@ type Node interface {
 	ReplaceChild(Node, Node)
 }
 
+// Element implements https://developer.mozilla.org/en-US/docs/Web/API/Element
 type Element interface {
 	Node
 
@@ -46,20 +47,37 @@ type Element interface {
 	TagName() string
 	Attributes() []Attr
 	Style() Style
+	ClassList() TokenList
+	ID() string
+	SetID(string)
+	ClassName() string
+	SetClassName(string)
 
 	// Attribute Methods
-	//RemoveAttribute(string)
-	//RemoveAttributeNode(Attr) Attr
+	RemoveAttribute(string)
+	RemoveAttributeNode(Attr)
 	SetAttribute(string, string) Attr
-	//SetAttributeNode(Attr) Attr
+	SetAttributeNode(Attr) Attr
 	GetAttribute(string) string
-	//GetAttributeNames() []string
+	GetAttributeNames() []string
 	GetAttributeNode(string) Attr
 	HasAttribute(string) bool
 	HasAttributes() bool
 
-	// Class Methods
-	ClassList() TokenList
+	// Selection Methods
+	GetElementsByClassName(string) []Element
+	GetElementsByTagName(string) []Element
+
+	// DOM Manipulation Methods
+	Children() []Element
+	ChildElementCount() int
+	FirstElementChild() Element
+	LastElementChild() Element
+	NextElementSibling() Element
+	PreviousElementSibling() Element
+	Remove()
+	ReplaceWith(...Node)
+	InsertAdjacentElement(string, Element) Element
 
 	// Event Methods
 	AddEventListener(string, func(Node)) Element
@@ -134,13 +152,13 @@ type DocumentType interface {
 	SystemId() string
 }
 
+// Window implements https://developer.mozilla.org/en-US/docs/Web/API/Window
 type Window interface {
 	// Properties
 	Document() Document
 
 	// Methods
 	Write(io.Writer, Node) (int, error)
-	WriteIndented(io.Writer, Node, string) (int, error)
 	//Read(io.Reader, string) (Document, error)
 }
 

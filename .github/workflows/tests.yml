@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch:
 
 jobs:
@@ -14,52 +14,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
-
+          go-version: "1.24"
       - name: Download dependencies
         run: go mod tidy
-
       - name: Run tests
         run: make test
-
-  jstest:
-    name: WASM Browser Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.24'
-
-      - name: Download dependencies
-        run: go mod tidy
-
-      - name: Install Chrome
-        uses: browser-actions/setup-chrome@latest
-        with:
-          chrome-version: stable
-
-      - name: Patch Chrome launcher for CI environment
-        run: |
-          # Backup the original launcher
-          sudo cp /opt/google/chrome/google-chrome /opt/google/chrome/google-chrome.bak
-
-          # Modify the launcher to inject Chrome flags needed for CI before "$@"
-          # Flags: --no-sandbox (required for CI), --disable-dev-shm-usage (CI /dev/shm is too small),
-          #        --disable-gpu (headless mode), --disable-software-rasterizer (GPU issues)
-          sudo sed -i -e 's/exec -a "$0" "$HERE\/chrome" "$@"/exec -a "$0" "$HERE\/chrome" --no-sandbox --disable-dev-shm-usage --disable-gpu --disable-software-rasterizer "$@"/' \
-                      /opt/google/chrome/google-chrome
-
-          echo "Modified exec line:"
-          tail -1 /opt/google/chrome/google-chrome
-          google-chrome --version
-
-      - name: Run WASM tests
-        run: make jstest

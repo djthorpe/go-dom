@@ -224,6 +224,7 @@ func (this *node) InsertBefore(new dom.Node, ref dom.Node) dom.Node {
 			node.parent.RemoveChild(new)
 		}
 		// Attach new to this
+		node.parent = this
 		this.children = append(this.children[:i], append([]dom.Node{new}, this.children[i:]...)...)
 		return new
 	}
@@ -301,27 +302,6 @@ func writeNode(w io.Writer, n dom.Node) (int, error) {
 	}
 }
 
-// writeNodeIndented serializes any node type to HTML with indentation
-// level is the current indent level, indent is the string to use (e.g., "  " or "\t")
-func writeNodeIndented(w io.Writer, n dom.Node, level int, indent string) (int, error) {
-	switch v := n.(type) {
-	case *element:
-		return v.writeIndented(w, level, indent)
-	case *text:
-		return v.write(w) // Text nodes don't get indented
-	case *comment:
-		return v.writeIndented(w, level, indent)
-	case *doctype:
-		return v.write(w) // Doctype doesn't get indented
-	case *document:
-		return v.writeIndented(w, level, indent)
-	case *node:
-		return v.writeIndented(w, level, indent)
-	default:
-		return writeNode(w, n) // Fallback to non-indented
-	}
-}
-
 // findNextChild finds the next sibling of child in parent's children
 // This replaces the nodevalue interface nextChild() method
 func findNextChild(parent *node, child dom.Node) dom.Node {
@@ -387,32 +367,5 @@ func (this *node) write(w io.Writer) (int, error) {
 	} else {
 		s += n
 	}
-	return s, nil
-}
-
-func (this *node) writeIndented(w io.Writer, level int, indent string) (int, error) {
-	s := 0
-	indentStr := strings.Repeat(indent, level)
-
-	if n, err := w.Write([]byte(indentStr + "<" + this.name + ">\n")); err != nil {
-		return 0, err
-	} else {
-		s += n
-	}
-
-	for _, child := range this.children {
-		if n, err := writeNodeIndented(w, child, level+1, indent); err != nil {
-			return 0, err
-		} else {
-			s += n
-		}
-	}
-
-	if n, err := w.Write([]byte(indentStr + "</" + this.name + ">\n")); err != nil {
-		return 0, err
-	} else {
-		s += n
-	}
-
 	return s, nil
 }

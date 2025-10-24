@@ -3,9 +3,10 @@ package dom_test
 import (
 	"testing"
 
-	// Modules
-
+	// Packages
 	dom "github.com/djthorpe/go-wasmbuild"
+
+	// Namespace import for interfaces
 	. "github.com/djthorpe/go-wasmbuild/pkg/dom"
 )
 

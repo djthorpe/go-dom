@@ -104,6 +104,162 @@ func (e *element) GetAttribute(name string) string {
 	return result.String()
 }
 
+func (e *element) RemoveAttribute(name string) {
+	e.Call("removeAttribute", name)
+}
+
+func (e *element) RemoveAttributeNode(attr dom.Attr) {
+	if attr == nil {
+		return
+	}
+
+	// Wrap in a deferred recover to handle JS errors gracefully
+	defer func() {
+		if r := recover(); r != nil {
+			// Error occurred (attribute wasn't attached to this element)
+			// Silently ignore
+		}
+	}()
+
+	attrValue := toJSValue(attr)
+	e.Call("removeAttributeNode", attrValue)
+}
+
+func (e *element) SetAttributeNode(attr dom.Attr) dom.Attr {
+	if attr == nil {
+		return nil
+	}
+	attrValue := toJSValue(attr)
+	result := e.Call("setAttributeNode", attrValue)
+	if result.IsNull() {
+		return nil
+	}
+	return NewNode(result).(dom.Attr)
+}
+
+func (e *element) GetAttributeNames() []string {
+	namesArray := e.Call("getAttributeNames")
+	length := namesArray.Get("length").Int()
+	names := make([]string, 0, length)
+	for i := 0; i < length; i++ {
+		names = append(names, namesArray.Index(i).String())
+	}
+	return names
+}
+
+func (e *element) GetElementsByClassName(className string) []dom.Element {
+	nodeList := e.Call("getElementsByClassName", className)
+	length := nodeList.Get("length").Int()
+	result := make([]dom.Element, 0, length)
+	for i := 0; i < length; i++ {
+		result = append(result, NewNode(nodeList.Index(i)).(dom.Element))
+	}
+	return result
+}
+
+func (e *element) GetElementsByTagName(tagName string) []dom.Element {
+	nodeList := e.Call("getElementsByTagName", tagName)
+	length := nodeList.Get("length").Int()
+	result := make([]dom.Element, 0, length)
+	for i := 0; i < length; i++ {
+		result = append(result, NewNode(nodeList.Index(i)).(dom.Element))
+	}
+	return result
+}
+
+func (e *element) Remove() {
+	e.Call("remove")
+}
+
+func (e *element) ReplaceWith(nodes ...dom.Node) {
+	if len(nodes) == 0 {
+		return
+	}
+
+	// Convert nodes to JS values
+	args := make([]interface{}, len(nodes))
+	for i, node := range nodes {
+		args[i] = toJSValue(node)
+	}
+
+	e.Call("replaceWith", args...)
+}
+
+func (e *element) InsertAdjacentElement(position string, element dom.Element) dom.Element {
+	if element == nil {
+		return nil
+	}
+
+	elemValue := toJSValue(element)
+	result := e.Call("insertAdjacentElement", position, elemValue)
+	if result.IsNull() {
+		return nil
+	}
+	return NewNode(result).(dom.Element)
+}
+
+func (e *element) ID() string {
+	return e.Get("id").String()
+}
+
+func (e *element) SetID(id string) {
+	e.Set("id", id)
+}
+
+func (e *element) ClassName() string {
+	return e.Get("className").String()
+}
+
+func (e *element) SetClassName(className string) {
+	e.Set("className", className)
+}
+
+func (e *element) Children() []dom.Element {
+	children := e.Get("children")
+	length := children.Get("length").Int()
+	result := make([]dom.Element, 0, length)
+	for i := 0; i < length; i++ {
+		result = append(result, NewNode(children.Index(i)).(dom.Element))
+	}
+	return result
+}
+
+func (e *element) ChildElementCount() int {
+	return e.Get("childElementCount").Int()
+}
+
+func (e *element) FirstElementChild() dom.Element {
+	child := e.Get("firstElementChild")
+	if child.IsNull() {
+		return nil
+	}
+	return NewNode(child).(dom.Element)
+}
+
+func (e *element) LastElementChild() dom.Element {
+	child := e.Get("lastElementChild")
+	if child.IsNull() {
+		return nil
+	}
+	return NewNode(child).(dom.Element)
+}
+
+func (e *element) NextElementSibling() dom.Element {
+	sibling := e.Get("nextElementSibling")
+	if sibling.IsNull() {
+		return nil
+	}
+	return NewNode(sibling).(dom.Element)
+}
+
+func (e *element) PreviousElementSibling() dom.Element {
+	sibling := e.Get("previousElementSibling")
+	if sibling.IsNull() {
+		return nil
+	}
+	return NewNode(sibling).(dom.Element)
+}
+
 func (e *element) AddEventListener(eventType string, callback func(dom.Node)) dom.Element {
 	// Initialize event listeners map if needed
 	if e.eventListeners == nil {
