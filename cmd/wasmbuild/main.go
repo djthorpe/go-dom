@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-
 	// Packages
+	"context"
+	"os"
+	"os/signal"
+
 	"github.com/alecthomas/kong"
 )
 
@@ -21,12 +21,14 @@ type Context struct {
 
 	// Private
 	log *Logger
+	ctx context.Context
 }
 
 type CLI struct {
 	Context
 	Build BuildCmd `cmd:"" help:"Build a WASM application"`
 	Serve ServeCmd `cmd:"" help:"Serve a WASM application"`
+	Dep   DepCmd   `cmd:"" help:"Show dependencies of a WASM application"`
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -39,39 +41,16 @@ func main() {
 	// Additional context setup
 	cli.Context.log = NewLogger(cli.Verbose)
 
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+	cli.Context.ctx = ctx
+
 	// Run the selected command
 	kong.FatalIfErrorf(kong.Run(&cli.Context))
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
-
-func ResolveDir(path, base string, file bool) (string, error) {
-	if filepath.IsAbs(path) == false {
-		if base == "" {
-			base = "."
-		}
-		path = filepath.Join(base, path)
-	}
-	path, err := filepath.Abs(path)
-	if err != nil {
-		return "", err
-	}
-	stat, err := os.Stat(path)
-	if err != nil {
-		return "", err
-	}
-	if file {
-		if stat.IsDir() {
-			return "", fmt.Errorf("expected file but found directory: %s", path)
-		}
-	} else {
-		if !stat.IsDir() {
-			return "", fmt.Errorf("expected directory but found file: %s", path)
-		}
-	}
-	return path, nil
-}
 
 /*
 func initContext() (*Context, error) {

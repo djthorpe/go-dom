@@ -13,5 +13,8 @@ var NotifyJS []byte
 //go:embed notify.css
 var NotifyCSS []byte
 
+//go:embed notify.html
+var NotifyHTML []byte
+
 //go:embed favicon.png
 var FaviconPNG []byte
