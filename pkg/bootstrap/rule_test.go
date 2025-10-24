@@ -43,14 +43,31 @@ func TestRule_WithColor(t *testing.T) {
 
 func TestRule_OuterHTML(t *testing.T) {
 	rule := bs.Rule()
-	outerHTML := rule.Element().OuterHTML()
-	assert.Equal(t, "<hr></hr>", strings.ToLower(outerHTML))
+	element := rule.Element()
+
+	// Verify tag name and structure
+	assert.Equal(t, "HR", element.TagName())
+
+	// Verify OuterHTML contains the expected tag (HR is a void element, no closing tag)
+	outerHTML := strings.ToLower(element.OuterHTML())
+	assert.Contains(t, outerHTML, "<hr")
 }
 
 func TestRule_WithClassOuterHTML(t *testing.T) {
 	rule := bs.Rule(bs.WithClass("my-4"))
-	outerHTML := rule.Element().OuterHTML()
-	assert.Equal(t, `<hr class="my-4"></hr>`, strings.ToLower(outerHTML))
+	element := rule.Element()
+
+	// Verify tag name
+	assert.Equal(t, "HR", element.TagName())
+
+	// Verify class is present
+	classList := element.ClassList()
+	assert.True(t, classList.Contains("my-4"), "Rule should have my-4 class")
+
+	// Verify OuterHTML contains expected parts (HR is a void element, no closing tag)
+	outerHTML := strings.ToLower(element.OuterHTML())
+	assert.Contains(t, outerHTML, "<hr")
+	assert.Contains(t, outerHTML, `class="my-4"`)
 }
 
 func TestRule_ComponentInterface(t *testing.T) {
@@ -115,8 +132,20 @@ func TestVerticalRule_HasVRClass(t *testing.T) {
 
 func TestVerticalRule_OuterHTML(t *testing.T) {
 	rule := bs.VerticalRule()
-	outerHTML := rule.Element().OuterHTML()
-	assert.Equal(t, `<div class="vr"></div>`, strings.ToLower(outerHTML))
+	element := rule.Element()
+
+	// Verify tag name
+	assert.Equal(t, "DIV", element.TagName())
+
+	// Verify class is present
+	classList := element.ClassList()
+	assert.True(t, classList.Contains("vr"), "VerticalRule should have vr class")
+
+	// Verify OuterHTML contains expected parts
+	outerHTML := strings.ToLower(element.OuterHTML())
+	assert.Contains(t, outerHTML, "<div")
+	assert.Contains(t, outerHTML, `class="vr"`)
+	assert.Contains(t, outerHTML, "</div>")
 }
 
 func TestVerticalRule_WithAdditionalClasses(t *testing.T) {

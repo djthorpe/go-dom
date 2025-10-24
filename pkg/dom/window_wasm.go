@@ -4,7 +4,9 @@ package dom
 
 import (
 	"fmt"
+	"html"
 	"io"
+	"strconv"
 	"syscall/js"
 
 	// Packages
@@ -57,23 +59,92 @@ func (this *window) Write(w io.Writer, node dom.Node) (int, error) {
 	if node == nil {
 		return 0, dom.ErrBadParameter
 	}
-	for child := node.FirstChild(); child != nil; child = child.NextSibling() {
-		html := toJSValue(child).Get("outerHTML").String()
+
+	jsVal := toJSValue(node)
+	nodeType := dom.NodeType(jsVal.Get("nodeType").Int())
+
+	switch nodeType {
+	case dom.DOCUMENT_NODE:
+		// For document, write DOCTYPE if present, then document element
+		if doctype := node.FirstChild(); doctype != nil && doctype.NodeType() == dom.DOCUMENT_TYPE_NODE {
+			if n, err := w.Write([]byte("<!DOCTYPE " + doctype.NodeName() + ">")); err != nil {
+				return 0, err
+			} else {
+				s += n
+			}
+		}
+		// Write document element (usually <html>)
+		if html := jsVal.Get("documentElement"); !html.IsUndefined() {
+			htmlStr := html.Get("outerHTML").String()
+			if n, err := w.Write([]byte(htmlStr)); err != nil {
+				return 0, err
+			} else {
+				s += n
+			}
+		}
+
+	case dom.ELEMENT_NODE:
+		// For elements, use outerHTML
+		html := jsVal.Get("outerHTML").String()
 		if n, err := w.Write([]byte(html)); err != nil {
 			return 0, err
 		} else {
 			s += n
 		}
-	}
-	return s, nil
-}
 
-// WriteIndented writes the node's HTML with indentation (for wasm, just uses outerHTML)
-// The browser's outerHTML doesn't support custom indentation, so this is the same as Write
-func (this *window) WriteIndented(w io.Writer, node dom.Node, indent string) (int, error) {
-	// For WASM, we rely on the browser's HTML serialization
-	// which doesn't support custom indentation
-	return this.Write(w, node)
+	case dom.TEXT_NODE:
+		// For text nodes, write the text content
+		text := jsVal.Get("data").String()
+		if n, err := w.Write([]byte(text)); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+
+	case dom.COMMENT_NODE:
+		// For comment nodes, write as HTML comment
+		comment := jsVal.Get("data").String()
+		if n, err := w.Write([]byte("<!--" + comment + "-->")); err != nil {
+			return 0, err
+		} else {
+			s += n
+		}
+
+	case dom.ATTRIBUTE_NODE:
+		// For attribute nodes, format as name="value" with HTML escaping
+		if attr, ok := node.(dom.Attr); ok {
+			name := attr.Name()
+			value := attr.Value()
+			// Escape the value and quote it
+			escaped := html.EscapeString(value)
+			formatted := name + "=" + strconv.Quote(escaped)
+			if n, err := w.Write([]byte(formatted)); err != nil {
+				return 0, err
+			} else {
+				s += n
+			}
+		}
+
+	default:
+		// For other node types, try outerHTML or fall back to textContent
+		if html := jsVal.Get("outerHTML"); !html.IsUndefined() && html.Type() == js.TypeString {
+			htmlStr := html.String()
+			if n, err := w.Write([]byte(htmlStr)); err != nil {
+				return 0, err
+			} else {
+				s += n
+			}
+		} else if text := jsVal.Get("textContent"); !text.IsUndefined() {
+			textStr := text.String()
+			if n, err := w.Write([]byte(textStr)); err != nil {
+				return 0, err
+			} else {
+				s += n
+			}
+		}
+	}
+
+	return s, nil
 }
 
 ///////////////////////////////////////////////////////////////////////////////

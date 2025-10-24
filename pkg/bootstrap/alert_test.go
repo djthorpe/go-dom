@@ -67,33 +67,57 @@ func TestAlert_WithAlertColor(t *testing.T) {
 
 func TestAlert_OuterHTML(t *testing.T) {
 	tests := []struct {
-		name         string
-		constructor  func() dom.Component
-		expectedHTML string
+		name            string
+		constructor     func() dom.Component
+		expectedClasses []string
+		expectedRole    string
 	}{
 		{
-			name:         "default alert",
-			constructor:  func() dom.Component { return bs.Alert() },
-			expectedHTML: `<div class="alert" role="alert"></div>`,
+			name:            "default alert",
+			constructor:     func() dom.Component { return bs.Alert() },
+			expectedClasses: []string{"alert"},
+			expectedRole:    "alert",
 		},
 		{
-			name:         "primary alert",
-			constructor:  func() dom.Component { return bs.Alert(bs.WithColor(bs.PRIMARY)) },
-			expectedHTML: `<div class="alert alert-primary" role="alert"></div>`,
+			name:            "primary alert",
+			constructor:     func() dom.Component { return bs.Alert(bs.WithColor(bs.PRIMARY)) },
+			expectedClasses: []string{"alert", "alert-primary"},
+			expectedRole:    "alert",
 		},
 		{
-			name:         "danger alert",
-			constructor:  func() dom.Component { return bs.Alert(bs.WithColor(bs.DANGER)) },
-			expectedHTML: `<div class="alert alert-danger" role="alert"></div>`,
+			name:            "danger alert",
+			constructor:     func() dom.Component { return bs.Alert(bs.WithColor(bs.DANGER)) },
+			expectedClasses: []string{"alert", "alert-danger"},
+			expectedRole:    "alert",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			alert := tt.constructor()
-			outerHTML := alert.Element().OuterHTML()
-			// Normalize to lowercase for comparison
-			assert.Equal(t, tt.expectedHTML, strings.ToLower(outerHTML), "Outer HTML should match expected format")
+			element := alert.Element()
+
+			// Verify tag name
+			assert.Equal(t, "DIV", element.TagName(), "Alert should be a DIV element")
+
+			// Verify role attribute
+			assert.Equal(t, tt.expectedRole, element.GetAttribute("role"), "Alert should have correct role attribute")
+
+			// Verify classes
+			classList := element.ClassList()
+			for _, expectedClass := range tt.expectedClasses {
+				assert.True(t, classList.Contains(expectedClass),
+					"Alert should contain class '%s', actual classes: %v", expectedClass, classList.Values())
+			}
+
+			// Verify OuterHTML contains expected parts (without checking attribute order)
+			outerHTML := strings.ToLower(element.OuterHTML())
+			assert.Contains(t, outerHTML, "<div", "OuterHTML should start with <div")
+			assert.Contains(t, outerHTML, "</div>", "OuterHTML should end with </div>")
+			assert.Contains(t, outerHTML, `role="alert"`, "OuterHTML should contain role attribute")
+			for _, expectedClass := range tt.expectedClasses {
+				assert.Contains(t, outerHTML, expectedClass, "OuterHTML should contain class '%s'", expectedClass)
+			}
 		})
 	}
 }

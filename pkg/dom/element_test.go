@@ -543,3 +543,400 @@ func Test_Element_003(t *testing.T) {
 		t.Error("OuterHTML() failed: ", parent.OuterHTML())
 	}
 }
+
+func TestElement_RemoveAttribute(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	element := doc.CreateElement("div")
+
+	// Set an attribute
+	element.SetAttribute("id", "test-id")
+	assert.True(t, element.HasAttribute("id"), "Should have id attribute")
+	assert.Equal(t, "test-id", element.GetAttribute("id"), "Should get correct id value")
+
+	// Remove the attribute
+	element.RemoveAttribute("id")
+	assert.False(t, element.HasAttribute("id"), "Should not have id attribute after removal")
+	assert.Equal(t, "", element.GetAttribute("id"), "GetAttribute should return empty string after removal")
+
+	// Removing non-existent attribute should not error
+	element.RemoveAttribute("non-existent")
+}
+
+func TestElement_RemoveAttributeNode(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	element := doc.CreateElement("div")
+
+	// Set an attribute
+	attr := element.SetAttribute("class", "my-class")
+	assert.NotNil(t, attr, "SetAttribute should return an attribute")
+	assert.True(t, element.HasAttribute("class"), "Should have class attribute")
+
+	// Remove the attribute node
+	element.RemoveAttributeNode(attr)
+	assert.False(t, element.HasAttribute("class"), "Should not have class attribute after removal")
+
+	// Removing non-existent attribute node - create a new unattached attribute (should not error)
+	newAttr := doc.CreateAttribute("other")
+	element.RemoveAttributeNode(newAttr)
+
+	// Removing nil should not error
+	element.RemoveAttributeNode(nil)
+}
+
+func TestElement_SetAttributeNode(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	element := doc.CreateElement("div")
+
+	// Create and set an attribute node
+	attr := doc.CreateAttribute("data-test")
+	attr.SetValue("value1")
+	oldAttr := element.SetAttributeNode(attr)
+	assert.Nil(t, oldAttr, "Setting new attribute should return nil")
+	assert.True(t, element.HasAttribute("data-test"), "Should have data-test attribute")
+	assert.Equal(t, "value1", element.GetAttribute("data-test"), "Should get correct value")
+
+	// Replace with a new attribute node
+	newAttr := doc.CreateAttribute("data-test")
+	newAttr.SetValue("value2")
+	oldAttr = element.SetAttributeNode(newAttr)
+	assert.NotNil(t, oldAttr, "Replacing attribute should return old attribute")
+	assert.Equal(t, "value1", oldAttr.Value(), "Old attribute should have previous value")
+	assert.Equal(t, "value2", element.GetAttribute("data-test"), "Should get new value")
+
+	// Setting nil should return nil
+	result := element.SetAttributeNode(nil)
+	assert.Nil(t, result, "Setting nil attribute should return nil")
+}
+
+func TestElement_GetAttributeNames(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	element := doc.CreateElement("div")
+
+	// Initially should have no attributes
+	names := element.GetAttributeNames()
+	assert.Equal(t, 0, len(names), "New element should have no attributes")
+
+	// Add some attributes
+	element.SetAttribute("id", "test")
+	element.SetAttribute("class", "my-class")
+	element.SetAttribute("data-value", "123")
+
+	names = element.GetAttributeNames()
+	assert.Equal(t, 3, len(names), "Should have 3 attributes")
+
+	// Check that all attribute names are present (order may vary)
+	nameSet := make(map[string]bool)
+	for _, name := range names {
+		nameSet[name] = true
+	}
+	assert.True(t, nameSet["id"], "Should contain 'id'")
+	assert.True(t, nameSet["class"], "Should contain 'class'")
+	assert.True(t, nameSet["data-value"], "Should contain 'data-value'")
+
+	// Remove an attribute
+	element.RemoveAttribute("class")
+	names = element.GetAttributeNames()
+	assert.Equal(t, 2, len(names), "Should have 2 attributes after removal")
+
+	// Verify class is not in the list
+	nameSet = make(map[string]bool)
+	for _, name := range names {
+		nameSet[name] = true
+	}
+	assert.False(t, nameSet["class"], "Should not contain 'class' after removal")
+}
+
+func TestElement_AttributeNodeOperations(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	element := doc.CreateElement("div")
+
+	// Test complete flow: create, set, get, remove
+	attr1 := doc.CreateAttribute("attr1")
+	attr1.SetValue("value1")
+	element.SetAttributeNode(attr1)
+
+	attr2 := doc.CreateAttribute("attr2")
+	attr2.SetValue("value2")
+	element.SetAttributeNode(attr2)
+
+	// Verify both attributes are set
+	assert.Equal(t, 2, len(element.GetAttributeNames()), "Should have 2 attributes")
+	assert.Equal(t, "value1", element.GetAttribute("attr1"), "attr1 should have correct value")
+	assert.Equal(t, "value2", element.GetAttribute("attr2"), "attr2 should have correct value")
+
+	// Get attribute node
+	retrievedAttr := element.GetAttributeNode("attr1")
+	assert.NotNil(t, retrievedAttr, "Should retrieve attr1 node")
+	assert.Equal(t, "attr1", retrievedAttr.Name(), "Retrieved node should have correct name")
+	assert.Equal(t, "value1", retrievedAttr.Value(), "Retrieved node should have correct value")
+
+	// Remove one attribute node
+	element.RemoveAttributeNode(attr1)
+	assert.Equal(t, 1, len(element.GetAttributeNames()), "Should have 1 attribute after removal")
+	assert.False(t, element.HasAttribute("attr1"), "attr1 should be removed")
+	assert.True(t, element.HasAttribute("attr2"), "attr2 should still exist")
+}
+
+func TestElement_GetElementsByClassName(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	container := doc.CreateElement("div")
+
+	// Create nested structure
+	div1 := doc.CreateElement("div")
+	div1.SetAttribute("class", "item active")
+	div2 := doc.CreateElement("div")
+	div2.SetAttribute("class", "item")
+	div3 := doc.CreateElement("div")
+	div3.SetAttribute("class", "active special")
+
+	span := doc.CreateElement("span")
+	span.SetAttribute("class", "item")
+	div1.AppendChild(span)
+
+	container.AppendChild(div1)
+	container.AppendChild(div2)
+	container.AppendChild(div3)
+
+	// Get elements by class
+	items := container.GetElementsByClassName("item")
+	assert.Equal(t, 3, len(items), "Should find 3 elements with 'item' class")
+
+	actives := container.GetElementsByClassName("active")
+	assert.Equal(t, 2, len(actives), "Should find 2 elements with 'active' class")
+
+	specials := container.GetElementsByClassName("special")
+	assert.Equal(t, 1, len(specials), "Should find 1 element with 'special' class")
+}
+
+func TestElement_GetElementsByTagName(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	container := doc.CreateElement("div")
+
+	// Create nested structure
+	p1 := doc.CreateElement("p")
+	p2 := doc.CreateElement("p")
+	span := doc.CreateElement("span")
+	div := doc.CreateElement("div")
+
+	nestedP := doc.CreateElement("p")
+	div.AppendChild(nestedP)
+
+	container.AppendChild(p1)
+	container.AppendChild(p2)
+	container.AppendChild(span)
+	container.AppendChild(div)
+
+	// Get elements by tag name
+	paragraphs := container.GetElementsByTagName("p")
+	assert.Equal(t, 3, len(paragraphs), "Should find 3 <p> elements including nested")
+
+	spans := container.GetElementsByTagName("span")
+	assert.Equal(t, 1, len(spans), "Should find 1 <span> element")
+
+	divs := container.GetElementsByTagName("div")
+	assert.Equal(t, 1, len(divs), "Should find 1 <div> element (not including container)")
+}
+
+func TestElement_Remove(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	parent := doc.CreateElement("div")
+	child := doc.CreateElement("p")
+
+	parent.AppendChild(child)
+	assert.True(t, parent.HasChildNodes(), "Parent should have child")
+	assert.True(t, child.ParentNode().Equals(parent), "Child should have parent")
+
+	// Remove the child
+	child.Remove()
+	assert.False(t, parent.HasChildNodes(), "Parent should not have child after removal")
+	assert.Nil(t, child.ParentNode(), "Child should have no parent after removal")
+}
+
+func TestElement_ReplaceWith(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	parent := doc.CreateElement("div")
+	oldChild := doc.CreateElement("p")
+	oldChild.AppendChild(doc.CreateTextNode("Old"))
+
+	parent.AppendChild(oldChild)
+	assert.Equal(t, 1, len(parent.ChildNodes()), "Parent should have 1 child")
+
+	// Replace with new nodes
+	newChild1 := doc.CreateElement("span")
+	newChild1.AppendChild(doc.CreateTextNode("New1"))
+	newChild2 := doc.CreateElement("span")
+	newChild2.AppendChild(doc.CreateTextNode("New2"))
+
+	oldChild.ReplaceWith(newChild1, newChild2)
+
+	assert.Equal(t, 2, len(parent.ChildNodes()), "Parent should have 2 children after replacement")
+	assert.Nil(t, oldChild.ParentNode(), "Old child should have no parent")
+	assert.True(t, newChild1.ParentNode().Equals(parent), "New child1 should have parent")
+	assert.True(t, newChild2.ParentNode().Equals(parent), "New child2 should have parent")
+}
+
+func TestElement_InsertAdjacentElement(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	container := doc.CreateElement("div")
+	target := doc.CreateElement("p")
+	target.AppendChild(doc.CreateTextNode("Target"))
+	container.AppendChild(target)
+
+	// beforebegin
+	before := doc.CreateElement("span")
+	before.AppendChild(doc.CreateTextNode("Before"))
+	result := target.InsertAdjacentElement("beforebegin", before)
+	assert.NotNil(t, result, "Should return inserted element")
+	assert.Equal(t, 2, len(container.ChildNodes()), "Container should have 2 children")
+	assert.Equal(t, before, container.FirstChild(), "Before element should be first")
+
+	// afterbegin (first child of target)
+	afterBegin := doc.CreateElement("b")
+	afterBegin.AppendChild(doc.CreateTextNode("AfterBegin"))
+	result = target.InsertAdjacentElement("afterbegin", afterBegin)
+	assert.NotNil(t, result, "Should return inserted element")
+	assert.True(t, target.HasChildNodes(), "Target should have children")
+	assert.Equal(t, afterBegin, target.FirstChild(), "AfterBegin should be first child of target")
+
+	// beforeend (last child of target)
+	beforeEnd := doc.CreateElement("i")
+	beforeEnd.AppendChild(doc.CreateTextNode("BeforeEnd"))
+	result = target.InsertAdjacentElement("beforeend", beforeEnd)
+	assert.NotNil(t, result, "Should return inserted element")
+	assert.Equal(t, beforeEnd, target.LastChild(), "BeforeEnd should be last child of target")
+
+	// afterend
+	after := doc.CreateElement("span")
+	after.AppendChild(doc.CreateTextNode("After"))
+	result = target.InsertAdjacentElement("afterend", after)
+	assert.NotNil(t, result, "Should return inserted element")
+	assert.Equal(t, after, container.LastChild(), "After element should be last in container")
+}
+
+func TestElement_IDMethods(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	element := doc.CreateElement("div")
+
+	// Initially no ID
+	assert.Equal(t, "", element.ID(), "New element should have no ID")
+
+	// Set ID
+	element.SetID("test-id")
+	assert.Equal(t, "test-id", element.ID(), "ID should be set")
+	assert.Equal(t, "test-id", element.GetAttribute("id"), "ID should be in attributes")
+
+	// Change ID
+	element.SetID("new-id")
+	assert.Equal(t, "new-id", element.ID(), "ID should be updated")
+}
+
+func TestElement_ClassNameMethods(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	element := doc.CreateElement("div")
+
+	// Initially no class
+	assert.Equal(t, "", element.ClassName(), "New element should have no class")
+
+	// Set class name
+	element.SetClassName("btn btn-primary")
+	assert.Equal(t, "btn btn-primary", element.ClassName(), "Class name should be set")
+	assert.Equal(t, "btn btn-primary", element.GetAttribute("class"), "Class should be in attributes")
+
+	// Change class name
+	element.SetClassName("btn btn-secondary active")
+	assert.Equal(t, "btn btn-secondary active", element.ClassName(), "Class name should be updated")
+}
+
+func TestElement_Children(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	parent := doc.CreateElement("div")
+
+	// Add mixed content: elements and text nodes
+	elem1 := doc.CreateElement("p")
+	text1 := doc.CreateTextNode("text1")
+	elem2 := doc.CreateElement("span")
+	text2 := doc.CreateTextNode("text2")
+	elem3 := doc.CreateElement("div")
+
+	parent.AppendChild(elem1)
+	parent.AppendChild(text1)
+	parent.AppendChild(elem2)
+	parent.AppendChild(text2)
+	parent.AppendChild(elem3)
+
+	// Children should only return elements, not text nodes
+	children := parent.Children()
+	assert.Equal(t, 3, len(children), "Should have 3 element children")
+	assert.Equal(t, elem1, children[0], "First child should be elem1")
+	assert.Equal(t, elem2, children[1], "Second child should be elem2")
+	assert.Equal(t, elem3, children[2], "Third child should be elem3")
+}
+
+func TestElement_ChildElementCount(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	parent := doc.CreateElement("div")
+
+	assert.Equal(t, 0, parent.ChildElementCount(), "Empty parent should have 0 element children")
+
+	// Add mixed content
+	parent.AppendChild(doc.CreateElement("p"))
+	parent.AppendChild(doc.CreateTextNode("text"))
+	parent.AppendChild(doc.CreateElement("span"))
+
+	assert.Equal(t, 2, parent.ChildElementCount(), "Should count only element children")
+}
+
+func TestElement_FirstLastElementChild(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	parent := doc.CreateElement("div")
+
+	// Empty parent
+	assert.Nil(t, parent.FirstElementChild(), "Empty parent should have no first element child")
+	assert.Nil(t, parent.LastElementChild(), "Empty parent should have no last element child")
+
+	// Add mixed content
+	text1 := doc.CreateTextNode("text1")
+	elem1 := doc.CreateElement("p")
+	elem2 := doc.CreateElement("span")
+	text2 := doc.CreateTextNode("text2")
+	elem3 := doc.CreateElement("div")
+
+	parent.AppendChild(text1)
+	parent.AppendChild(elem1)
+	parent.AppendChild(elem2)
+	parent.AppendChild(text2)
+	parent.AppendChild(elem3)
+
+	assert.Equal(t, elem1, parent.FirstElementChild(), "First element child should be elem1")
+	assert.Equal(t, elem3, parent.LastElementChild(), "Last element child should be elem3")
+}
+
+func TestElement_ElementSiblings(t *testing.T) {
+	doc := domPkg.GetWindow().Document()
+	parent := doc.CreateElement("div")
+
+	// Create structure with mixed content
+	text1 := doc.CreateTextNode("text1")
+	elem1 := doc.CreateElement("p")
+	text2 := doc.CreateTextNode("text2")
+	elem2 := doc.CreateElement("span")
+	elem3 := doc.CreateElement("div")
+	text3 := doc.CreateTextNode("text3")
+
+	parent.AppendChild(text1)
+	parent.AppendChild(elem1)
+	parent.AppendChild(text2)
+	parent.AppendChild(elem2)
+	parent.AppendChild(elem3)
+	parent.AppendChild(text3)
+
+	// Test NextElementSibling
+	assert.Equal(t, elem2, elem1.NextElementSibling(), "elem1's next element sibling should be elem2")
+	assert.Equal(t, elem3, elem2.NextElementSibling(), "elem2's next element sibling should be elem3")
+	assert.Nil(t, elem3.NextElementSibling(), "elem3 should have no next element sibling")
+
+	// Test PreviousElementSibling
+	assert.Nil(t, elem1.PreviousElementSibling(), "elem1 should have no previous element sibling")
+	assert.Equal(t, elem1, elem2.PreviousElementSibling(), "elem2's previous element sibling should be elem1")
+	assert.Equal(t, elem2, elem3.PreviousElementSibling(), "elem3's previous element sibling should be elem2")
+}
