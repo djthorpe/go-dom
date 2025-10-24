@@ -161,9 +161,17 @@ func (this *element) GetElementsByClassName(className string) []dom.Element {
 }
 
 func (this *element) getElementsByClassName(className string, result *[]dom.Element) {
-	// Check if this element has the class
-	if this.ClassList().Contains(className) {
-		*result = append(*result, this)
+	// Check if this element has the class by directly checking the attribute
+	// This is more efficient than ClassList().Contains() which parses the entire class list
+	classAttr := this.GetAttribute("class")
+	if classAttr != "" {
+		// Split and check for exact match
+		for _, cls := range strings.Fields(classAttr) {
+			if cls == className {
+				*result = append(*result, this)
+				break
+			}
+		}
 	}
 	// Recursively check children
 	for _, child := range this.node.children {

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html"
 	"io"
-	"strconv"
 	"syscall/js"
 
 	// Packages
@@ -115,9 +114,9 @@ func (this *window) Write(w io.Writer, node dom.Node) (int, error) {
 		if attr, ok := node.(dom.Attr); ok {
 			name := attr.Name()
 			value := attr.Value()
-			// Escape the value and quote it
+			// Escape the value for HTML and wrap in quotes
 			escaped := html.EscapeString(value)
-			formatted := name + "=" + strconv.Quote(escaped)
+			formatted := name + "=\"" + escaped + "\""
 			if n, err := w.Write([]byte(formatted)); err != nil {
 				return 0, err
 			} else {
