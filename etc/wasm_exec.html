@@ -2,33 +2,27 @@
 <html lang="en">
 
 <head>
+    <title>{{Title}}</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <!-- favicon -->
-    <link rel="icon" type="image/png" href="/favicon.png" />
-
-    <!-- reload when code is changed -->
-    <link rel="stylesheet" href="notify.css" />
-    <script src="notify.js"></script>
-
     <!-- bootstrap the application -->
     <script src="wasm_exec.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const go = new Go();
-            WebAssembly.instantiateStreaming(fetch("{{WASM_FILE}}"), go.importObject).then((result) => {
+            WebAssembly.instantiateStreaming(fetch("{{WasmFile}}"), go.importObject).then((result) => {
                 go.run(result.instance);
             });
         });
     </script>
-
-    <!-- include bootstrap library -->
-    {{LIBRARY}}
+    <!-- additional head components -->
+    <link rel="icon" type="image/png" href="favicon.png" />
+    {{Notify}}
+    {{Header}}
 </head>
 
 <body>
-    <!-- your application goes here -->
+    {{Footer}}
 </body>
 
 </html>

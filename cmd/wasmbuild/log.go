@@ -60,11 +60,3 @@ func (l *Logger) Error(v ...interface{}) {
 func (l *Logger) Errorf(format string, v ...interface{}) {
 	l.errorLogger.Printf(format, v...)
 }
-
-// Global logger instance
-var logger *Logger
-
-// InitLogger initializes the global logger
-func InitLogger(verbose bool) {
-	logger = NewLogger(verbose)
-}
