@@ -25,8 +25,8 @@ type Context struct {
 
 type CLI struct {
 	Context
-	Compile CompileCmd `cmd:"" help:"Compile a WASM application"`
-	Serve   ServeCmd   `cmd:"" help:"Serve a WASM application"`
+	Build BuildCmd `cmd:"" help:"Build a WASM application"`
+	Serve ServeCmd `cmd:"" help:"Serve a WASM application"`
 }
 
 ///////////////////////////////////////////////////////////////////////////////

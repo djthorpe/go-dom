@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -36,12 +38,17 @@ func NewFileFromSource(source, dest string) (*File, error) {
 	}, nil
 }
 
-func NewFileFromTemplate(data []byte, dest string, vars map[string]any, funcs template.FuncMap) (*File, error) {
+func NewFileFromTemplate(data []byte, dest string, vars map[string]string, funcs template.FuncMap) (*File, error) {
 	tmpl := template.New(filepath.Base(dest))
 
 	// Define functions before parsing
 	if funcs != nil {
 		tmpl = tmpl.Funcs(funcs)
+	}
+
+	// Expand environment variables in template data
+	for key, value := range vars {
+		vars[key] = os.ExpandEnv(value)
 	}
 
 	// Parse the template
@@ -80,4 +87,24 @@ func (f *File) WriteTo(dir string) error {
 		return err
 	}
 	return os.WriteFile(dest, f.Data, 0o644)
+}
+
+func (f *File) URL() string {
+	return "/" + f.Path
+}
+
+func (f *File) Handler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set the Content-Type and Content-Length headers
+		w.Header().Set("Content-Type", http.DetectContentType(f.Data))
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", len(f.Data)))
+
+		// Set no-cache headers
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+
+		// Output the data
+		w.Write(f.Data)
+	})
 }

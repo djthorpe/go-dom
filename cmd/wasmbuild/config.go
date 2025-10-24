@@ -19,8 +19,8 @@ import (
 // TYPES
 
 type Config struct {
-	Vars   map[string]any `yaml:"vars,omitempty" json:"vars,omitempty"`
-	Assets []string       `yaml:"assets,omitempty" json:"assets,omitempty"`
+	Vars   map[string]string `yaml:"vars,omitempty" json:"vars,omitempty"`
+	Assets []string          `yaml:"assets,omitempty" json:"assets,omitempty"`
 }
 
 type BuildContext struct {
@@ -148,18 +148,6 @@ func (c Config) BuildContext(ctx *Context, path, output string) (*BuildContext, 
 		goroot = strings.TrimSpace(string(output))
 	}
 
-	// Make asset paths absolute
-	for i, asset := range c.Assets {
-		if filepath.IsAbs(asset) == false {
-			asset = filepath.Join(path, asset)
-		}
-		// Check to make sure the asset exists
-		if _, err := os.Stat(asset); err != nil {
-			return nil, fmt.Errorf("asset does not exist: %s", asset)
-		}
-		c.Assets[i] = asset
-	}
-
 	// wasm_exec.js
 	wasmPathExecJS := RegularFileFromPathList(ctx.WasmExec, goroot)
 	if wasmPathExecJS == "" {
@@ -170,41 +158,39 @@ func (c Config) BuildContext(ctx *Context, path, output string) (*BuildContext, 
 		return nil, fmt.Errorf("failed to read wasm_exec.js: %w", err)
 	}
 
-	// Define the functions for templates
+	//  wasm_exec.html
 	funcs := template.FuncMap{
 		"Title": func() string {
-			if title, ok := c.Vars["Title"].(string); ok {
+			if title, ok := c.Vars["Title"]; ok {
 				return title
 			}
 			return filepath.Base(path)
 		},
 		"Header": func() string {
-			if head, ok := c.Vars["Header"].(string); ok {
+			if head, ok := c.Vars["Header"]; ok {
 				return head
 			}
 			return ""
 		},
 		"Footer": func() string {
-			if foot, ok := c.Vars["Footer"].(string); ok {
+			if foot, ok := c.Vars["Footer"]; ok {
 				return foot
 			}
 			return ""
 		},
 		"Notify": func() string {
-			if notify, ok := c.Vars["Notify"].(string); ok {
+			if notify, ok := c.Vars["Notify"]; ok {
 				return notify
 			}
 			return ""
 		},
 		"WasmFile": func() string {
-			if wasmFile, ok := c.Vars["WasmFile"].(string); ok {
+			if wasmFile, ok := c.Vars["WasmFile"]; ok {
 				return wasmFile
 			}
 			return filepath.Base(path) + ".wasm"
 		},
 	}
-
-	// Make wasm_exec.html from embedded file using template variables
 	wasmExecHTML, err := NewFileFromTemplate(etc.WasmExecHTML, "wasm_exec.html", c.Vars, funcs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create wasm_exec.html: %w", err)
@@ -219,7 +205,6 @@ func (c Config) BuildContext(ctx *Context, path, output string) (*BuildContext, 
 		GoRoot: goroot,
 		GoArgs: append([]string{
 			"build",
-			"-o", filepath.Join(output, filepath.Base(path)+".wasm"),
 		}, strings.Fields(ctx.GoFlags)...),
 		GoEnv: []string{
 			"GOOS=js",
@@ -232,8 +217,8 @@ func (c Config) BuildContext(ctx *Context, path, output string) (*BuildContext, 
 }
 
 // Return a exec.Cmd for building the WASM application
-func (bc *BuildContext) GoBuildCmd() *exec.Cmd {
-	cmd := exec.Command(bc.GoCmd, bc.GoArgs...)
+func (bc *BuildContext) GoBuildCmd(args ...string) *exec.Cmd {
+	cmd := exec.Command(bc.GoCmd, append(bc.GoArgs, args...)...)
 	cmd.Dir = bc.Path
 	cmd.Env = append(os.Environ(), bc.GoEnv...)
 	return cmd
