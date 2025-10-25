@@ -57,8 +57,45 @@ func (component *component) Element() Element {
 ///////////////////////////////////////////////////////////////////////////////
 // METHODS
 
+// Insert Component, Element or string children into the body element (or root if no body)
+func (component *component) Insert(children ...any) Component {
+	if len(children) == 0 {
+		return component
+	}
+	target := component.body
+	if target == nil {
+		target = component.root
+	}
+
+	// Insert first child at the start of the target
+	var next Node
+	for i, child := range children {
+		// Convert to Element if necessary
+		if component, ok := child.(Component); ok {
+			child = component.Element()
+		} else if str, ok := child.(string); ok {
+			child = dom.GetWindow().Document().CreateTextNode(str)
+		}
+
+		// First child inserted at beginning
+		if i == 0 {
+			next = target.InsertBefore(child.(Node), target.FirstChild())
+			continue
+		}
+
+		// Append after previous child (insert before next sibling)
+		next = target.InsertBefore(child.(Node), next.NextSibling())
+	}
+
+	// Return the component for chaining
+	return component
+}
+
+// Append Component, Element or string children to the body element (or root if no body)
 func (component *component) Append(children ...any) Component {
-	// Append Component, Element or string children to the body element (or root if no body)
+	if len(children) == 0 {
+		return component
+	}
 	target := component.body
 	if target == nil {
 		target = component.root

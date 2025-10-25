@@ -7,12 +7,12 @@ import (
 
 func main() {
 	// Create the bootstrap app
-	bs.New().Append(
+	bs.New().Insert(
 		bs.Container(
 			bs.WithBreakpoint(bs.BreakpointLarge),
 			bs.WithMargin(bs.TOP|bs.BOTTOM, 5),
-		).Append(
-			bs.Heading(1, bs.WithTextAlign(bs.CENTER)).Append("Hello, World!"),
+		).Insert(
+			bs.Heading(1, bs.WithTextAlign(bs.CENTER)).Insert("Hello, World!"),
 		),
 	)
 

@@ -38,13 +38,9 @@
 </style>
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function () {
-        // Create error overlay DOM elements
         notifyCreateErrorOverlay();
-
-        // Start notify listener
         notifyStartListener();
     });
-
     function notifyCreateErrorOverlay() {
         // Create the error overlay div
         const errorDiv = document.createElement('div');
@@ -54,7 +50,7 @@
         const closeButton = document.createElement('button');
         closeButton.id = 'notify-error-close';
         closeButton.textContent = '✕ Close';
-        closeButton.onclick = hideNotifyError;
+        closeButton.onclick = notifyHide;
 
         // Create title
         const title = document.createElement('div');
@@ -73,52 +69,30 @@
         // Append to body
         document.body.appendChild(errorDiv);
     }
-
     function notifyStartListener() {
         const eventSource = new EventSource('/_notify');
-
-        // Listen for 'connected' event
         eventSource.addEventListener('connected', function (event) {
             console.log('wasmbuild: connected');
-            hideNotifyError();
+            notifyHide();
         });
-
-        // Listen for 'reload' event
         eventSource.addEventListener('reload', function (event) {
             console.log('wasmbuild: reload');
-            hideNotifyError();
+            notifyHide();
             window.location.reload();
         });
-
-        // Listen for 'error' event
         eventSource.addEventListener('build-error', function (event) {
             console.log('wasmbuild: build-error', event.data);
-            notifyError(event.data);
+            notifyShow(event.data);
         });
-
-        // Handle connection errors
         eventSource.addEventListener('error', function (event) {
-            notifyError('Connection to dev server lost, retrying');
+            notifyShow('Connection to dev server lost, retrying');
         });
     }
-
-    function notifyError(msg) {
-        const errorContent = document.getElementById('notify-error-content');
-        if (errorContent) {
-            errorContent.textContent = msg;
-        }
-        const errorDiv = document.getElementById('notify-error');
-        if (errorDiv) {
-            errorDiv.style.display = 'block';
-        }
+    function notifyShow(msg) {
+        document.getElementById('notify-error-content').textContent = msg;
+        document.getElementById('notify-error').style.display = 'block';
     }
-
-    function hideNotifyError() {
-        const errorDiv = document.getElementById('notify-error');
-        if (errorDiv) {
-            errorDiv.style.display = 'none';
-        }
+    function notifyHide() {
+        document.getElementById('notify-error').style.display = 'none';
     }
-
-
 </script>

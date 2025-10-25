@@ -267,10 +267,12 @@ func (d *DepContext) Run(ctx context.Context) error {
 	defer watcher.Close()
 
 	// Add all dependency paths to the watcher
+	watchedPaths := make(map[string]bool)
 	for _, path := range paths {
 		if err := watcher.Add(path); err != nil {
 			return fmt.Errorf("failed to watch %s: %w", path, err)
 		}
+		watchedPaths[path] = true
 	}
 
 	// Track modification times for debouncing
@@ -297,7 +299,29 @@ func (d *DepContext) Run(ctx context.Context) error {
 				d.modified <- nil
 			}
 
-			// TODO: If the event is a Create event on a directory, re-compute watched paths
+			// If the event is a Create event, re-compute watched paths
+			if event.Has(fsnotify.Create) {
+				// Check if it's a directory
+				if info, err := os.Stat(event.Name); err == nil && info.IsDir() {
+					// Re-discover dependencies
+					newPaths, err := d.Dependencies()
+					if err != nil {
+						d.modified <- fmt.Errorf("failed to re-discover dependencies: %w", err)
+						continue
+					}
+
+					// Add any new paths to the watcher
+					for _, path := range newPaths {
+						if !watchedPaths[path] {
+							if err := watcher.Add(path); err != nil {
+								d.modified <- fmt.Errorf("failed to watch new path %s: %w", path, err)
+							} else {
+								watchedPaths[path] = true
+							}
+						}
+					}
+				}
+			}
 
 		case err := <-watcher.Errors:
 			d.modified <- fmt.Errorf("watcher error: %w", err)
