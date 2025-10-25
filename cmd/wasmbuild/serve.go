@@ -255,10 +255,11 @@ func (c *ServeContext) NotifyHandler(w http.ResponseWriter, r *http.Request) {
 	for {
 		select {
 		case msg := <-notify:
+			fmt.Println("Notify client:", msg.Type)
 			switch msg.Type {
 			case "reload":
 				fmt.Fprintf(w, "event: reload\ndata: reload\n\n")
-			case "error":
+			case "build-error":
 				fmt.Fprintf(w, "event: build-error\n")
 				// For multi-line error messages, prefix each line with "data: "
 				lines := strings.Split(msg.Data, "\n")
