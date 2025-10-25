@@ -3,11 +3,22 @@ package bootstrap
 import (
 
 	// Packages
+	"fmt"
+	"strings"
+
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
 
 	// Namespace import for interfaces
 	. "github.com/djthorpe/go-wasmbuild"
 )
+
+///////////////////////////////////////////////////////////////////////////////
+// INIT
+
+func init() {
+	// Register the component factory with the dom package
+	dom.RegisterComponentFactory(ComponentFromElement)
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // TYPES
@@ -22,6 +33,20 @@ type component struct {
 
 // Ensure that component implements Component interface
 var _ Component = (*component)(nil)
+
+///////////////////////////////////////////////////////////////////////////////
+// LIFECYCLE
+
+// newComponent creates a new component with the given name and root element
+// The data-component attribute will be set when applyTo is called
+func newComponent(name_ name, root Element) *component {
+	c := &component{
+		name: name_,
+		root: root,
+		body: nil,
+	}
+	return c
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // GLOBALS
@@ -41,10 +66,23 @@ const (
 	CardComponent        name = "card"
 	ImageComponent       name = "image"
 	NavComponent         name = "nav"
+	NavBarComponent      name = "nav-bar"
+	NavItemComponent     name = "nav-item"
+	NavDropdownComponent name = "nav-dropdown"
+	NavSpacerComponent   name = "nav-spacer"
+	NavDividerComponent  name = "nav-divider"
+	TableComponent       name = "table"
+	TableRowComponent    name = "table-row"
+	PaginationComponent  name = "pagination"
+	OffcanvasComponent   name = "offcanvas"
 )
 
 ///////////////////////////////////////////////////////////////////////////////
 // PROPERTIES
+
+func (component *component) ID() string {
+	return component.root.GetAttribute("id")
+}
 
 func (component *component) Name() string {
 	return string(component.name)
@@ -52,6 +90,13 @@ func (component *component) Name() string {
 
 func (component *component) Element() Element {
 	return component.root
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// STRININGIFY
+
+func (component *component) String() string {
+	return fmt.Sprint(component.root)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -115,4 +160,134 @@ func (component *component) Append(children ...any) Component {
 
 	// Return the component for chaining
 	return component
+}
+
+// AddEventListener adds an event listener to the component's root element
+func (component *component) AddEventListener(event string, handler func(Node)) Component {
+	component.root.AddEventListener(event, handler)
+	return component
+}
+
+// Apply applies options to the component's root element
+// It preserves existing id, classes, and attributes by reading them first
+func (component *component) Apply(opts ...any) Component {
+	// Read existing attributes from the element
+	existingOpts := make([]Opt, 0)
+
+	// Preserve existing ID
+	if id := component.root.GetAttribute("id"); id != "" {
+		existingOpts = append(existingOpts, WithID(id))
+	}
+
+	// Preserve existing classes (split space-separated classes into individual tokens)
+	if class := component.root.GetAttribute("class"); class != "" {
+		// Split the class string by spaces to get individual class names
+		classes := strings.Fields(class)
+		if len(classes) > 0 {
+			existingOpts = append(existingOpts, WithClass(classes...))
+		}
+	}
+
+	// Preserve existing attributes (excluding id, class, and data-component)
+	attrs := component.root.Attributes()
+	for _, attr := range attrs {
+		name := attr.Name()
+		value := attr.Value()
+		// Skip id, class, and data-component as they're handled separately
+		if name != "id" && name != "class" && name != "data-component" {
+			existingOpts = append(existingOpts, WithAttribute(name, value))
+		}
+	}
+
+	// Convert any opts to Opt type and append them (new opts override existing)
+	optList := make([]Opt, 0, len(existingOpts)+len(opts))
+	optList = append(optList, existingOpts...)
+	for _, opt := range opts {
+		if o, ok := opt.(Opt); ok {
+			optList = append(optList, o)
+		}
+	}
+
+	// Apply options to root element
+	if err := component.applyTo(component.root, optList...); err != nil {
+		panic(err)
+	}
+
+	return component
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// FACTORY FUNCTION
+
+// ComponentFromElement reconstructs a component from an element with data-component attribute
+// Returns nil if the element doesn't have data-component or the component type is unknown
+//
+// This function is registered with the dom package and is called automatically by node.Component()
+//
+// Example usage:
+//
+//	buttonGroup.AddEventListener("click", func(node Node) {
+//	    // Get the parent ButtonGroup component from any clicked element (including buttons)
+//	    if comp := node.Component(); comp != nil {
+//	        if bg, ok := comp.(*buttonGroup); ok {
+//	            activeIndices := bg.Active()
+//	            // ... work with the button group
+//	        }
+//	    }
+//	})
+//
+// All bootstrap components automatically set data-component attribute via newComponent()
+func ComponentFromElement(elem Element) Component {
+	if !elem.HasAttribute("data-component") {
+		return nil
+	}
+
+	componentType := name(elem.GetAttribute("data-component"))
+
+	// Create a basic component wrapper
+	c := &component{
+		name: componentType,
+		root: elem,
+		body: nil,
+	}
+
+	// For certain component types, we can return specialized wrappers
+	// This allows the returned component to have type-specific methods
+	switch componentType {
+	case ButtonComponent:
+		return &button{component: *c}
+	case ButtonGroupComponent:
+		return &buttonGroup{component: *c}
+	case TableComponent:
+		return &table{component: *c}
+	case CardComponent:
+		return &card{component: *c}
+	case ContainerComponent:
+		return &container{component: *c}
+	case HeadingComponent:
+		return &heading{component: *c}
+	case BadgeComponent:
+		return &badge{component: *c}
+	case AlertComponent:
+		return &alert{component: *c}
+	case IconComponent:
+		return &icon{component: *c}
+	case NavComponent:
+		return &nav{component: *c}
+	case NavBarComponent:
+		return &navbar{component: *c}
+	case NavItemComponent:
+		return &navItem{component: *c}
+	case NavDropdownComponent:
+		return &navDropdown{component: *c}
+	case ImageComponent:
+		return &image{component: *c}
+	case SpanComponent:
+		return &span{component: *c}
+	case OffcanvasComponent:
+		return &offcanvas{component: *c}
+	// Add more specialized types as needed
+	default:
+		return c
+	}
 }

@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 
 	// Packages
@@ -27,11 +28,7 @@ var _ dom.Element = (*element)(nil)
 // STRINGIFY
 
 func (this *element) String() string {
-	var b strings.Builder
-	b.WriteString("<DOMElement")
-	fmt.Fprint(&b, " ", this.node)
-	b.WriteString(">")
-	return b.String()
+	return this.OuterHTML()
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -81,6 +78,13 @@ func (this *element) SetAttribute(name, value string) dom.Attr {
 	attr.SetValue(value)
 	getNode(attr).parent = this
 	this.attrs[name] = attr
+
+	// Sync classlist when class attribute is set
+	if name == "class" && value != "" {
+		classes := strings.Fields(value)
+		this.classlist = NewTokenList(classes...)
+	}
+
 	return attr
 }
 
@@ -142,15 +146,8 @@ func (this *element) GetAttributeNames() []string {
 }
 
 func (this *element) ClassList() dom.TokenList {
-	// Sync classlist with class attribute if needed
-	classAttr := this.GetAttribute("class")
-	if classAttr != "" {
-		// Parse class attribute and update classlist
-		classes := strings.Fields(classAttr)
-		this.classlist = NewTokenList(classes...)
-	} else if this.classlist == nil {
-		this.classlist = NewTokenList()
-	}
+	// ClassList is already initialized when element is created
+	// Just return the existing instance
 	return this.classlist
 }
 
@@ -395,12 +392,27 @@ func (this *element) v() *node {
 func (this *element) write(w io.Writer) (int, error) {
 	s := 0
 
-	// Write opening tag with attributes
-	tag := "<" + this.node.name
+	// Sync classlist to class attribute before writing
+	if this.classlist != nil && this.classlist.Length() > 0 {
+		this.SetAttribute("class", this.classlist.Value())
+	}
 
-	// Add attributes
+	// Write opening tag with attributes (lowercase to match browser behavior)
+	tagName := strings.ToLower(this.node.name)
+	tag := "<" + tagName
+
+	// Add attributes in sorted order for consistent output
 	if len(this.attrs) > 0 {
-		for _, attr := range this.attrs {
+		// Get sorted attribute names
+		names := make([]string, 0, len(this.attrs))
+		for name := range this.attrs {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+
+		// Write attributes in sorted order
+		for _, name := range names {
+			attr := this.attrs[name]
 			tag += fmt.Sprintf(" %s=%q", attr.Name(), attr.Value())
 		}
 	}
@@ -421,8 +433,8 @@ func (this *element) write(w io.Writer) (int, error) {
 		}
 	}
 
-	// Write closing tag
-	if n, err := w.Write([]byte("</" + this.node.name + ">")); err != nil {
+	// Write closing tag (lowercase to match browser behavior)
+	if n, err := w.Write([]byte("</" + tagName + ">")); err != nil {
 		return 0, err
 	} else {
 		s += n

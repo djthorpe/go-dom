@@ -2,6 +2,12 @@ package dom
 
 // Component interface
 type Component interface {
+	// Return the components type name
+	Name() string
+
+	// Return the component's ID
+	ID() string
+
 	// Return the component's root element
 	Element() Element
 
@@ -10,6 +16,12 @@ type Component interface {
 
 	// Append text, Element or Component children to this component
 	Append(children ...any) Component
+
+	// Add an event listener to the component's root element
+	AddEventListener(event string, handler func(Node)) Component
+
+	// Apply options to the component
+	Apply(opts ...any) Component
 }
 
 // Application interface

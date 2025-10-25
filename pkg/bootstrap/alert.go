@@ -1,7 +1,6 @@
 package bootstrap
 
 import (
-	"strings"
 
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
@@ -26,31 +25,16 @@ var _ Component = (*alert)(nil)
 // Alert creates a new bootstrap alert (div element with role="alert")
 // Default alert uses "alert" class. Use WithColor to set color variant.
 func Alert(opt ...Opt) *alert {
-	// Create an alert div element
-	root := dom.GetWindow().Document().CreateElement("DIV")
+	// Create a new component
+	c := newComponent(AlertComponent, dom.GetWindow().Document().CreateElement("DIV"))
 
 	// Apply options
-	if opts, err := NewOpts(AlertComponent, WithClass("alert")); err != nil {
+	if err := c.applyTo(c.root, append(opt, WithClass("alert"), WithRole("alert"))...); err != nil {
 		panic(err)
-	} else if err := opts.apply(opt...); err != nil {
-		panic(err)
-	} else {
-		// Set class list
-		classes := opts.classList.Values()
-		if len(classes) > 0 {
-			root.SetAttribute("class", strings.Join(classes, " "))
-		}
-
-		// Set role attribute for accessibility
-		root.SetAttribute("role", "alert")
 	}
 
-	return &alert{
-		component: component{
-			name: AlertComponent,
-			root: root,
-		},
-	}
+	// Return the component
+	return &alert{*c}
 }
 
 // DismissibleAlert creates a new dismissible bootstrap alert with fade and show classes
@@ -59,16 +43,9 @@ func DismissibleAlert(opt ...Opt) *alert {
 	// Append the dismissible classes to options
 	opt = append(opt, WithClass("alert-dismissible", "fade", "show"))
 	alert := Alert(opt...)
-
-	// Create and append close button
-	closeButton := dom.GetWindow().Document().CreateElement("BUTTON")
-	closeButton.SetAttribute("type", "button")
-	closeButton.SetAttribute("class", "btn-close")
-	closeButton.SetAttribute("data-bs-dismiss", "alert")
-	closeButton.SetAttribute("aria-label", "Close")
-
-	alert.root.AppendChild(closeButton)
-
+	alert.Append(
+		CloseButton(WithAttribute("data-bs-dismiss", "alert")),
+	)
 	return alert
 }
 

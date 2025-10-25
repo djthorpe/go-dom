@@ -1,8 +1,6 @@
 package bootstrap
 
 import (
-	"strings"
-
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
 
@@ -17,62 +15,47 @@ type card struct {
 	component
 }
 
+// Ensure that card implements Component interface
+var _ Component = (*card)(nil)
+
 ///////////////////////////////////////////////////////////////////////////////
 // LIFECYCLE
 
 // Card creates a new bootstrap card (div element with class="card")
 // The card automatically creates a card-body div where content is appended.
-// Use Heading() to add a card-header and Footer() to add a card-footer.
+// Use Header() to add a card-header and Footer() to add a card-footer.
 // Content added via Append() goes to the card-body.
 //
 // Example:
 //
-//	Card().Heading("Featured").Append("Card content")
-//	Card(WithColor(PRIMARY)).Heading("Header").Append("Content").Footer("Footer")
+//	Card().Header("Featured").Append("Card content")
+//	Card(WithColor(PRIMARY)).Header("Header").Append("Content").Footer("Footer")
 func Card(opt ...Opt) *card {
-	// Create a card div element
-	root := dom.GetWindow().Document().CreateElement("DIV")
+	// Create a new component
+	c := newComponent(CardComponent, dom.GetWindow().Document().CreateElement("DIV"))
 
 	// Apply options
-	if opts, err := NewOpts(CardComponent, WithClass("card")); err != nil {
+	if err := c.applyTo(c.root, append(opt, WithClass("card"))...); err != nil {
 		panic(err)
-	} else if err := opts.apply(opt...); err != nil {
-		panic(err)
-	} else {
-		// Set class list
-		classes := opts.classList.Values()
-		if len(classes) > 0 {
-			root.SetAttribute("class", strings.Join(classes, " "))
-		}
-
-		// Set attributes
-		for key, value := range opts.attributes {
-			root.SetAttribute(key, value)
-		}
 	}
 
 	// Create card-body div
 	body := dom.GetWindow().Document().CreateElement("DIV")
 	body.SetAttribute("class", "card-body")
-	root.AppendChild(body)
+	c.root.AppendChild(body)
+	c.body = body
 
-	return &card{
-		component: component{
-			name: CardComponent,
-			root: root,
-			body: body,
-		},
-	}
+	return &card{component: *c}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // METHODS
 
-// Heading adds a card-header div at the beginning of the card (root element).
+// Header adds a card-header div at the beginning of the card (root element).
 // It creates a <div class="card-header"> element and accepts string, Component, or Element children.
-// Returns *card to allow method chaining with Heading(), Footer(), and Append().
+// Returns *card to allow method chaining with Header(), Footer(), and Append().
 // If called multiple times, only the last call is used.
-func (c *card) Heading(children ...any) *card {
+func (c *card) Header(children ...any) *card {
 	// Remove existing header if present
 	childNodes := c.root.ChildNodes()
 	for i, node := range childNodes {
@@ -116,7 +99,7 @@ func (c *card) Heading(children ...any) *card {
 
 // Footer adds a card-footer div at the end of the card (root element).
 // It creates a <div class="card-footer"> element and accepts string, Component, or Element children.
-// Returns *card to allow method chaining with Heading(), Footer(), and Append().
+// Returns *card to allow method chaining with Header(), Footer(), and Append().
 // If called multiple times, only the last call is used.
 func (c *card) Footer(children ...any) *card {
 	// Remove existing footer if present

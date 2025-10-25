@@ -35,6 +35,7 @@ type Node interface {
 	InsertBefore(Node, Node) Node
 	RemoveChild(Node)
 	ReplaceChild(Node, Node)
+	Component() Component
 }
 
 // Element implements https://developer.mozilla.org/en-US/docs/Web/API/Element
@@ -159,6 +160,7 @@ type Window interface {
 
 	// Methods
 	Write(io.Writer, Node) (int, error)
+	NewMutationObserver(callback func()) MutationObserver
 	//Read(io.Reader, string) (Document, error)
 }
 
@@ -174,6 +176,13 @@ type TokenList interface {
 	Add(...string)
 	Remove(...string)
 	Toggle(value string, force ...bool) bool
+}
+
+// MutationObserver implements https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
+type MutationObserver interface {
+	// Methods
+	Observe(target Node, options map[string]interface{})
+	Disconnect()
 }
 
 ///////////////////////////////////////////////////////////////////////////////

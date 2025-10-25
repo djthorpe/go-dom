@@ -56,12 +56,12 @@ func TestContainer_OuterHTML(t *testing.T) {
 		{
 			name:         "default container",
 			constructor:  func() dom.Component { return bs.Container() },
-			expectedHTML: `<div class="container"></div>`,
+			expectedHTML: `<div class="container" data-component="container"></div>`,
 		},
 		{
 			name:         "fluid container",
 			constructor:  func() dom.Component { return bs.Container(bs.WithBreakpoint(bs.BreakpointFluid)) },
-			expectedHTML: `<div class="container-fluid"></div>`,
+			expectedHTML: `<div class="container-fluid" data-component="container"></div>`,
 		},
 	}
 
@@ -423,11 +423,11 @@ func Test_Container_001(t *testing.T) {
 
 	// Create a container
 	container := bs.Container()
-	assert.Equal(`<div class="container"></div>`, strings.ToLower(container.Element().OuterHTML()))
+	assert.Equal(`<div class="container" data-component="container"></div>`, strings.ToLower(container.Element().OuterHTML()))
 
 	// Create a fluid container
 	fluid := bs.Container(bs.WithBreakpoint(bs.BreakpointFluid))
-	assert.Equal(`<div class="container-fluid"></div>`, strings.ToLower(fluid.Element().OuterHTML()))
+	assert.Equal(`<div class="container-fluid" data-component="container"></div>`, strings.ToLower(fluid.Element().OuterHTML()))
 }
 
 // TestContainer_ResponsiveBreakpoints tests all responsive breakpoint container options
@@ -490,7 +490,7 @@ func TestContainer_ResponsiveBreakpoints(t *testing.T) {
 				"Container should contain '%s' class", tt.expected)
 
 			// Check OuterHTML
-			expectedHTML := `<div class="` + tt.expected + `"></div>`
+			expectedHTML := `<div class="` + tt.expected + `" data-component="container"></div>`
 			assert.Equal(t, expectedHTML, strings.ToLower(element.OuterHTML()),
 				"OuterHTML should match expected format")
 		})

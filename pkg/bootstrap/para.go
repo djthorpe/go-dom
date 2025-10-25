@@ -1,8 +1,6 @@
 package bootstrap
 
 import (
-	"strings"
-
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
 
@@ -25,26 +23,13 @@ var _ Component = (*para)(nil)
 
 // Para creates a new paragraph (P) element
 func Para(opt ...Opt) *para {
-	// Create a paragraph element
-	root := dom.GetWindow().Document().CreateElement("P")
+	c := newComponent(ParaComponent, dom.GetWindow().Document().CreateElement("P"))
 
-	// Apply options
-	if opts, err := NewOpts(ParaComponent); err != nil {
+	if err := c.applyTo(c.root, opt...); err != nil {
 		panic(err)
-	} else if err := opts.apply(opt...); err != nil {
-		panic(err)
-	} else {
-		// Set class list
-		classes := opts.classList.Values()
-		if len(classes) > 0 {
-			root.SetAttribute("class", strings.Join(classes, " "))
-		}
 	}
 
 	return &para{
-		component: component{
-			name: ParaComponent,
-			root: root,
-		},
+		component: *c,
 	}
 }

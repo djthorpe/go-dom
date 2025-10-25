@@ -170,7 +170,7 @@ func TestNavBar_Basic(t *testing.T) {
 }
 
 func TestNavBar_WithExpand(t *testing.T) {
-	navbar := NavBar(WithClass("navbar-expand-lg"))
+	navbar := NavBar(WithResponsive(BreakpointLarge))
 
 	class := navbar.Element().GetAttribute("class")
 	if !strings.Contains(class, "navbar-expand-lg") {
@@ -178,18 +178,20 @@ func TestNavBar_WithExpand(t *testing.T) {
 	}
 }
 
-func TestNavBar_Brand(t *testing.T) {
-	navbar := NavBar().Brand("My Brand", "#")
+func TestNavBar_Header(t *testing.T) {
+	navbar := NavBar().Header("My Brand")
 
 	// Check that brand was added to container
 	container := navbar.Element().ChildNodes()[0].(Element)
-	brandElements := container.ChildNodes()
+	children := container.ChildNodes()
 
-	if len(brandElements) != 1 {
-		t.Errorf("Expected 1 brand element, got %d", len(brandElements))
+	// Should have 3 children: brand, toggler, collapse
+	if len(children) != 3 {
+		t.Errorf("Expected 3 elements (brand, toggler, collapse), got %d", len(children))
 	}
 
-	brand := brandElements[0].(Element)
+	// First child should be brand (inserted at top)
+	brand := children[0].(Element)
 	if brand.TagName() != "A" {
 		t.Errorf("Expected brand tag 'A', got '%s'", brand.TagName())
 	}
@@ -205,18 +207,19 @@ func TestNavBar_Brand(t *testing.T) {
 	}
 }
 
-func TestNavBar_Toggler(t *testing.T) {
-	navbar := NavBar().Toggler("navbarNav")
+func TestNavBar_Structure(t *testing.T) {
+	navbar := NavBar()
 
-	// Check that toggler was added
+	// Check that toggler and collapse were automatically created
 	container := navbar.Element().ChildNodes()[0].(Element)
-	togglerElements := container.ChildNodes()
+	children := container.ChildNodes()
 
-	if len(togglerElements) != 1 {
-		t.Errorf("Expected 1 toggler element, got %d", len(togglerElements))
+	if len(children) != 2 {
+		t.Errorf("Expected 2 children (toggler + collapse), got %d", len(children))
 	}
 
-	toggler := togglerElements[0].(Element)
+	// Check toggler
+	toggler := children[0].(Element)
 	if toggler.TagName() != "BUTTON" {
 		t.Errorf("Expected toggler tag 'BUTTON', got '%s'", toggler.TagName())
 	}
@@ -226,7 +229,7 @@ func TestNavBar_Toggler(t *testing.T) {
 		t.Errorf("Expected toggler class to contain 'navbar-toggler', got '%s'", togglerClass)
 	}
 
-	// Check data attributes
+	// Check toggler data attributes
 	target := toggler.GetAttribute("data-bs-target")
 	if target != "#navbarNav" {
 		t.Errorf("Expected data-bs-target '#navbarNav', got '%s'", target)
@@ -238,13 +241,9 @@ func TestNavBar_Toggler(t *testing.T) {
 	if !strings.Contains(iconClass, "navbar-toggler-icon") {
 		t.Errorf("Expected icon class to contain 'navbar-toggler-icon', got '%s'", iconClass)
 	}
-}
 
-func TestNavBar_Collapse(t *testing.T) {
-	navbar := NavBar()
-	collapse := navbar.Collapse("navbarNav")
-
-	// Check collapse element
+	// Check collapse
+	collapse := children[1].(Element)
 	if collapse.TagName() != "DIV" {
 		t.Errorf("Expected collapse tag 'DIV', got '%s'", collapse.TagName())
 	}
@@ -261,50 +260,116 @@ func TestNavBar_Collapse(t *testing.T) {
 	if collapseId != "navbarNav" {
 		t.Errorf("Expected collapse id 'navbarNav', got '%s'", collapseId)
 	}
+
+	// The collapse element is where navbar content is appended
+	// (verified by other tests like TestNavBar_Append)
 }
 
-func TestNavBar_NavContent(t *testing.T) {
-	navbar := NavBar()
-	navContent := navbar.NavContent(true, "me-auto")
+func TestNavBar_Append(t *testing.T) {
+	homeItem := NavItem("#", "Home")
+	homeItem.Active(true)
 
-	// Check nav content element
-	if navContent.TagName() != "UL" {
-		t.Errorf("Expected nav content tag 'UL', got '%s'", navContent.TagName())
+	navbar := NavBar().Append(
+		homeItem,
+		NavItem("#", "About"),
+	)
+
+	// Check that items were added to the collapse body
+	container := navbar.Element().ChildNodes()[0].(Element)
+	collapse := container.ChildNodes()[1].(Element) // collapse is second child after toggler
+	navList := collapse.ChildNodes()[0].(Element)   // navbar-nav UL inside collapse
+	children := navList.ChildNodes()
+	if len(children) != 2 {
+		t.Errorf("Expected 2 nav items, got %d", len(children))
 	}
 
-	navClass := navContent.GetAttribute("class")
-	if !strings.Contains(navClass, "navbar-nav") {
-		t.Errorf("Expected nav class to contain 'navbar-nav', got '%s'", navClass)
-	}
-	if !strings.Contains(navClass, "me-auto") {
-		t.Errorf("Expected nav class to contain 'me-auto', got '%s'", navClass)
+	// Check first item is active
+	firstItem := children[0].(Element)
+	if !strings.Contains(firstItem.GetAttribute("class"), "active") {
+		t.Error("Expected first item to be active")
 	}
 }
 
-func TestNavBar_NavContentDiv(t *testing.T) {
-	navbar := NavBar()
-	navContent := navbar.NavContent(false)
+func TestNavBar_Insert(t *testing.T) {
+	navbar := NavBar().Append(NavItem("#", "First"))
 
-	// Check that div is used instead of ul
-	if navContent.TagName() != "DIV" {
-		t.Errorf("Expected nav content tag 'DIV', got '%s'", navContent.TagName())
+	// Insert at the top
+	newFirst := NavItem("#", "New First")
+	newFirst.Active(true)
+	navbar.Insert(newFirst)
+
+	// Check that new item is first
+	container := navbar.Element().ChildNodes()[0].(Element)
+	collapse := container.ChildNodes()[1].(Element)
+	navList := collapse.ChildNodes()[0].(Element) // navbar-nav UL inside collapse
+	children := navList.ChildNodes()
+	if len(children) != 2 {
+		t.Errorf("Expected 2 nav items, got %d", len(children))
 	}
 
-	navClass := navContent.GetAttribute("class")
-	if !strings.Contains(navClass, "navbar-nav") {
-		t.Errorf("Expected nav class to contain 'navbar-nav', got '%s'", navClass)
+	firstItem := children[0].(Element)
+	if !strings.Contains(firstItem.GetAttribute("class"), "active") {
+		t.Error("Expected first item to be active (newly inserted)")
+	}
+}
+
+func TestNavBar_AppendWithSpacer(t *testing.T) {
+	navbar := NavBar().Append(
+		NavItem("#", "Home"),
+		NavSpacer(),
+		NavItem("#", "Login"),
+	)
+
+	// Check that all items were added
+	container := navbar.Element().ChildNodes()[0].(Element)
+	collapse := container.ChildNodes()[1].(Element)
+	navList := collapse.ChildNodes()[0].(Element) // navbar-nav UL inside collapse
+	children := navList.ChildNodes()
+	if len(children) != 3 {
+		t.Errorf("Expected 3 children (2 items + spacer), got %d", len(children))
+	}
+
+	// Check middle item is spacer
+	spacer := children[1].(Element)
+	if spacer.GetAttribute("data-component") != string(NavSpacerComponent) {
+		t.Error("Expected middle child to be NavSpacer")
+	}
+}
+
+func TestNavBar_AppendWithDivider(t *testing.T) {
+	navbar := NavBar().Append(
+		NavItem("#", "Home"),
+		NavDivider(true),
+		NavItem("#", "About"),
+	)
+
+	// Check that all items were added
+	container := navbar.Element().ChildNodes()[0].(Element)
+	collapse := container.ChildNodes()[1].(Element)
+	navList := collapse.ChildNodes()[0].(Element) // navbar-nav UL inside collapse
+	children := navList.ChildNodes()
+	if len(children) != 3 {
+		t.Errorf("Expected 3 children (2 items + divider), got %d", len(children))
+	}
+
+	// Check middle item is divider
+	divider := children[1].(Element)
+	if divider.GetAttribute("data-component") != string(NavDividerComponent) {
+		t.Error("Expected middle child to be NavDivider")
 	}
 }
 
 func TestNavBar_Complete(t *testing.T) {
 	// Build a complete navbar
-	navbar := NavBar(WithClass("navbar-expand-lg"), WithClass("bg-body-tertiary")).
-		Brand("Navbar", "#").
-		Toggler("navbarNav")
+	homeItem := NavItem("#", "Home")
+	homeItem.Active(true)
 
-	collapse := navbar.Collapse("navbarNav")
-	navContent := navbar.NavContent(true, "me-auto", "mb-2", "mb-lg-0")
-	collapse.AppendChild(navContent)
+	navbar := NavBar(WithResponsive(BreakpointLarge), WithClass("bg-body-tertiary")).
+		Header("Navbar").
+		Append(
+			homeItem,
+			NavItem("#", "About"),
+		)
 
 	// Verify structure
 	root := navbar.Element()
@@ -330,13 +395,21 @@ func TestNavBar_Complete(t *testing.T) {
 	if len(containerChildren) != 3 {
 		t.Errorf("Expected 3 children (brand, toggler, collapse), got %d", len(containerChildren))
 	}
+
+	// Check collapse has nav items
+	collapse := containerChildren[2].(Element)
+	navList := collapse.ChildNodes()[0].(Element) // navbar-nav UL inside collapse
+	navItems := navList.ChildNodes()
+	if len(navItems) != 2 {
+		t.Errorf("Expected 2 nav items in collapse, got %d", len(navItems))
+	}
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // NAVITEM TESTS
 
 func TestNavItem_Basic(t *testing.T) {
-	navItem := NavItem("/home", false, false, "Home")
+	navItem := NavItem("/home", "Home")
 
 	// Check element type
 	if tagName := navItem.Element().TagName(); tagName != "A" {
@@ -363,7 +436,8 @@ func TestNavItem_Basic(t *testing.T) {
 }
 
 func TestNavItem_Active(t *testing.T) {
-	navItem := NavItem("#", true, false, "Home")
+	navItem := NavItem("#", "Home")
+	navItem.Active(true)
 
 	class := navItem.Element().GetAttribute("class")
 	if !strings.Contains(class, "active") {
@@ -377,7 +451,8 @@ func TestNavItem_Active(t *testing.T) {
 }
 
 func TestNavItem_Disabled(t *testing.T) {
-	navItem := NavItem("#", false, true, "Disabled")
+	navItem := NavItem("#", "Disabled")
+	navItem.Disabled(true)
 
 	class := navItem.Element().GetAttribute("class")
 	if !strings.Contains(class, "disabled") {
@@ -392,7 +467,8 @@ func TestNavItem_Disabled(t *testing.T) {
 
 func TestNavItem_WithContent(t *testing.T) {
 	icon := Icon("home")
-	navItem := NavItem("/dashboard", true, false, icon, " Dashboard")
+	navItem := NavItem("/dashboard", icon, " Dashboard")
+	navItem.Active(true)
 
 	// Check active state
 	class := navItem.Element().GetAttribute("class")
@@ -413,9 +489,9 @@ func TestNavItem_WithContent(t *testing.T) {
 }
 
 func TestNavItem_Component(t *testing.T) {
-	navItem := NavItem("#", false, false, "Test")
-	if navItem.component.name != NavComponent {
-		t.Errorf("Expected component type %s, got %s", NavComponent, navItem.component.name)
+	navItem := NavItem("#", "Test")
+	if navItem.component.name != NavItemComponent {
+		t.Errorf("Expected component type %s, got %s", NavItemComponent, navItem.component.name)
 	}
 }
 
@@ -520,12 +596,15 @@ func TestNavDivider_ComponentInterface(t *testing.T) {
 
 func TestNav_WithSpacerAndDivider(t *testing.T) {
 	// Test that NavSpacer and NavDivider work correctly within a Nav component
+	homeItem := NavItem("#", "Home")
+	homeItem.Active(true)
+
 	nav := Nav().
-		Append(NavItem("#", true, false, "Home")).
+		Append(homeItem).
 		Append(NavDivider(true)).
-		Append(NavItem("#", false, false, "About")).
+		Append(NavItem("#", "About")).
 		Append(NavSpacer()).
-		Append(NavItem("#", false, false, "Login"))
+		Append(NavItem("#", "Login"))
 
 	// Check that nav has the expected number of children
 	children := nav.Element().ChildNodes()
@@ -563,9 +642,9 @@ func TestNav_WithSpacerAndDivider(t *testing.T) {
 // NAVDROPDOWN TESTS
 
 func TestNavDropdown_Basic(t *testing.T) {
-	dropdown := NavDropdown("More", false,
-		NavDropdownItem("#", false, "Action"),
-		NavDropdownItem("#", false, "Another action"),
+	dropdown := NavDropdown("More",
+		NavItem("#", "Action"),
+		NavItem("#", "Another action"),
 	)
 
 	// Check element type
@@ -603,73 +682,6 @@ func TestNavDropdown_Basic(t *testing.T) {
 	menuClass := menu.GetAttribute("class")
 	if !strings.Contains(menuClass, "dropdown-menu") {
 		t.Errorf("Expected menu class to contain 'dropdown-menu', got '%s'", menuClass)
-	}
-}
-
-func TestNavDropdown_Active(t *testing.T) {
-	dropdown := NavDropdown("Active", true, NavDropdownItem("#", false, "Item"))
-
-	// Find the toggle element
-	children := dropdown.Element().ChildNodes()
-	toggle := children[0].(dom.Element)
-
-	// Check active state
-	class := toggle.GetAttribute("class")
-	if !strings.Contains(class, "active") {
-		t.Errorf("Expected class to contain 'active', got '%s'", class)
-	}
-
-	ariaCurrent := toggle.GetAttribute("aria-current")
-	if ariaCurrent != "page" {
-		t.Errorf("Expected aria-current 'page', got '%s'", ariaCurrent)
-	}
-}
-
-func TestNavDropdownItem_Basic(t *testing.T) {
-	item := NavDropdownItem("/profile", false, "My Profile")
-
-	// Check element type
-	if tagName := item.Element().TagName(); tagName != "LI" {
-		t.Errorf("Expected tag name 'LI', got '%s'", tagName)
-	}
-
-	// Check link inside li
-	children := item.Element().ChildNodes()
-	if len(children) != 1 {
-		t.Errorf("Expected 1 child (link), got %d", len(children))
-	}
-
-	link := children[0].(dom.Element)
-	if tagName := link.TagName(); tagName != "A" {
-		t.Errorf("Expected link tag name 'A', got '%s'", tagName)
-	}
-
-	class := link.GetAttribute("class")
-	if !strings.Contains(class, "dropdown-item") {
-		t.Errorf("Expected class to contain 'dropdown-item', got '%s'", class)
-	}
-
-	href := link.GetAttribute("href")
-	if href != "/profile" {
-		t.Errorf("Expected href '/profile', got '%s'", href)
-	}
-}
-
-func TestNavDropdownItem_Active(t *testing.T) {
-	item := NavDropdownItem("#", true, "Active Item")
-
-	// Get the link element
-	children := item.Element().ChildNodes()
-	link := children[0].(dom.Element)
-
-	class := link.GetAttribute("class")
-	if !strings.Contains(class, "active") {
-		t.Errorf("Expected class to contain 'active', got '%s'", class)
-	}
-
-	ariaCurrent := link.GetAttribute("aria-current")
-	if ariaCurrent != "true" {
-		t.Errorf("Expected aria-current 'true', got '%s'", ariaCurrent)
 	}
 }
 
@@ -725,18 +737,21 @@ func TestNavDropdownHeader(t *testing.T) {
 
 func TestNavDropdown_Integration(t *testing.T) {
 	// Test a complete dropdown in a nav
+	homeItem := NavItem("#", "Home")
+	homeItem.Active(true)
+
 	nav := Nav().
-		Append(NavItem("#", true, false, "Home")).
-		Append(NavDropdown("More", false,
+		Append(homeItem).
+		Append(NavDropdown("More",
 			NavDropdownHeader("Account"),
-			NavDropdownItem("/profile", false, "Profile"),
-			NavDropdownItem("/settings", false, "Settings"),
+			NavItem("/profile", "Profile"),
+			NavItem("/settings", "Settings"),
 			NavDropdownDivider(),
 			NavDropdownHeader("Help"),
-			NavDropdownItem("/help", false, "Documentation"),
-			NavDropdownItem("/contact", false, "Contact"),
+			NavItem("/help", "Documentation"),
+			NavItem("/contact", "Contact"),
 		)).
-		Append(NavItem("#", false, false, "About"))
+		Append(NavItem("#", "About"))
 
 	// Check nav has expected children
 	children := nav.Element().ChildNodes()
@@ -754,28 +769,97 @@ func TestNavDropdown_Integration(t *testing.T) {
 }
 
 func TestNavDropdown_InNavBar(t *testing.T) {
-	// Test dropdown can be added to navbar nav content
-	navbar := NavBar(WithClass("navbar-expand-lg"))
-	_ = navbar.Collapse("test") // Create collapse container but don't need to use it
-	navContent := navbar.NavContent(false)
+	// Test dropdown can be added to navbar
+	navbar := NavBar(WithResponsive(BreakpointLarge))
 
-	// Create dropdown and add to nav content
-	dropdown := NavDropdown("Services", false,
-		NavDropdownItem("/web", false, "Web Design"),
-		NavDropdownItem("/mobile", false, "Mobile Apps"),
+	// Create dropdown and add to navbar
+	dropdown := NavDropdown("Services",
+		NavItem("/web", "Web Design"),
+		NavItem("/mobile", "Mobile Apps"),
 	)
 
-	navContent.AppendChild(dropdown.Element())
+	navbar.Append(dropdown)
 
 	// Verify the dropdown was added correctly
-	children := navContent.ChildNodes()
+	container := navbar.Element().ChildNodes()[0].(Element)
+	collapse := container.ChildNodes()[1].(Element)
+	navList := collapse.ChildNodes()[0].(Element) // navbar-nav UL inside collapse
+	children := navList.ChildNodes()
 	if len(children) != 1 {
-		t.Errorf("Expected 1 child in nav content, got %d", len(children))
+		t.Errorf("Expected 1 child in navbar body, got %d", len(children))
 	}
 
 	dropdownEl := children[0].(dom.Element)
 	class := dropdownEl.GetAttribute("class")
 	if !strings.Contains(class, "nav-item") || !strings.Contains(class, "dropdown") {
 		t.Errorf("Expected dropdown class 'nav-item dropdown', got '%s'", class)
+	}
+}
+
+func TestNavDropdown_Active(t *testing.T) {
+	// Test Active method
+	dropdown := NavDropdown("Menu",
+		NavItem("#", "Item 1"),
+		NavItem("#", "Item 2"),
+		NavItem("#", "Item 3"),
+	)
+
+	// Initially no items should be active
+	activeIndices := dropdown.Active()
+	if len(activeIndices) != 0 {
+		t.Errorf("Expected 0 active items initially, got %d", len(activeIndices))
+	}
+
+	// Set item 1 as active
+	activeIndices = dropdown.Active(1)
+	if len(activeIndices) != 1 || activeIndices[0] != 1 {
+		t.Errorf("Expected item 1 to be active, got %v", activeIndices)
+	}
+
+	// Check that -1 doesn't change state, just returns current
+	activeIndices = dropdown.Active(-1)
+	if len(activeIndices) != 1 || activeIndices[0] != 1 {
+		t.Errorf("Expected item 1 to still be active after -1 call, got %v", activeIndices)
+	}
+
+	// Set item 0 as active (doesn't clear previous)
+	dropdown.Active(0)
+	activeIndices = dropdown.Active()
+	if len(activeIndices) != 2 {
+		t.Errorf("Expected 2 active items, got %d: %v", len(activeIndices), activeIndices)
+	}
+}
+
+func TestNavDropdown_Disabled(t *testing.T) {
+	// Test Disabled method
+	dropdown := NavDropdown("Menu",
+		NavItem("#", "Item 1"),
+		NavItem("#", "Item 2"),
+		NavItem("#", "Item 3"),
+	)
+
+	// Initially no items should be disabled
+	disabledIndices := dropdown.Disabled()
+	if len(disabledIndices) != 0 {
+		t.Errorf("Expected 0 disabled items initially, got %d", len(disabledIndices))
+	}
+
+	// Set item 2 as disabled
+	disabledIndices = dropdown.Disabled(2)
+	if len(disabledIndices) != 1 || disabledIndices[0] != 2 {
+		t.Errorf("Expected item 2 to be disabled, got %v", disabledIndices)
+	}
+
+	// Check that -1 doesn't change state, just returns current
+	disabledIndices = dropdown.Disabled(-1)
+	if len(disabledIndices) != 1 || disabledIndices[0] != 2 {
+		t.Errorf("Expected item 2 to still be disabled after -1 call, got %v", disabledIndices)
+	}
+
+	// Set item 0 as disabled
+	dropdown.Disabled(0)
+	disabledIndices = dropdown.Disabled()
+	if len(disabledIndices) != 2 {
+		t.Errorf("Expected 2 disabled items, got %d: %v", len(disabledIndices), disabledIndices)
 	}
 }

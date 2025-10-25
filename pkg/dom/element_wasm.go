@@ -3,8 +3,6 @@
 package dom
 
 import (
-	"fmt"
-	"strings"
 	"syscall/js"
 
 	// Packages
@@ -29,11 +27,7 @@ var _ dom.Element = (*element)(nil)
 // STRINGIFY
 
 func (this *element) String() string {
-	var b strings.Builder
-	b.WriteString("<DOMElement")
-	fmt.Fprint(&b, " ", this.node)
-	b.WriteString(">")
-	return b.String()
+	return this.OuterHTML()
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -272,7 +266,11 @@ func (e *element) AddEventListener(eventType string, callback func(dom.Node)) do
 			// Create a Node from the event target
 			target := args[0].Get("target")
 			if !target.IsUndefined() && !target.IsNull() {
-				callback(NewNode(target))
+				// Wrap as Element first if possible, then fall back to Node
+				// This ensures Component() can find components on the clicked element
+				if targetNode := NewNode(target); targetNode != nil {
+					callback(targetNode)
+				}
 			}
 		}
 		return nil

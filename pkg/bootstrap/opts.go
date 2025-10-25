@@ -3,6 +3,8 @@ package bootstrap
 import (
 
 	// Packages
+	"strings"
+
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
 
 	// Namespace import for interfaces
@@ -14,6 +16,7 @@ import (
 
 type opts struct {
 	name       name
+	id         string
 	classList  TokenList
 	attributes map[string]string
 }
@@ -55,6 +58,82 @@ const (
 	SizeLarge Size = "lg"
 )
 
+// Cursor defines the cursor type
+type Cursor string
+
+const (
+	// CursorAuto - Browser determines cursor (default)
+	CursorAuto Cursor = "auto"
+	// CursorDefault - Platform-dependent default cursor (usually an arrow)
+	CursorDefault Cursor = "default"
+	// CursorPointer - Hand with pointing finger (typically for links)
+	CursorPointer Cursor = "pointer"
+	// CursorWait - Indicates the program is busy
+	CursorWait Cursor = "wait"
+	// CursorText - Indicates text can be selected
+	CursorText Cursor = "text"
+	// CursorMove - Indicates something can be moved
+	CursorMove Cursor = "move"
+	// CursorNotAllowed - Indicates action is not allowed
+	CursorNotAllowed Cursor = "not-allowed"
+	// CursorHelp - Help information is available
+	CursorHelp Cursor = "help"
+	// CursorCrosshair - Simple crosshair
+	CursorCrosshair Cursor = "crosshair"
+	// CursorGrab - Indicates something can be grabbed
+	CursorGrab Cursor = "grab"
+	// CursorGrabbing - Indicates something is being grabbed
+	CursorGrabbing Cursor = "grabbing"
+	// CursorZoomIn - Indicates zoom in
+	CursorZoomIn Cursor = "zoom-in"
+	// CursorZoomOut - Indicates zoom out
+	CursorZoomOut Cursor = "zoom-out"
+	// CursorNone - No cursor is rendered
+	CursorNone Cursor = "none"
+	// CursorProgress - Indicates program is busy but user can still interact
+	CursorProgress Cursor = "progress"
+	// CursorCopy - Indicates something will be copied
+	CursorCopy Cursor = "copy"
+	// CursorAlias - Indicates an alias or shortcut will be created
+	CursorAlias Cursor = "alias"
+	// CursorContextMenu - Context menu is available
+	CursorContextMenu Cursor = "context-menu"
+	// CursorCell - Indicates table cell selection
+	CursorCell Cursor = "cell"
+	// CursorVerticalText - Indicates vertical text can be selected
+	CursorVerticalText Cursor = "vertical-text"
+	// CursorNResize - North resize
+	CursorNResize Cursor = "n-resize"
+	// CursorEResize - East resize
+	CursorEResize Cursor = "e-resize"
+	// CursorSResize - South resize
+	CursorSResize Cursor = "s-resize"
+	// CursorWResize - West resize
+	CursorWResize Cursor = "w-resize"
+	// CursorNEResize - North-East resize
+	CursorNEResize Cursor = "ne-resize"
+	// CursorNWResize - North-West resize
+	CursorNWResize Cursor = "nw-resize"
+	// CursorSEResize - South-East resize
+	CursorSEResize Cursor = "se-resize"
+	// CursorSWResize - South-West resize
+	CursorSWResize Cursor = "sw-resize"
+	// CursorEWResize - East-West resize
+	CursorEWResize Cursor = "ew-resize"
+	// CursorNSResize - North-South resize
+	CursorNSResize Cursor = "ns-resize"
+	// CursorNESWResize - North-East/South-West resize
+	CursorNESWResize Cursor = "nesw-resize"
+	// CursorNWSEResize - North-West/South-East resize
+	CursorNWSEResize Cursor = "nwse-resize"
+	// CursorColResize - Column resize
+	CursorColResize Cursor = "col-resize"
+	// CursorRowResize - Row resize
+	CursorRowResize Cursor = "row-resize"
+	// CursorAllScroll - Indicates scrolling in any direction
+	CursorAllScroll Cursor = "all-scroll"
+)
+
 ///////////////////////////////////////////////////////////////////////////////
 // LIFECYCLE
 
@@ -78,6 +157,36 @@ func (o *opts) apply(opts ...Opt) error {
 			}
 		}
 	}
+	return nil
+}
+
+// Apply options to any dom.Element
+func (component *component) applyTo(root Element, opts ...Opt) error {
+	opt, err := NewOpts(component.name, opts...)
+	if err != nil {
+		return err
+	}
+
+	// Set class list first (Bootstrap convention: class comes before other attributes)
+	classes := opt.classList.Values()
+	if len(classes) > 0 {
+		root.SetAttribute("class", strings.Join(classes, " "))
+	}
+
+	// Set data-component attribute second (for consistency in output)
+	root.SetAttribute("data-component", string(component.name))
+
+	// Set ID if provided
+	if opt.id != "" {
+		root.SetAttribute("id", opt.id)
+	}
+
+	// Set other attributes
+	for key, value := range opt.attributes {
+		root.SetAttribute(key, value)
+	}
+
+	// Return success
 	return nil
 }
 
@@ -123,8 +232,8 @@ func WithBreakpoint(breakpoint Breakpoint) Opt {
 
 func WithBorder(position Position, color ...Color) Opt {
 	return func(o *opts) error {
-		// WithBorder works with heading, container, badge, and alert components
-		if o.name != HeadingComponent && o.name != ContainerComponent && o.name != BadgeComponent && o.name != AlertComponent {
+		// WithBorder works with heading, container, badge, alert, and button-group components
+		if o.name != HeadingComponent && o.name != ContainerComponent && o.name != BadgeComponent && o.name != AlertComponent && o.name != ButtonGroupComponent {
 			return ErrBadParameter.Withf("Cannot use WithBorder with component of type %q", o.name)
 		}
 
@@ -162,35 +271,119 @@ func WithBackground(color Color) Opt {
 	}
 }
 
-// WithColor sets the color for badge, alert, button, icon, link, and card components.
+// WithColor sets the color for badge, alert, button, icon, link, card, and table components.
 // For badges: <span class="badge text-bg-primary">Primary</span>
 // For alerts: <div class="alert alert-primary" role="alert">Primary</div>
 // For buttons: <button class="btn btn-primary">Primary</button>
 // For icons: <i class="bi bi-icon text-primary"></i>
 // For links: <a class="link-primary">Link</a>
 // For cards: <div class="card text-bg-primary">Card</div>
+// For tables: <table class="table table-primary">Table</table>
 func WithColor(color Color) Opt {
 	return func(o *opts) error {
-		// WithColor works with badge, alert, button, icon, link, and card components
-		if o.name != BadgeComponent && o.name != AlertComponent && o.name != ButtonComponent && o.name != IconComponent && o.name != LinkComponent && o.name != CardComponent {
+		// Define all possible color suffixes
+		colorSuffixes := []string{
+			"primary", "primary-subtle",
+			"secondary", "secondary-subtle",
+			"success", "success-subtle",
+			"danger", "danger-subtle",
+			"warning", "warning-subtle",
+			"info", "info-subtle",
+			"light", "light-subtle",
+			"dark", "dark-subtle",
+			"white", "black",
+		}
+
+		// Remove existing color classes based on component type
+		switch o.name {
+		case BadgeComponent, CardComponent:
+			// Remove text-bg-* classes
+			for _, suffix := range colorSuffixes {
+				o.classList.Remove("text-bg-" + suffix)
+			}
+		case AlertComponent:
+			// Remove alert-* classes
+			for _, suffix := range colorSuffixes {
+				o.classList.Remove("alert-" + suffix)
+			}
+		case ButtonComponent:
+			// Remove btn-* classes
+			for _, suffix := range colorSuffixes {
+				o.classList.Remove("btn-" + suffix)
+			}
+		case IconComponent:
+			// Remove text-* classes
+			for _, suffix := range colorSuffixes {
+				o.classList.Remove("text-" + suffix)
+			}
+		case LinkComponent:
+			// Remove link-* classes
+			for _, suffix := range colorSuffixes {
+				o.classList.Remove("link-" + suffix)
+			}
+		case TableComponent:
+			// Remove table-* classes
+			for _, suffix := range colorSuffixes {
+				o.classList.Remove("table-" + suffix)
+			}
+		default:
 			return ErrBadParameter.Withf("Cannot use WithColor with component of type %q", o.name)
 		}
 
-		// TODO: Remove any existing color classes
+		// Add appropriate color class based on component type (skip if TRANSPARENT)
+		if color != "" {
+			switch o.name {
+			case BadgeComponent:
+				o.classList.Add(color.className("text-bg"))
+			case AlertComponent:
+				o.classList.Add(color.className("alert"))
+			case ButtonComponent:
+				o.classList.Add(color.className("btn"))
+			case IconComponent:
+				o.classList.Add(color.className("text"))
+			case LinkComponent:
+				o.classList.Add(color.className("link"))
+			case CardComponent:
+				o.classList.Add(color.className("text-bg"))
+			case TableComponent:
+				o.classList.Add(color.className("table"))
+			}
+		}
 
-		// Add appropriate color class based on component type
-		if o.name == BadgeComponent {
-			o.classList.Add(color.className("text-bg"))
-		} else if o.name == AlertComponent {
-			o.classList.Add(color.className("alert"))
-		} else if o.name == ButtonComponent {
-			o.classList.Add(color.className("btn"))
-		} else if o.name == IconComponent {
-			o.classList.Add(color.className("text"))
-		} else if o.name == LinkComponent {
-			o.classList.Add(color.className("link"))
-		} else if o.name == CardComponent {
-			o.classList.Add(color.className("text-bg"))
+		// Return success
+		return nil
+	}
+}
+
+// WithResponsive sets the responsive breakpoint for tables or navbars.
+// For tables: makes the table horizontally scrollable on smaller screens.
+// For navbars: sets when the navbar should expand from collapsed to full horizontal layout.
+// Use specific breakpoints (sm, md, lg, xl, xxl) to make responsive up to that breakpoint.
+// For tables: <table class="table table-responsive">Table</table>
+// For specific breakpoint: <table class="table table-responsive-md">Table</table>
+// For navbars: <nav class="navbar navbar-expand-lg">Navbar</nav>
+func WithResponsive(breakpoint Breakpoint) Opt {
+	return func(o *opts) error {
+		// WithResponsive works with table and navbar components
+		if o.name != TableComponent && o.name != NavBarComponent {
+			return ErrBadParameter.Withf("Cannot use WithResponsive with component of type %q", o.name)
+		}
+
+		// Add responsive class based on component type
+		if o.name == TableComponent {
+			if breakpoint == BreakpointDefault || breakpoint == "" {
+				o.classList.Add("table-responsive")
+			} else {
+				o.classList.Add("table-responsive-" + string(breakpoint))
+			}
+		} else if o.name == NavBarComponent {
+			// For navbars, add navbar-expand-{breakpoint}
+			if breakpoint == BreakpointDefault || breakpoint == "" {
+				// No expand class means always collapsed
+				// (usually you want a breakpoint, but we allow this)
+			} else {
+				o.classList.Add("navbar-expand-" + string(breakpoint))
+			}
 		}
 
 		// Return success
@@ -270,6 +463,16 @@ func WithAriaLabel(label string) Opt {
 	}
 }
 
+// WithRole sets the role attribute for accessibility
+func WithRole(role string) Opt {
+	return func(o *opts) error {
+		if role != "" {
+			o.attributes["role"] = role
+		}
+		return nil
+	}
+}
+
 // WithAttribute sets a custom HTML attribute
 func WithAttribute(key, value string) Opt {
 	return func(o *opts) error {
@@ -327,6 +530,56 @@ func WithTextAlign(position Position) Opt {
 			o.classList.Add("text-start")
 		case position&END != 0:
 			o.classList.Add("text-end")
+		}
+		return nil
+	}
+}
+
+// WithCursor sets the CSS cursor style for the component
+// Accepts any Cursor constant (e.g., CursorPointer, CursorNotAllowed, CursorGrab, etc.)
+func WithCursor(cursor Cursor) Opt {
+	return func(o *opts) error {
+		if cursor != "" && cursor != CursorAuto {
+			o.attributes["style"] = "cursor: " + string(cursor) + ";"
+		}
+		return nil
+	}
+}
+
+// WithID sets the ID attribute for any component.
+// This is a general-purpose option that can be used by all components.
+func WithID(id string) Opt {
+	return func(o *opts) error {
+		o.id = id
+		return nil
+	}
+}
+
+// WithPosition sets the position for components that support positioning.
+// For offcanvas: TOP, BOTTOM, START, END
+// The specific class name will be determined by the component.
+func WithPosition(position Position) Opt {
+	return func(o *opts) error {
+		// Store position in a special attribute that components can read
+		// Components will translate this to their specific class names
+		if className := position.className(""); className != "" {
+			o.attributes["data-position"] = className
+		}
+		return nil
+	}
+}
+
+// WithTheme sets the Bootstrap theme.
+// Only LIGHT or DARK colors are supported for themes.
+// Applies data-bs-theme attribute and adds text-bg-dark class for DARK theme.
+func WithTheme(theme Color) Opt {
+	return func(o *opts) error {
+		if theme != LIGHT && theme != DARK {
+			return ErrBadParameter.Withf("WithTheme only accepts LIGHT or DARK colors, got %q", theme)
+		}
+		o.attributes["data-bs-theme"] = string(theme)
+		if theme == DARK {
+			o.classList.Add("text-bg-dark")
 		}
 		return nil
 	}

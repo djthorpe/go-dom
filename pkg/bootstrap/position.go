@@ -55,19 +55,27 @@ func (position Position) borderClassNames() []string {
 	return classNames
 }
 
-func (position Position) borderClassName(prefix string) string {
+func (position Position) className(prefix string) string {
 	switch position {
 	case TOP:
-		return prefix + "-top"
+		return prefix + "top"
 	case BOTTOM:
-		return prefix + "-bottom"
+		return prefix + "bottom"
 	case START:
-		return prefix + "-start"
+		return prefix + "start"
 	case END:
-		return prefix + "-end"
+		return prefix + "end"
 	default:
 		return ""
 	}
+}
+
+func (position Position) borderClassName(prefix string) string {
+	suffix := position.className("")
+	if suffix == "" {
+		return ""
+	}
+	return prefix + "-" + suffix
 }
 
 func (position Position) marginClassNames(size int) []string {

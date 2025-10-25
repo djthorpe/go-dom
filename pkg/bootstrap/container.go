@@ -1,8 +1,6 @@
 package bootstrap
 
 import (
-	"strings"
-
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
 
@@ -25,28 +23,18 @@ var _ Component = (*container)(nil)
 
 // Create a new bootstrap container
 func Container(opt ...Opt) *container {
-	// Create a container
-	root := dom.GetWindow().Document().CreateElement("DIV")
+	// Create a new component
+	c := newComponent(ContainerComponent, dom.GetWindow().Document().CreateElement("DIV"))
+
+	// Prepend default class before user options
+	opts := append([]Opt{WithClass("container")}, opt...)
 
 	// Apply options
-	if opts, err := NewOpts(ContainerComponent, WithClass("container")); err != nil {
+	if err := c.applyTo(c.root, opts...); err != nil {
 		panic(err)
-	} else if err := opts.apply(opt...); err != nil {
-		panic(err)
-	} else {
-		// Set class list
-		classes := opts.classList.Values()
-		if len(classes) > 0 {
-			root.SetAttribute("class", strings.Join(classes, " "))
-		}
 	}
 
-	return &container{
-		component: component{
-			name: ContainerComponent,
-			root: root,
-		},
-	}
+	return &container{component: *c}
 }
 
 ///////////////////////////////////////////////////////////////////////////////

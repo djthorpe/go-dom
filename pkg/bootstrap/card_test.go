@@ -52,7 +52,7 @@ func TestCard_WithContent(t *testing.T) {
 }
 
 func TestCard_WithHeading(t *testing.T) {
-	card := Card().Heading("Featured")
+	card := Card().Header("Featured")
 
 	// Check that we have header and body
 	children := card.Element().ChildNodes()
@@ -110,7 +110,7 @@ func TestCard_WithFooter(t *testing.T) {
 }
 
 func TestCard_WithHeadingAndFooter(t *testing.T) {
-	c := Card().Heading("Featured")
+	c := Card().Header("Featured")
 	c.Append("Card content")
 	c.Footer("2 days ago")
 
@@ -155,8 +155,8 @@ func TestCard_WithColor(t *testing.T) {
 
 func TestCard_MultipleHeadingCalls(t *testing.T) {
 	card := Card().
-		Heading("First heading").
-		Heading("Second heading")
+		Header("First heading").
+		Header("Second heading")
 
 	// Should have 2 children (header + body)
 	children := card.Element().ChildNodes()
@@ -194,7 +194,7 @@ func TestCard_MultipleFooterCalls(t *testing.T) {
 func TestCard_WithComponent(t *testing.T) {
 	icon := Icon("star-fill")
 	card := Card().
-		Heading("Featured ", icon).
+		Header("Featured ", icon).
 		Append("Card with icon in header")
 
 	// Check that icon is in header
@@ -238,7 +238,7 @@ func TestCard_Component(t *testing.T) {
 
 func TestCard_MethodChaining(t *testing.T) {
 	c := Card(WithClass("text-center")).
-		Heading("Card Title")
+		Header("Card Title")
 
 	c.Append("Card body content")
 	c.Footer("Card footer")

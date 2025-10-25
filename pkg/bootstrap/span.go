@@ -1,8 +1,6 @@
 package bootstrap
 
 import (
-	"strings"
-
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
 
@@ -25,26 +23,13 @@ var _ Component = (*span)(nil)
 
 // Span creates a new span element
 func Span(opt ...Opt) *span {
-	// Create a span element
-	root := dom.GetWindow().Document().CreateElement("SPAN")
+	c := newComponent(SpanComponent, dom.GetWindow().Document().CreateElement("SPAN"))
 
-	// Apply options
-	if opts, err := NewOpts(SpanComponent); err != nil {
+	if err := c.applyTo(c.root, opt...); err != nil {
 		panic(err)
-	} else if err := opts.apply(opt...); err != nil {
-		panic(err)
-	} else {
-		// Set class list
-		classes := opts.classList.Values()
-		if len(classes) > 0 {
-			root.SetAttribute("class", strings.Join(classes, " "))
-		}
 	}
 
 	return &span{
-		component: component{
-			name: SpanComponent,
-			root: root,
-		},
+		component: *c,
 	}
 }
