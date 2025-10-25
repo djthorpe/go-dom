@@ -1,11 +1,10 @@
 package bootstrap
 
 import (
-
-	// Packages
 	"fmt"
 	"strings"
 
+	// Packages
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
 
 	// Namespace import for interfaces
@@ -96,7 +95,7 @@ func (component *component) Element() Element {
 // STRINGIFY
 
 func (component *component) String() string {
-	return component.root.String()
+	return fmt.Sprint(component.root)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
