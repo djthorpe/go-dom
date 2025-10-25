@@ -93,7 +93,7 @@ func (component *component) Element() Element {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// STRININGIFY
+// STRINGIFY
 
 func (component *component) String() string {
 	return fmt.Sprint(component.root)
