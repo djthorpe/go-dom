@@ -71,17 +71,17 @@ func TestBadge_OuterHTML(t *testing.T) {
 		{
 			name:         "default badge",
 			constructor:  func() dom.Component { return bs.Badge() },
-			expectedHTML: `<span class="badge"></span>`,
+			expectedHTML: `<span class="badge" data-component="badge"></span>`,
 		},
 		{
 			name:         "primary badge",
 			constructor:  func() dom.Component { return bs.Badge(bs.WithColor(bs.PRIMARY)) },
-			expectedHTML: `<span class="badge text-bg-primary"></span>`,
+			expectedHTML: `<span class="badge text-bg-primary" data-component="badge"></span>`,
 		},
 		{
 			name:         "danger badge",
 			constructor:  func() dom.Component { return bs.Badge(bs.WithColor(bs.DANGER)) },
-			expectedHTML: `<span class="badge text-bg-danger"></span>`,
+			expectedHTML: `<span class="badge text-bg-danger" data-component="badge"></span>`,
 		},
 	}
 

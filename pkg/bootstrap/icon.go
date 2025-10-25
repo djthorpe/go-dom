@@ -1,8 +1,6 @@
 package bootstrap
 
 import (
-	"strings"
-
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
 
@@ -32,36 +30,15 @@ var _ Component = (*icon)(nil)
 //
 //	Icon("heart-fill", WithColor(DANGER), WithClass("fs-3"))
 func Icon(iconName string, opt ...Opt) *icon {
-	// Create an i element for the icon
-	root := dom.GetWindow().Document().CreateElement("I")
+	c := newComponent(IconComponent, dom.GetWindow().Document().CreateElement("I"))
 
-	// Add the base Bootstrap Icons class and the specific icon class
-	iconClass := "bi-" + iconName
-	opt = append([]Opt{WithClass("bi"), WithClass(iconClass)}, opt...)
-
-	// Apply options
-	if opts, err := NewOpts(IconComponent); err != nil {
+	// Add the base Bootstrap Icons class and the specific icon class, then apply user options
+	if err := c.applyTo(c.root, append([]Opt{WithClass("bi"), WithClass("bi-" + iconName)}, opt...)...); err != nil {
 		panic(err)
-	} else if err := opts.apply(opt...); err != nil {
-		panic(err)
-	} else {
-		// Set class list
-		classes := opts.classList.Values()
-		if len(classes) > 0 {
-			root.SetAttribute("class", strings.Join(classes, " "))
-		}
+	}
 
-		// Set attributes (for aria-label, role, etc.)
-		for key, value := range opts.attributes {
-			root.SetAttribute(key, value)
-		}
-
-		// Return the icon component
-		return &icon{
-			component: component{
-				name: IconComponent,
-				root: root,
-			},
-		}
+	// Return the icon component
+	return &icon{
+		component: *c,
 	}
 }

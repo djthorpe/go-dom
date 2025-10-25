@@ -80,25 +80,25 @@ func TestHeading_OuterHTML(t *testing.T) {
 			name:         "h1 without classes",
 			level:        1,
 			options:      nil,
-			expectedHTML: "<h1></h1>",
+			expectedHTML: "<h1 data-component=\"heading\"></h1>",
 		},
 		{
 			name:         "h2 with single class",
 			level:        2,
 			options:      []bs.Opt{bs.WithClass("text-primary")},
-			expectedHTML: `<h2 class="text-primary"></h2>`,
+			expectedHTML: `<h2 class="text-primary" data-component="heading"></h2>`,
 		},
 		{
 			name:         "h3 with multiple classes",
 			level:        3,
 			options:      []bs.Opt{bs.WithClass("display-3", "text-center")},
-			expectedHTML: `<h3 class="display-3 text-center"></h3>`,
+			expectedHTML: `<h3 class="display-3 text-center" data-component="heading"></h3>`,
 		},
 		{
 			name:         "h6 with bootstrap utility classes",
 			level:        6,
 			options:      []bs.Opt{bs.WithClass("fw-bold", "text-muted")},
-			expectedHTML: `<h6 class="fw-bold text-muted"></h6>`,
+			expectedHTML: `<h6 class="fw-bold text-muted" data-component="heading"></h6>`,
 		},
 	}
 
@@ -129,7 +129,7 @@ func TestHeading_AppendText(t *testing.T) {
 	assert.Equal(t, 1, len(element.ChildNodes()), "Heading should have one child")
 	assert.Equal(t, "Hello, World!", element.TextContent(), "Heading text should match")
 
-	expectedHTML := "<h2>hello, world!</h2>"
+	expectedHTML := "<h2 data-component=\"heading\">hello, world!</h2>"
 	assert.Equal(t, expectedHTML, strings.ToLower(element.OuterHTML()),
 		"OuterHTML should include text content")
 }
@@ -157,7 +157,7 @@ func TestHeading_AppendElements(t *testing.T) {
 	element := heading.Element()
 	assert.Equal(t, 2, len(element.ChildNodes()), "Heading should have two children")
 
-	expectedHTML := `<h3>title <span class="badge">new</span></h3>`
+	expectedHTML := `<h3 data-component="heading">title <span class="badge">new</span></h3>`
 	assert.Equal(t, expectedHTML, strings.ToLower(element.OuterHTML()),
 		"OuterHTML should include nested element")
 }
@@ -173,7 +173,7 @@ func TestHeading_AppendComponents(t *testing.T) {
 	assert.Equal(t, 2, len(element.ChildNodes()), "Heading should have two children")
 
 	// Check that container was appended
-	expectedHTML := `<h1>main <div class="container d-inline">nested</div></h1>`
+	expectedHTML := `<h1 data-component="heading">main <div class="container d-inline" data-component="container">nested</div></h1>`
 	assert.Equal(t, expectedHTML, strings.ToLower(element.OuterHTML()),
 		"OuterHTML should include nested component")
 }
@@ -306,7 +306,7 @@ func TestHeading_MixedContent(t *testing.T) {
 
 	heading.Append("This is ", strong, " text")
 
-	expectedHTML := "<h1>this is <strong>important</strong> text</h1>"
+	expectedHTML := "<h1 data-component=\"heading\">this is <strong>important</strong> text</h1>"
 	assert.Equal(t, expectedHTML, strings.ToLower(heading.Element().OuterHTML()),
 		"Heading should support mixed content")
 }
@@ -317,7 +317,7 @@ func TestHeading_EmptyHeading(t *testing.T) {
 
 	assert.Equal(t, 0, len(element.ChildNodes()), "Empty heading should have no children")
 	assert.Equal(t, "", element.TextContent(), "Empty heading should have empty text content")
-	assert.Equal(t, "<h1></h1>", strings.ToLower(element.OuterHTML()),
+	assert.Equal(t, "<h1 data-component=\"heading\"></h1>", strings.ToLower(element.OuterHTML()),
 		"Empty heading OuterHTML should be correct")
 }
 
@@ -342,13 +342,13 @@ func Test_Heading_001(t *testing.T) {
 	// Create headings of different levels
 	h1 := bs.Heading(1)
 	h1.Append("Heading 1")
-	assert.Equal(`<h1>heading 1</h1>`, strings.ToLower(h1.Element().OuterHTML()))
+	assert.Equal(`<h1 data-component="heading">heading 1</h1>`, strings.ToLower(h1.Element().OuterHTML()))
 
 	h2 := bs.Heading(2, bs.WithClass("text-muted"))
 	h2.Append("Heading 2")
-	assert.Equal(`<h2 class="text-muted">heading 2</h2>`, strings.ToLower(h2.Element().OuterHTML()))
+	assert.Equal(`<h2 class="text-muted" data-component="heading">heading 2</h2>`, strings.ToLower(h2.Element().OuterHTML()))
 
 	h3 := bs.Heading(3, bs.WithClass("display-3", "text-center"))
 	h3.Append("Display Heading")
-	assert.Equal(`<h3 class="display-3 text-center">display heading</h3>`, strings.ToLower(h3.Element().OuterHTML()))
+	assert.Equal(`<h3 class="display-3 text-center" data-component="heading">display heading</h3>`, strings.ToLower(h3.Element().OuterHTML()))
 }

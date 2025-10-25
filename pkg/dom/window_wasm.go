@@ -146,5 +146,9 @@ func (this *window) Write(w io.Writer, node dom.Node) (int, error) {
 	return s, nil
 }
 
+func (this *window) NewMutationObserver(callback func()) dom.MutationObserver {
+	return newMutationObserver(callback)
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS

@@ -2,7 +2,6 @@ package bootstrap
 
 import (
 	"fmt"
-	"strings"
 
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
@@ -31,27 +30,14 @@ func Heading(level int, opt ...Opt) *heading {
 		panic("heading level must be between 1 and 6")
 	}
 
-	// Create heading element
-	tag := fmt.Sprintf("H%d", level)
-	root := dom.GetWindow().Document().CreateElement(tag)
-
-	// Apply options
-	if opts, err := NewOpts(HeadingComponent, opt...); err != nil {
+	c := newComponent(HeadingComponent, dom.GetWindow().Document().CreateElement(fmt.Sprintf("H%d", level)))
+	if err := c.applyTo(c.root, opt...); err != nil {
 		panic(err)
-	} else {
-		// Set class list
-		classes := opts.classList.Values()
-		if len(classes) > 0 {
-			root.SetAttribute("class", strings.Join(classes, " "))
-		}
 	}
 
 	return &heading{
-		component: component{
-			name: HeadingComponent,
-			root: root,
-		},
-		level: level,
+		component: *c,
+		level:     level,
 	}
 }
 

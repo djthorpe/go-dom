@@ -215,3 +215,197 @@ func TestButton_OutlineWithSize(t *testing.T) {
 	assert.True(t, classList.Contains("btn-outline-danger"))
 	assert.True(t, classList.Contains("btn-sm"))
 }
+
+func TestCloseButton_Basic(t *testing.T) {
+	button := bs.CloseButton()
+	assert.NotNil(t, button)
+	assert.NotNil(t, button.Element())
+}
+
+func TestCloseButton_TagName(t *testing.T) {
+	button := bs.CloseButton()
+	element := button.Element()
+	assert.Equal(t, "BUTTON", element.TagName())
+}
+
+func TestCloseButton_DefaultClass(t *testing.T) {
+	button := bs.CloseButton()
+	classList := button.Element().ClassList()
+	assert.True(t, classList.Contains("btn-close"))
+}
+
+func TestCloseButton_DefaultType(t *testing.T) {
+	button := bs.CloseButton()
+	element := button.Element()
+	assert.Equal(t, "button", element.GetAttribute("type"))
+}
+
+func TestCloseButton_DefaultAriaLabel(t *testing.T) {
+	button := bs.CloseButton()
+	element := button.Element()
+	assert.Equal(t, "Close", element.GetAttribute("aria-label"))
+}
+
+func TestCloseButton_WithCustomAriaLabel(t *testing.T) {
+	button := bs.CloseButton(bs.WithAttribute("aria-label", "Dismiss"))
+	element := button.Element()
+	assert.Equal(t, "Dismiss", element.GetAttribute("aria-label"))
+}
+
+func TestCloseButton_WithDismissAttribute(t *testing.T) {
+	button := bs.CloseButton(bs.WithAttribute("data-bs-dismiss", "modal"))
+	element := button.Element()
+	assert.Equal(t, "modal", element.GetAttribute("data-bs-dismiss"))
+	assert.True(t, element.ClassList().Contains("btn-close"))
+}
+
+func TestCloseButton_WithAdditionalClass(t *testing.T) {
+	button := bs.CloseButton(bs.WithClass("btn-close-white"))
+	classList := button.Element().ClassList()
+	assert.True(t, classList.Contains("btn-close"))
+	assert.True(t, classList.Contains("btn-close-white"))
+}
+
+func TestCloseButton_OuterHTML(t *testing.T) {
+	button := bs.CloseButton()
+	html := button.Element().OuterHTML()
+	assert.Contains(t, html, `class="btn-close"`)
+	assert.Contains(t, html, `type="button"`)
+	assert.Contains(t, html, `aria-label="Close"`)
+	assert.Contains(t, html, `data-component="button"`)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ButtonGroup Tests
+
+func TestButtonGroup_Basic(t *testing.T) {
+	bg := bs.ButtonGroup()
+	assert.NotNil(t, bg)
+}
+
+func TestButtonGroup_TagName(t *testing.T) {
+	bg := bs.ButtonGroup()
+	assert.Equal(t, "DIV", bg.Element().TagName())
+}
+
+func TestButtonGroup_DefaultClass(t *testing.T) {
+	bg := bs.ButtonGroup()
+	classList := bg.Element().ClassList()
+	assert.True(t, classList.Contains("btn-group"))
+}
+
+func TestButtonGroup_DefaultRole(t *testing.T) {
+	bg := bs.ButtonGroup()
+	role := bg.Element().GetAttribute("role")
+	assert.Equal(t, "group", role)
+}
+
+func TestButtonGroup_WithAdditionalClasses(t *testing.T) {
+	bg := bs.ButtonGroup(bs.WithClass("custom-class"))
+	classList := bg.Element().ClassList()
+	assert.True(t, classList.Contains("btn-group"))
+	assert.True(t, classList.Contains("custom-class"))
+}
+
+func TestButtonGroup_OuterHTML(t *testing.T) {
+	bg := bs.ButtonGroup()
+	html := bg.Element().OuterHTML()
+	assert.Contains(t, html, `class="btn-group"`)
+	assert.Contains(t, html, `role="group"`)
+	assert.Contains(t, html, `data-component="button-group"`)
+}
+
+func TestButtonGroup_ComponentInterface(t *testing.T) {
+	bg := bs.ButtonGroup()
+	assert.Implements(t, (*dom.Component)(nil), bg)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// VerticalButtonGroup Tests
+
+func TestVerticalButtonGroup_Basic(t *testing.T) {
+	bg := bs.VerticalButtonGroup()
+	assert.NotNil(t, bg)
+}
+
+func TestVerticalButtonGroup_TagName(t *testing.T) {
+	bg := bs.VerticalButtonGroup()
+	assert.Equal(t, "DIV", bg.Element().TagName())
+}
+
+func TestVerticalButtonGroup_DefaultClass(t *testing.T) {
+	bg := bs.VerticalButtonGroup()
+	classList := bg.Element().ClassList()
+	assert.True(t, classList.Contains("btn-group-vertical"))
+}
+
+func TestVerticalButtonGroup_DefaultRole(t *testing.T) {
+	bg := bs.VerticalButtonGroup()
+	role := bg.Element().GetAttribute("role")
+	assert.Equal(t, "group", role)
+}
+
+func TestVerticalButtonGroup_WithAdditionalClasses(t *testing.T) {
+	bg := bs.VerticalButtonGroup(bs.WithClass("custom-vertical"))
+	classList := bg.Element().ClassList()
+	assert.True(t, classList.Contains("btn-group-vertical"))
+	assert.True(t, classList.Contains("custom-vertical"))
+}
+
+func TestVerticalButtonGroup_OuterHTML(t *testing.T) {
+	bg := bs.VerticalButtonGroup()
+	html := bg.Element().OuterHTML()
+	assert.Contains(t, html, `class="btn-group-vertical"`)
+	assert.Contains(t, html, `role="group"`)
+	assert.Contains(t, html, `data-component="button-group"`)
+}
+
+func TestVerticalButtonGroup_ComponentInterface(t *testing.T) {
+	bg := bs.VerticalButtonGroup()
+	assert.Implements(t, (*dom.Component)(nil), bg)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ButtonToolbar Tests
+
+func TestButtonToolbar_Basic(t *testing.T) {
+	toolbar := bs.ButtonToolbar()
+	assert.NotNil(t, toolbar)
+}
+
+func TestButtonToolbar_TagName(t *testing.T) {
+	toolbar := bs.ButtonToolbar()
+	assert.Equal(t, "DIV", toolbar.Element().TagName())
+}
+
+func TestButtonToolbar_DefaultClass(t *testing.T) {
+	toolbar := bs.ButtonToolbar()
+	classList := toolbar.Element().ClassList()
+	assert.True(t, classList.Contains("btn-toolbar"))
+}
+
+func TestButtonToolbar_DefaultRole(t *testing.T) {
+	toolbar := bs.ButtonToolbar()
+	role := toolbar.Element().GetAttribute("role")
+	assert.Equal(t, "toolbar", role)
+}
+
+func TestButtonToolbar_WithAdditionalClasses(t *testing.T) {
+	toolbar := bs.ButtonToolbar(bs.WithClass("custom-toolbar"))
+	classList := toolbar.Element().ClassList()
+	assert.True(t, classList.Contains("btn-toolbar"))
+	assert.True(t, classList.Contains("custom-toolbar"))
+}
+
+func TestButtonToolbar_OuterHTML(t *testing.T) {
+	toolbar := bs.ButtonToolbar()
+	html := toolbar.Element().OuterHTML()
+	assert.Contains(t, html, `class="btn-toolbar"`)
+	assert.Contains(t, html, `role="toolbar"`)
+	assert.Contains(t, html, `data-component="button-group"`)
+}
+
+func TestButtonToolbar_ComponentInterface(t *testing.T) {
+	toolbar := bs.ButtonToolbar()
+	assert.Implements(t, (*dom.Component)(nil), toolbar)
+}

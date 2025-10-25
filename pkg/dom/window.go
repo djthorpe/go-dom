@@ -125,6 +125,10 @@ func (this *window) Read(r io.Reader, mimetype string) (dom.Document, error) {
 	}
 }
 
+func (this *window) NewMutationObserver(callback func()) dom.MutationObserver {
+	return newMutationObserver(callback)
+}
+
 func readCreateElement(doc dom.Document, parser *html.Tokenizer) dom.Element {
 	tag, hasattr := parser.TagName()
 	elem := doc.CreateElement(string(tag))

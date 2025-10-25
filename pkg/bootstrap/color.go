@@ -10,6 +10,7 @@ type Color string
 // CONSTANTS
 
 const (
+	TRANSPARENT      Color = ""
 	PRIMARY          Color = "primary"
 	PRIMARY_SUBTLE   Color = "primary-subtle"
 	SECONDARY        Color = "secondary"
