@@ -37,7 +37,14 @@ func New() *app {
 	// Append a div to the body which will contain the application
 	root := doc.CreateElement("DIV")
 	root.SetAttribute("id", string(AppComponent))
-	doc.Body().AppendChild(root)
+
+	// Insert as first child of body (right after opening <body> tag)
+	body := doc.Body()
+	if firstChild := body.FirstChild(); firstChild != nil {
+		body.InsertBefore(root, firstChild)
+	} else {
+		body.AppendChild(root)
+	}
 
 	// Return the document
 	return &app{

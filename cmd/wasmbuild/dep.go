@@ -4,13 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	// Packages
+	"github.com/fsnotify/fsnotify"
 )
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -19,8 +21,11 @@ import (
 type DepContext struct {
 	BuildContext
 
-	// Modified channel
-	modified chan struct{}
+	// Modified channel - returns nil or an error
+	modified chan error
+
+	// The WebAssembly file that was compiled
+	wasm *File
 }
 
 type DepCmd struct {
@@ -39,6 +44,30 @@ type DepPackageInfo struct {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// LIFECYCLE
+
+// DepContext creates a DepContext from the Config, returning all the
+// information needed to build a WASM application.
+func (b BuildContext) DepContext(ctx *Context) (*DepContext, error) {
+	// Return the DepContext
+	return &DepContext{
+		BuildContext: b,
+		modified:     make(chan error),
+	}, nil
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// STRINGIFY
+
+func (d *DepContext) String() string {
+	data, err := json.MarshalIndent(d, "", "  ")
+	if err != nil {
+		return err.Error()
+	}
+	return string(data)
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // COMMANDS
 
 func (c *DepCmd) Run(ctx *Context) error {
@@ -53,7 +82,7 @@ func (c *DepCmd) Run(ctx *Context) error {
 	}
 
 	// Create a build context from the configuration
-	buildContext, err := config.BuildContext(ctx, c.Path, "")
+	buildContext, err := config.BuildContext(ctx, c.Path, "", false)
 	if err != nil {
 		return err
 	}
@@ -84,8 +113,22 @@ func (c *DepCmd) Run(ctx *Context) error {
 				select {
 				case <-ctx.ctx.Done():
 					return
-				case <-dep.modified:
-					fmt.Println("Modified")
+				case event := <-dep.modified:
+					if event != nil {
+						ctx.log.Error(event)
+						continue
+					}
+
+					// Compile the code
+					if wasm, err := buildContext.CompileExec(ctx); err != nil {
+						ctx.log.Error("Compilation error after modification: ", err)
+						continue
+					} else {
+						dep.wasm = wasm
+					}
+
+					// Indicate success
+					ctx.log.Info("Re-compiled wasm: ", dep.wasm.Path)
 				}
 			}
 		}()
@@ -107,16 +150,6 @@ func (c *DepCmd) Run(ctx *Context) error {
 
 ///////////////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
-
-// DepContext creates a DepContext from the Config, returning all the
-// information needed to build a WASM application.
-func (b BuildContext) DepContext(ctx *Context) (*DepContext, error) {
-	// Return the DepContext
-	return &DepContext{
-		BuildContext: b,
-		modified:     make(chan struct{}),
-	}, nil
-}
 
 // Return a list of dependencies
 func (d *DepContext) Dependencies() ([]string, error) {
@@ -218,40 +251,7 @@ func (d *DepContext) Dependencies() ([]string, error) {
 	return paths, nil
 }
 
-// Return a map of modification times on all files
-func (d *DepContext) ModTimes(paths []string, cap int) map[string]time.Time {
-	modTimes := make(map[string]time.Time, cap)
-	for _, k := range paths {
-		info, err := os.Stat(k)
-		if err != nil {
-			continue
-		}
-		if info.IsDir() {
-			// Read files in the directory
-			entries, err := os.ReadDir(k)
-			if err != nil {
-				continue
-			}
-			for _, entry := range entries {
-				if strings.HasPrefix(entry.Name(), ".") {
-					continue
-				}
-				entryInfo, err := entry.Info()
-				if err != nil {
-					continue
-				}
-				if !entryInfo.IsDir() {
-					modTimes[filepath.Join(k, entry.Name())] = entryInfo.ModTime()
-				}
-			}
-		} else {
-			modTimes[k] = info.ModTime()
-		}
-	}
-	return modTimes
-}
-
-// Run a watcher for dependencies
+// Run a watcher for dependencies using fsnotify
 func (d *DepContext) Run(ctx context.Context) error {
 	// Get paths of dependencies
 	paths, err := d.Dependencies()
@@ -259,34 +259,48 @@ func (d *DepContext) Run(ctx context.Context) error {
 		return err
 	}
 
-	// Track modification times
-	modTimes := d.ModTimes(paths, len(paths))
+	// Create fsnotify watcher
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return fmt.Errorf("failed to create watcher: %w", err)
+	}
+	defer watcher.Close()
 
-	// Check for dependency changes every 5 seconds
-	ticker := time.NewTicker(5 * time.Second)
-	defer ticker.Stop()
+	// Add all dependency paths to the watcher
+	for _, path := range paths {
+		if err := watcher.Add(path); err != nil {
+			return fmt.Errorf("failed to watch %s: %w", path, err)
+		}
+	}
+
+	// Track modification times for debouncing
+	last := time.Now()
+	debounceDelay := 500 * time.Millisecond
 
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
-		case <-ticker.C:
-			// Check each dependency for changes
-			modTimes2 := d.ModTimes(paths, len(modTimes))
 
-			// Compare the two maps
-			if !maps.Equal(modTimes2, modTimes) {
-				// Redisover new paths
-				if paths2, err := d.Dependencies(); err == nil {
-					paths = paths2
-				}
-
-				// Send modification signal
-				d.modified <- struct{}{}
+		case event := <-watcher.Events:
+			// Filter out events we don't care about
+			if event.Has(fsnotify.Chmod) {
+				continue
 			}
 
-			// Set modTimes to modTimes2 for next iteration
-			modTimes = modTimes2
+			// Debounce: ignore events that occur too quickly
+			now := time.Now()
+			if now.Sub(last) < debounceDelay {
+				continue
+			} else {
+				last = now
+				d.modified <- nil
+			}
+
+			// TODO: If the event is a Create event on a directory, re-compute watche paths
+
+		case err := <-watcher.Errors:
+			d.modified <- fmt.Errorf("watcher error: %w", err)
 		}
 	}
 }

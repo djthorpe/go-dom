@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -48,125 +49,11 @@ type BuildContext struct {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// COMMANDS
-
-func (c *BuildCmd) Run(ctx *Context) error {
-	// Read the configuration file
-	configPath, err := ResolveFile(ctx.Config, c.Path)
-	if err != nil {
-		return err
-	}
-	config, err := ParseYAMLPath(configPath, c.Path)
-	if err != nil {
-		return err
-	}
-
-	// Create a compiler context from the configuration
-	buildContext, err := config.BuildContext(ctx, c.Path, c.Output)
-	if err != nil {
-		return err
-	}
-
-	// Compile
-	file, err := buildContext.CompileExec(ctx)
-	if err != nil {
-		return err
-	}
-
-	// Copy files to output directory
-	for _, files := range []*File{
-		file,
-		buildContext.WasmExecHTML,
-		buildContext.WasmExecJS,
-		buildContext.FavIcon,
-	} {
-		// Write file
-		ctx.log.Info("cp ", files.Path, " ", buildContext.Output)
-		if err := files.WriteTo(buildContext.Output); err != nil {
-			return fmt.Errorf("failed to copy %s: %w", files.Path, err)
-		}
-	}
-
-	// Copy assets to output directory
-	for _, asset := range config.Assets {
-		if filepath.IsAbs(asset) == false {
-			asset = filepath.Join(c.Path, asset)
-		}
-		dest := fmt.Sprintf("%s/%s", buildContext.Output, filepath.Base(asset))
-
-		// Walk the asset path and copy files
-		err := filepath.Walk(asset, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if strings.HasPrefix(info.Name(), ".") {
-				return nil
-			}
-
-			// Relative path from asset root
-			relPath, err := filepath.Rel(asset, path)
-			if err != nil {
-				return err
-			}
-
-			destPath := filepath.Join(dest, relPath)
-			if info.Mode().IsDir() {
-				ctx.log.Info("mkdir ", destPath)
-				if err := os.MkdirAll(destPath, 0755); err != nil {
-					return err
-				}
-				// Walk into directory
-				return nil
-			}
-
-			// Copy file across
-			ctx.log.Info("cp ", path, " ", filepath.Dir(destPath))
-			if err := CopyFile(path, destPath); err != nil {
-				return err
-			}
-
-			// Return success
-			return nil
-		})
-		if err != nil {
-			return fmt.Errorf("failed to copy asset %s: %w", asset, err)
-		}
-	}
-
-	// Print out the destination to stdout
-	fmt.Println(buildContext.Output)
-
-	// Return success
-	return nil
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// PUBLIC METHODS
-
-func ResolveFile(path, base string) (string, error) {
-	if filepath.IsAbs(path) == false {
-		if base == "" {
-			base = "."
-		}
-		path = filepath.Join(base, path)
-	}
-	path, err := filepath.Abs(path)
-	if err != nil {
-		return "", err
-	}
-	stat, err := os.Stat(path)
-	if err != nil {
-		return "", err
-	}
-	if stat.IsDir() {
-		return "", fmt.Errorf("expected file but found directory: %s", path)
-	}
-	return path, nil
-}
+// LIFECYCLE
 
 // BuildContext creates a BuildContext from the Config, returning all the
 // information needed to build a WASM application.
-func (c Config) BuildContext(ctx *Context, path, output string) (*BuildContext, error) {
+func (c Config) BuildContext(ctx *Context, path, output string, watch bool) (*BuildContext, error) {
 	// Make input path absolute
 	if filepath.IsAbs(path) == false {
 		var err error
@@ -252,8 +139,12 @@ func (c Config) BuildContext(ctx *Context, path, output string) (*BuildContext, 
 			return ""
 		},
 		"Notify": func() string {
-			if notify, ok := c.Vars["Notify"]; ok {
-				return notify
+			if watch {
+				if notify, ok := c.Vars["Notify"]; ok {
+					return notify
+				} else {
+					return string(etc.NotifyHTML)
+				}
 			}
 			return ""
 		},
@@ -288,6 +179,113 @@ func (c Config) BuildContext(ctx *Context, path, output string) (*BuildContext, 
 		FavIcon:      NewFile(etc.FaviconPNG, "favicon.png"),
 	}, nil
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// STRINGIFY
+
+func (c *BuildContext) String() string {
+	data, err := json.MarshalIndent(c, "", "  ")
+	if err != nil {
+		return err.Error()
+	}
+	return string(data)
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// COMMANDS
+
+func (c *BuildCmd) Run(ctx *Context) error {
+	// Read the configuration file
+	configPath, err := ResolveFile(ctx.Config, c.Path)
+	if err != nil {
+		return err
+	}
+	config, err := ParseYAMLPath(configPath, c.Path)
+	if err != nil {
+		return err
+	}
+
+	// Create a compiler context from the configuration
+	buildContext, err := config.BuildContext(ctx, c.Path, c.Output, false)
+	if err != nil {
+		return err
+	}
+
+	// Compile
+	file, err := buildContext.CompileExec(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Copy files to output directory
+	for _, files := range []*File{
+		file,
+		buildContext.WasmExecHTML,
+		buildContext.WasmExecJS,
+		buildContext.FavIcon,
+	} {
+		// Write file
+		ctx.log.Info("cp ", files.Path, " ", buildContext.Output)
+		if err := files.WriteTo(buildContext.Output); err != nil {
+			return fmt.Errorf("failed to copy %s: %w", files.Path, err)
+		}
+	}
+
+	// Copy assets to output directory
+	for _, asset := range config.Assets {
+		if filepath.IsAbs(asset) == false {
+			asset = filepath.Join(c.Path, asset)
+		}
+		dest := fmt.Sprintf("%s/%s", buildContext.Output, filepath.Base(asset))
+
+		// Walk the asset path and copy files
+		err := filepath.Walk(asset, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if strings.HasPrefix(info.Name(), ".") {
+				return nil
+			}
+
+			// Relative path from asset root
+			relPath, err := filepath.Rel(asset, path)
+			if err != nil {
+				return err
+			}
+
+			destPath := filepath.Join(dest, relPath)
+			if info.Mode().IsDir() {
+				ctx.log.Info("mkdir ", destPath)
+				if err := os.MkdirAll(destPath, 0755); err != nil {
+					return err
+				}
+				// Walk into directory
+				return nil
+			}
+
+			// Copy file across
+			ctx.log.Info("cp ", path, " ", filepath.Dir(destPath))
+			if err := CopyFile(path, destPath); err != nil {
+				return err
+			}
+
+			// Return success
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("failed to copy asset %s: %w", asset, err)
+		}
+	}
+
+	// Print out the destination to stdout
+	fmt.Println(buildContext.Output)
+
+	// Return success
+	return nil
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PUBLIC METHODS
 
 // Return a exec.Cmd for building the WASM application
 func (bc *BuildContext) GoBuildCmd(args ...string) *exec.Cmd {
@@ -376,4 +374,25 @@ func RegularFileFromPathList(path, base string) string {
 		}
 	}
 	return ""
+}
+
+func ResolveFile(path, base string) (string, error) {
+	if filepath.IsAbs(path) == false {
+		if base == "" {
+			base = "."
+		}
+		path = filepath.Join(base, path)
+	}
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+	stat, err := os.Stat(path)
+	if err != nil {
+		return "", err
+	}
+	if stat.IsDir() {
+		return "", fmt.Errorf("expected file but found directory: %s", path)
+	}
+	return path, nil
 }

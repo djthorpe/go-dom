@@ -7,12 +7,6 @@ import (
 //go:embed wasm_exec.html
 var WasmExecHTML []byte
 
-//go:embed notify.js
-var NotifyJS []byte
-
-//go:embed notify.css
-var NotifyCSS []byte
-
 //go:embed notify.html
 var NotifyHTML []byte
 

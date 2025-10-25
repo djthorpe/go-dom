@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	// Packages
-
 	yaml "gopkg.in/yaml.v3"
 )
 
@@ -48,14 +47,6 @@ func ParseYAMLPath(path, base string) (*Config, error) {
 // STRINGIFY
 
 func (c *Config) String() string {
-	data, err := json.MarshalIndent(c, "", "  ")
-	if err != nil {
-		return err.Error()
-	}
-	return string(data)
-}
-
-func (c *BuildContext) String() string {
 	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
 		return err.Error()

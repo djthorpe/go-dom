@@ -1,3 +1,124 @@
 <!-- reload when code is changed -->
-<link rel="stylesheet" href="notify.css" />
-<script src="notify.js"></script>
+<style type="text/css">
+    /* Notification error overlay styles */
+    #notify-error {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background-color: #fee;
+        border-bottom: 2px solid #c33;
+        color: #c33;
+        padding: 20px;
+        font-family: monospace;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        max-height: 50vh;
+        overflow-y: auto;
+        z-index: 10000;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #notify-error-close {
+        float: right;
+        cursor: pointer;
+        background: #c33;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        font-weight: bold;
+    }
+
+    #notify-error-title {
+        font-weight: bold;
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+</style>
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function () {
+        // Create error overlay DOM elements
+        notifyCreateErrorOverlay();
+
+        // Start notify listener
+        notifyStartListener();
+    });
+
+    function notifyCreateErrorOverlay() {
+        // Create the error overlay div
+        const errorDiv = document.createElement('div');
+        errorDiv.id = 'notify-error';
+
+        // Create close button
+        const closeButton = document.createElement('button');
+        closeButton.id = 'notify-error-close';
+        closeButton.textContent = '✕ Close';
+        closeButton.onclick = hideNotifyError;
+
+        // Create title
+        const title = document.createElement('div');
+        title.id = 'notify-error-title';
+        title.textContent = '⚠️ Compilation Error';
+
+        // Create content div
+        const content = document.createElement('div');
+        content.id = 'notify-error-content';
+
+        // Assemble the error overlay
+        errorDiv.appendChild(closeButton);
+        errorDiv.appendChild(title);
+        errorDiv.appendChild(content);
+
+        // Append to body
+        document.body.appendChild(errorDiv);
+    }
+
+    function notifyStartListener() {
+        const eventSource = new EventSource('/_notify');
+
+        // Listen for 'connected' event
+        eventSource.addEventListener('connected', function (event) {
+            console.log('wasmbuild: connected');
+            hideNotifyError();
+        });
+
+        // Listen for 'reload' event
+        eventSource.addEventListener('reload', function (event) {
+            console.log('wasmbuild: reload');
+            hideNotifyError();
+            window.location.reload();
+        });
+
+        // Listen for 'error' event
+        eventSource.addEventListener('build-error', function (event) {
+            console.log('wasmbuild: build-error', event.data);
+            notifyError(event.data);
+        });
+
+        // Handle connection errors
+        eventSource.addEventListener('error', function (event) {
+            notifyError('Connection to dev server lost, retrying');
+        });
+    }
+
+    function notifyError(msg) {
+        const errorContent = document.getElementById('notify-error-content');
+        if (errorContent) {
+            errorContent.textContent = msg;
+        }
+        const errorDiv = document.getElementById('notify-error');
+        if (errorDiv) {
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    function hideNotifyError() {
+        const errorDiv = document.getElementById('notify-error');
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+        }
+    }
+
+
+</script>

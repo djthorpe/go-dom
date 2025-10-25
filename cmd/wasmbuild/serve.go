@@ -25,32 +25,26 @@ type WatchFlag struct {
 }
 
 type ServeContext struct {
-	BuildContext
+	DepContext
 	Listen string `json:"listen"`
 	Watch  bool   `json:"watch"`
 
 	// Broadcast notifications to clients
-	broadcaster ServeBroadcaster `json:"-"`
-}
-
-// ServeMessage represents a message sent to SSE clients
-type ServeMessage struct {
-	Type string // "reload" or "error"
-	Data string
-}
-
-type ServeBroadcaster struct {
-	mu      sync.Mutex
-	clients map[chan ServeMessage]bool
+	broadcaster *ServeBroadcaster `json:"-"`
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // LIFECYCLE
 
-func NewServeBroadcaster() *ServeBroadcaster {
-	return &ServeBroadcaster{
-		clients: make(map[chan ServeMessage]bool),
-	}
+// ServeContext creates a ServeContext from a DepContext, returning all the
+// information needed to serve a WASM application.
+func (d DepContext) ServeContext(ctx *Context, listen string, watch bool) (*ServeContext, error) {
+	// Return the ServeContext
+	return &ServeContext{
+		DepContext: d,
+		Listen:     listen,
+		Watch:      watch,
+	}, nil
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -67,8 +61,20 @@ func (c *ServeCmd) Run(ctx *Context) error {
 		return err
 	}
 
+	// Create a build context from the configuration
+	buildContext, err := config.BuildContext(ctx, c.Path, "", c.Watch)
+	if err != nil {
+		return err
+	}
+
+	// Create a dependency context from the build context
+	dep, err := buildContext.DepContext(ctx)
+	if err != nil {
+		return err
+	}
+
 	// Create the server context from the configuration
-	serveContext, err := config.ServeContext(ctx, c.Path, c.Listen, c.Watch)
+	serveContext, err := dep.ServeContext(ctx, c.Listen, c.Watch)
 	if err != nil {
 		return err
 	}
@@ -77,14 +83,15 @@ func (c *ServeCmd) Run(ctx *Context) error {
 	file, err := serveContext.CompileExec(ctx)
 	if err != nil {
 		return err
+	} else {
+		serveContext.wasm = file
 	}
 
 	// Log the serve context
-	ctx.log.Info("Serve: ", serveContext)
+	ctx.log.Info(serveContext)
 
 	// Start the server
 	return serveContext.Serve(ctx,
-		file,
 		serveContext.WasmExecJS,
 		serveContext.WasmExecHTML,
 		serveContext.FavIcon,
@@ -104,22 +111,6 @@ func (c *ServeContext) String() string {
 
 ///////////////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
-
-// ServeContext creates a ServeContext from the Config, returning all the
-// information needed to build and serve a WASM application.
-func (c Config) ServeContext(ctx *Context, path, listen string, watch bool) (*ServeContext, error) {
-	// Create a compiler context from the configuration
-	buildContext, err := c.BuildContext(ctx, path, "")
-	if err != nil {
-		return nil, err
-	}
-
-	return &ServeContext{
-		BuildContext: *buildContext,
-		Listen:       listen,
-		Watch:        watch,
-	}, nil
-}
 
 func (c *ServeContext) Serve(ctx *Context, files ...*File) error {
 	handler := http.NewServeMux()
@@ -148,6 +139,18 @@ func (c *ServeContext) Serve(ctx *Context, files ...*File) error {
 		}
 	}
 
+	// Server notify handler
+	if c.Watch {
+		c.broadcaster = NewServeBroadcaster()
+		handler.HandleFunc("/_notify", c.NotifyHandler)
+	}
+
+	// WASM file handler
+	handler.HandleFunc(c.wasm.URL(), func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/wasm")
+		w.Write(c.wasm.Data)
+	})
+
 	// Output listening info
 	url, err := url.Parse(fmt.Sprintf("http://%s%s", c.Listen, c.WasmExecHTML.URL()))
 	if err != nil {
@@ -158,16 +161,11 @@ func (c *ServeContext) Serve(ctx *Context, files ...*File) error {
 	// If watch flag is set, we build a dependency watcher
 	var wg sync.WaitGroup
 	if c.Watch {
-		dep, err := c.BuildContext.DepContext(ctx)
-		if err != nil {
-			return err
-		}
-
 		// Watch for dependency changes
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			dep.Run(ctx.ctx)
+			c.DepContext.Run(ctx.ctx)
 		}()
 
 		// Respond to modification events
@@ -178,22 +176,14 @@ func (c *ServeContext) Serve(ctx *Context, files ...*File) error {
 				select {
 				case <-ctx.ctx.Done():
 					return
-				case <-dep.modified:
+				case <-c.DepContext.modified:
 					// Re-compile the .wasm file
-					file, err := c.CompileExec(ctx)
-					if err != nil {
-						c.broadcaster.broadcast(ServeMessage{
-							Type: "error",
-							Data: fmt.Sprintf("Compilation error: %v", err),
-						})
-						ctx.log.Error("Failed to compile after modification: ", err)
-						continue
+					if file, err := c.CompileExec(ctx); err != nil {
+						c.broadcaster.error(err)
+						ctx.log.Error(err)
 					} else {
-						// TODO: Update the handler with the new file data
-						c.broadcaster.broadcast(ServeMessage{
-							Type: "reload",
-							Data: file.Path,
-						})
+						c.wasm = file
+						c.broadcaster.reload()
 					}
 				}
 			}
@@ -202,47 +192,42 @@ func (c *ServeContext) Serve(ctx *Context, files ...*File) error {
 	}
 
 	// Start HTTP server
-	err = http.ListenAndServe(c.Listen, logging(handler, ctx.log))
+	server := &http.Server{
+		Addr:    c.Listen,
+		Handler: logging(handler, ctx.log),
+	}
+
+	// Start server in goroutine
+	wg.Add(1)
+	serverErr := make(chan error, 1)
+	go func() {
+		defer wg.Done()
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			serverErr <- err
+		}
+	}()
+
+	// Wait for context cancellation or server error
+	select {
+	case <-ctx.ctx.Done():
+		ctx.log.Info("Shutting down server...")
+		// Gracefully shutdown the server
+		if err := server.Close(); err != nil {
+			ctx.log.Error("Error shutting down server: ", err)
+		}
+	case err := <-serverErr:
+		return err
+	}
 
 	// Wait for all go-routines to end
 	wg.Wait()
 
-	// Return any errors
-	return err
+	// Return success
+	return nil
 }
 
-func (rb *ServeBroadcaster) register(client chan ServeMessage) {
-	rb.mu.Lock()
-	defer rb.mu.Unlock()
-	rb.clients[client] = true
-}
-
-func (rb *ServeBroadcaster) unregister(client chan ServeMessage) {
-	rb.mu.Lock()
-	defer rb.mu.Unlock()
-	delete(rb.clients, client)
-	close(client)
-}
-
-func (rb *ServeBroadcaster) broadcast(msg ServeMessage) {
-	rb.mu.Lock()
-	defer rb.mu.Unlock()
-	for client := range rb.clients {
-		select {
-		case client <- msg:
-		default:
-			// Client not ready, skip
-		}
-	}
-}
-
-// logging middleware
-func logging(next http.Handler, logger *Logger) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		logger.Infof("%s %s %s", r.Method, r.URL.Path, r.RemoteAddr)
-		next.ServeHTTP(w, r)
-	})
-}
+///////////////////////////////////////////////////////////////////////////////
+// HANDLERS
 
 // notify handler
 func (c *ServeContext) NotifyHandler(w http.ResponseWriter, r *http.Request) {
@@ -263,7 +248,7 @@ func (c *ServeContext) NotifyHandler(w http.ResponseWriter, r *http.Request) {
 	defer c.broadcaster.unregister(notify)
 
 	// Send initial connection message
-	fmt.Fprintf(w, "data: connected\n\n")
+	fmt.Fprintf(w, "event: connected\ndata: connected\n\n")
 	flusher.Flush()
 
 	// Keep connection alive and wait for reload signals
@@ -272,18 +257,17 @@ func (c *ServeContext) NotifyHandler(w http.ResponseWriter, r *http.Request) {
 		case msg := <-notify:
 			switch msg.Type {
 			case "reload":
-				fmt.Fprintf(w, "data: reload\n\n")
-				flusher.Flush()
+				fmt.Fprintf(w, "event: reload\ndata: reload\n\n")
 			case "error":
+				fmt.Fprintf(w, "event: build-error\n")
 				// For multi-line error messages, prefix each line with "data: "
 				lines := strings.Split(msg.Data, "\n")
-				fmt.Fprintf(w, "event: error\n")
 				for _, line := range lines {
 					fmt.Fprintf(w, "data: %s\n", line)
 				}
 				fmt.Fprintf(w, "\n")
-				flusher.Flush()
 			}
+			flusher.Flush()
 		case <-r.Context().Done():
 			return
 		}
