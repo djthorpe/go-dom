@@ -297,7 +297,7 @@ func (d *DepContext) Run(ctx context.Context) error {
 				d.modified <- nil
 			}
 
-			// TODO: If the event is a Create event on a directory, re-compute watche paths
+			// TODO: If the event is a Create event on a directory, re-compute watched paths
 
 		case err := <-watcher.Errors:
 			d.modified <- fmt.Errorf("watcher error: %w", err)
