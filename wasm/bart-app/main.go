@@ -1,5 +1,3 @@
-//go:build js
-
 package main
 
 import (
@@ -8,8 +6,7 @@ import (
 
 	// Packages
 	dom "github.com/djthorpe/go-dom"
-	"github.com/djthorpe/go-dom/pkg/bs5"
-	"github.com/djthorpe/go-dom/pkg/wc"
+	bs5 "github.com/djthorpe/go-wasmbuild/pkg/bs5"
 )
 
 func main() {

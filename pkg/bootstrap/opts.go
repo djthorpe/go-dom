@@ -317,3 +317,17 @@ func WithFlex(position Position) Opt {
 		return nil
 	}
 }
+
+func WithTextAlign(position Position) Opt {
+	return func(o *opts) error {
+		switch {
+		case position&CENTER != 0:
+			o.classList.Add("text-center")
+		case position&START != 0:
+			o.classList.Add("text-start")
+		case position&END != 0:
+			o.classList.Add("text-end")
+		}
+		return nil
+	}
+}

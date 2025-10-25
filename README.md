@@ -1,7 +1,7 @@
 # go-wasmbuild
 
-**wasmbuild** is a command-line tool for compiling applications in the Go programming language ("golang") into 
-[WASM](https://webassembly.org/) so they can be run in a web browser. 
+**wasmbuild** is a command-line tool for compiling applications in the Go programming language ("golang") into
+[WASM](https://webassembly.org/) so they can be run in a web browser.
 
 It provides a development environment so you can test your code as you
 develop it. There are also various packages which implement bridges to the web browser runtime, and several

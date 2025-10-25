@@ -10,10 +10,9 @@ func main() {
 	bs.New().Append(
 		bs.Container(
 			bs.WithBreakpoint(bs.BreakpointLarge),
-			bs.WithClass("mt-5", "mb-5"),
-			bs.WithClass("border-top", "border-bottom", "border-left", "border-danger"),
+			bs.WithMargin(bs.TOP|bs.BOTTOM, 5),
 		).Append(
-			bs.Heading(1, bs.WithClass("text-primary")).Append("Hello, World"),
+			bs.Heading(1, bs.WithTextAlign(bs.CENTER)).Append("Hello, World!"),
 		),
 	)
 
