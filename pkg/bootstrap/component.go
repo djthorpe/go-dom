@@ -96,7 +96,7 @@ func (component *component) Element() Element {
 // STRINGIFY
 
 func (component *component) String() string {
-	return fmt.Sprint(component.root)
+	return component.root.String()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
