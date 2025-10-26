@@ -37,6 +37,10 @@ func (this *element) InnerHTML() string {
 	return this.Get("innerHTML").String()
 }
 
+func (this *element) SetInnerHTML(html string) {
+	this.Set("innerHTML", html)
+}
+
 func (this *element) OuterHTML() string {
 	return this.Get("outerHTML").String()
 }

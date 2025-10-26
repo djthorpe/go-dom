@@ -6,7 +6,7 @@ import (
 )
 
 func TestTableOpts_Striped(t *testing.T) {
-	table := Table(WithStriped())
+	table := Table(WithStripedRows())
 	class := table.Element().GetAttribute("class")
 	if !strings.Contains(class, "table-striped") {
 		t.Errorf("Expected 'table-striped' in class, got '%s'", class)
@@ -46,7 +46,7 @@ func TestTableOpts_Borderless(t *testing.T) {
 }
 
 func TestTableOpts_Small(t *testing.T) {
-	table := Table(WithSmall())
+	table := Table(WithSize(SizeSmall))
 	class := table.Element().GetAttribute("class")
 	if !strings.Contains(class, "table-sm") {
 		t.Errorf("Expected 'table-sm' in class, got '%s'", class)
@@ -82,10 +82,10 @@ func TestTableOpts_Variants(t *testing.T) {
 
 func TestTableOpts_MultipleOptions(t *testing.T) {
 	table := Table(
-		WithStriped(),
+		WithStripedRows(),
 		WithHover(),
 		WithBordered(),
-		WithSmall(),
+		WithSize(SizeSmall),
 	)
 
 	class := table.Element().GetAttribute("class")
@@ -99,7 +99,7 @@ func TestTableOpts_MultipleOptions(t *testing.T) {
 }
 
 func TestTableOpts_StripedWithVariant(t *testing.T) {
-	table := Table(WithColor(DARK), WithStriped(), WithHover())
+	table := Table(WithColor(DARK), WithStripedRows(), WithHover())
 
 	class := table.Element().GetAttribute("class")
 	expectedClasses := []string{"table", "table-dark", "table-striped", "table-hover"}

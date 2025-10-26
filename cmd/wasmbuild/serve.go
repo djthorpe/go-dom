@@ -165,7 +165,10 @@ func (c *ServeContext) Serve(ctx *Context, files ...*File) error {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			c.DepContext.Run(ctx.ctx)
+			if err := c.DepContext.Run(ctx.ctx); err != nil {
+				ctx.log.Error(err)
+				ctx.cancel()
+			}
 		}()
 
 		// Respond to modification events

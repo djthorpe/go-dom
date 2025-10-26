@@ -1,10 +1,9 @@
 package bootstrap
 
 import (
-
-	// Packages
 	"strings"
 
+	// Packages
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
 
 	// Namespace import for interfaces
@@ -271,7 +270,7 @@ func WithBackground(color Color) Opt {
 	}
 }
 
-// WithColor sets the color for badge, alert, button, icon, link, card, and table components.
+// WithColor sets the color for badge, alert, button, icon, link, card, table, and navbar components.
 // For badges: <span class="badge text-bg-primary">Primary</span>
 // For alerts: <div class="alert alert-primary" role="alert">Primary</div>
 // For buttons: <button class="btn btn-primary">Primary</button>
@@ -279,6 +278,7 @@ func WithBackground(color Color) Opt {
 // For links: <a class="link-primary">Link</a>
 // For cards: <div class="card text-bg-primary">Card</div>
 // For tables: <table class="table table-primary">Table</table>
+// For navbars: <nav class="navbar bg-primary">Navbar</nav>
 func WithColor(color Color) Opt {
 	return func(o *opts) error {
 		// Define all possible color suffixes
@@ -326,6 +326,16 @@ func WithColor(color Color) Opt {
 			for _, suffix := range colorSuffixes {
 				o.classList.Remove("table-" + suffix)
 			}
+		case NavBarComponent:
+			// Remove bg-* classes
+			for _, suffix := range colorSuffixes {
+				o.classList.Remove("bg-" + suffix)
+			}
+		case ToastComponent:
+			// Remove text-bg-* classes
+			for _, suffix := range colorSuffixes {
+				o.classList.Remove("text-bg-" + suffix)
+			}
 		default:
 			return ErrBadParameter.Withf("Cannot use WithColor with component of type %q", o.name)
 		}
@@ -347,6 +357,10 @@ func WithColor(color Color) Opt {
 				o.classList.Add(color.className("text-bg"))
 			case TableComponent:
 				o.classList.Add(color.className("table"))
+			case NavBarComponent:
+				o.classList.Add(color.className("bg"))
+			case ToastComponent:
+				o.classList.Add(color.className("text-bg"))
 			}
 		}
 
@@ -425,13 +439,32 @@ func WithPadding(position Position, padding int) Opt {
 	}
 }
 
-// WithSize sets the size for button components (btn-sm, btn-lg)
-// or button group components (btn-group-sm, btn-group-lg)
+// WithSize sets the size for button, button group, or table components.
+// For buttons: btn-sm, btn-lg
+// For button groups: btn-group-sm, btn-group-lg
+// For tables: table-sm (only SizeSmall and SizeDefault supported)
 func WithSize(size Size) Opt {
 	return func(o *opts) error {
-		// WithSize only works with button or button-group components
-		if o.name != ButtonComponent && o.name != ButtonGroupComponent {
+		// WithSize only works with button, button-group, or table components
+		if o.name != ButtonComponent && o.name != ButtonGroupComponent && o.name != TableComponent {
 			return ErrBadParameter.Withf("Cannot use WithSize with component of type %q", o.name)
+		}
+
+		// For tables, only allow SizeDefault and SizeSmall
+		if o.name == TableComponent {
+			if size != SizeDefault && size != SizeSmall {
+				return ErrBadParameter.Withf("Table component only supports SizeDefault and SizeSmall, got %q", size)
+			}
+
+			// Remove existing size classes
+			o.classList.Remove("table-sm")
+
+			// Add size class if not default
+			if size == SizeSmall {
+				o.classList.Add("table-sm")
+			}
+
+			return nil
 		}
 
 		// Skip if default size
@@ -439,7 +472,7 @@ func WithSize(size Size) Opt {
 			return nil
 		}
 
-		// TODO: Remove any existing size classes
+		// TODO: Remove any existing size classes for buttons
 
 		// Add size class based on component type
 		if o.name == ButtonGroupComponent {

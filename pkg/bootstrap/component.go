@@ -51,29 +51,34 @@ func newComponent(name_ name, root Element) *component {
 // GLOBALS
 
 const (
-	ContainerComponent   name = "container"
-	HeadingComponent     name = "heading"
-	BadgeComponent       name = "badge"
-	AlertComponent       name = "alert"
-	SpanComponent        name = "span"
-	ParaComponent        name = "para"
-	RuleComponent        name = "rule"
-	ButtonComponent      name = "button"
-	ButtonGroupComponent name = "button-group"
-	IconComponent        name = "icon"
-	LinkComponent        name = "link"
-	CardComponent        name = "card"
-	ImageComponent       name = "image"
-	NavComponent         name = "nav"
-	NavBarComponent      name = "nav-bar"
-	NavItemComponent     name = "nav-item"
-	NavDropdownComponent name = "nav-dropdown"
-	NavSpacerComponent   name = "nav-spacer"
-	NavDividerComponent  name = "nav-divider"
-	TableComponent       name = "table"
-	TableRowComponent    name = "table-row"
-	PaginationComponent  name = "pagination"
-	OffcanvasComponent   name = "offcanvas"
+	ContainerComponent      name = "container"
+	HeadingComponent        name = "heading"
+	BadgeComponent          name = "badge"
+	AlertComponent          name = "alert"
+	SpanComponent           name = "span"
+	ParaComponent           name = "para"
+	RuleComponent           name = "rule"
+	ButtonComponent         name = "button"
+	ButtonGroupComponent    name = "button-group"
+	IconComponent           name = "icon"
+	LinkComponent           name = "link"
+	CardComponent           name = "card"
+	ImageComponent          name = "image"
+	NavComponent            name = "nav"
+	NavBarComponent         name = "nav-bar"
+	NavItemComponent        name = "nav-item"
+	NavDropdownComponent    name = "nav-dropdown"
+	NavSpacerComponent      name = "nav-spacer"
+	NavDividerComponent     name = "nav-divider"
+	TableComponent          name = "table"
+	TableRowComponent       name = "table-row"
+	PaginationComponent     name = "pagination"
+	PaginationItemComponent name = "pagination-item"
+	OffcanvasComponent      name = "offcanvas"
+	ToastComponent          name = "toast"
+	FormComponent           name = "form"
+	InputComponent          name = "input"
+	LabelComponent          name = "label"
 )
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -100,6 +105,15 @@ func (component *component) String() string {
 
 ///////////////////////////////////////////////////////////////////////////////
 // METHODS
+
+func (component *component) Empty() Component {
+	elem := component.body
+	if elem == nil {
+		elem = component.root
+	}
+	elem.SetInnerHTML("")
+	return component
+}
 
 // Insert Component, Element or string children into the body element (or root if no body)
 func (component *component) Insert(children ...any) Component {
@@ -259,6 +273,8 @@ func ComponentFromElement(elem Element) Component {
 		return &buttonGroup{component: *c}
 	case TableComponent:
 		return &table{component: *c}
+	case TableRowComponent:
+		return &tableRow{component: *c}
 	case CardComponent:
 		return &card{component: *c}
 	case ContainerComponent:
@@ -285,6 +301,14 @@ func ComponentFromElement(elem Element) Component {
 		return &span{component: *c}
 	case OffcanvasComponent:
 		return &offcanvas{component: *c}
+	case ToastComponent:
+		return &toast{component: *c}
+	case FormComponent:
+		return &form{component: *c}
+	case InputComponent:
+		return &input{component: *c}
+	case LabelComponent:
+		return &label{component: *c}
 	// Add more specialized types as needed
 	default:
 		return c

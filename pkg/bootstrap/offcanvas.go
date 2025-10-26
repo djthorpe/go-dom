@@ -1,6 +1,11 @@
+//go:build js && wasm
+
 package bootstrap
 
 import (
+	"fmt"
+	"syscall/js"
+
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
 
@@ -13,8 +18,9 @@ import (
 
 type offcanvas struct {
 	component
-	header Element
-	body   Element
+	header   Element
+	body     Element
+	instance js.Value // Bootstrap Offcanvas instance
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -64,11 +70,30 @@ func Offcanvas(opt ...Opt) *offcanvas {
 
 	c.body = body
 
-	return &offcanvas{
+	// Create the offcanvas object
+	o := &offcanvas{
 		component: *c,
 		header:    header,
 		body:      body,
 	}
+
+	// Add event listeners to manage Bootstrap instance lifecycle
+	c.root.AddEventListener("DOMNodeInserted", func(node Node) {
+		fmt.Println("DOMNodeInserted fired")
+		if o.instance.IsUndefined() {
+			jsElement := c.root.(interface{ JSValue() js.Value }).JSValue()
+			o.instance = js.Global().Get("bootstrap").Get("Offcanvas").New(jsElement)
+		}
+	})
+	c.root.AddEventListener("DOMNodeRemoved", func(node Node) {
+		fmt.Println("DOMNodeRemoved fired")
+		if !o.instance.IsUndefined() {
+			o.instance.Call("dispose")
+			o.instance = js.Undefined()
+		}
+	})
+
+	return o
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -97,35 +122,38 @@ func (o *offcanvas) Header(children ...any) *offcanvas {
 	return o
 }
 
-// Show makes the offcanvas visible by adding the "show" class.
-// Returns *offcanvas to allow method chaining.
-//
-// Example:
-//
-//	offcanvas.Show().Header("Menu")
-func (o *offcanvas) Show() *offcanvas {
-	o.root.ClassList().Add("show")
-	return o
+// Show makes the offcanvas visible by initializing Bootstrap's Offcanvas instance and calling show().
+// This properly handles the backdrop, animations, and accessibility features.
+func (o *offcanvas) Show() {
+	// Create instance if not yet initialized (fallback if DOMNodeInserted hasn't fired)
+	if o.instance.IsUndefined() {
+		jsElement := o.root.(interface{ JSValue() js.Value }).JSValue()
+		bootstrap := js.Global().Get("bootstrap")
+		if bootstrap.IsUndefined() {
+			return
+		}
+		o.instance = bootstrap.Get("Offcanvas").New(jsElement)
+	}
+	o.instance.Call("show")
 }
 
-// Hide makes the offcanvas hidden by removing the "show" class.
-// Returns *offcanvas to allow method chaining.
-//
-// Example:
-//
-//	offcanvas.Hide()
-func (o *offcanvas) Hide() *offcanvas {
-	o.root.ClassList().Remove("show")
-	return o
+// Hide makes the offcanvas hidden by using Bootstrap's Offcanvas instance.
+func (o *offcanvas) Hide() {
+	if !o.instance.IsUndefined() {
+		o.instance.Call("hide")
+	}
 }
 
-// Toggle toggles the visibility of the offcanvas by toggling the "show" class.
-// Returns *offcanvas to allow method chaining.
-//
-// Example:
-//
-//	offcanvas.Toggle()
-func (o *offcanvas) Toggle() *offcanvas {
-	o.root.ClassList().Toggle("show")
-	return o
+// Toggle toggles the visibility of the offcanvas using Bootstrap's Offcanvas instance.
+func (o *offcanvas) Toggle() {
+	// Create instance if not yet initialized (fallback if DOMNodeInserted hasn't fired)
+	if o.instance.IsUndefined() {
+		jsElement := o.root.(interface{ JSValue() js.Value }).JSValue()
+		bootstrap := js.Global().Get("bootstrap")
+		if bootstrap.IsUndefined() {
+			return
+		}
+		o.instance = bootstrap.Get("Offcanvas").New(jsElement)
+	}
+	o.instance.Call("toggle")
 }

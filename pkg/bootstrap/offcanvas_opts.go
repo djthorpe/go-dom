@@ -13,13 +13,18 @@ func WithScroll() Opt {
 }
 
 // WithBackdrop configures the backdrop behavior for offcanvas.
-// Use "false" for no backdrop, "static" for a backdrop that doesn't close on click,
-// or omit this option for the default backdrop behavior.
-func WithBackdrop(backdrop string) Opt {
+// Accepts "false" (no backdrop) or "static" (backdrop doesn't close on click).
+func WithBackdrop(value string) Opt {
 	return func(o *opts) error {
-		if backdrop == "false" || backdrop == "static" {
-			o.attributes["data-bs-backdrop"] = backdrop
-		}
+		o.attributes["data-bs-backdrop"] = value
+		return nil
+	}
+}
+
+// WithoutBackdrop configures the backdrop behavior for offcanvas.
+func WithoutBackdrop() Opt {
+	return func(o *opts) error {
+		o.attributes["data-bs-backdrop"] = "false"
 		return nil
 	}
 }
