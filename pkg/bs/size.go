@@ -100,7 +100,7 @@ func WithSize(size Size) mvc.Opt {
 	return func(o mvc.OptSet) error {
 		prefix := sizePrefixForView(o.Name())
 		if prefix == "" {
-			return ErrInternalAppError.Withf("WithColor: unsupported view %q", o.Name())
+			return ErrInternalAppError.Withf("WithSize: unsupported view %q", o.Name())
 		}
 
 		// Remove all other size classes
