@@ -265,7 +265,10 @@ func WithBorder(position Position, color ...Color) mvc.Opt {
 	}
 }
 
-// WithAlign adds alignment to a view
+// WithAlign adds alignment to a view.
+// 
+// Note: This function only supports views of type ViewFigureCaption and ViewContainer.
+// Calling WithAlign on other view types will result in an error.
 func WithAlign(position Position) mvc.Opt {
 	return func(o mvc.OptSet) error {
 		if o.Name() != ViewFigureCaption && o.Name() != ViewContainer {
