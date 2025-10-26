@@ -144,7 +144,7 @@ func TestLinkHrefAttribute(t *testing.T) {
 func TestLinkEmbedding(t *testing.T) {
 	// Verify that link properly embeds View
 	link := bs.Link("#")
-	
+
 	t.Run("can append text", func(t *testing.T) {
 		link.Append("Click here")
 		// Should not panic
@@ -696,7 +696,7 @@ func TestLinkWithMultipleChildren(t *testing.T) {
 
 func TestLinkEmptyHref(t *testing.T) {
 	link := bs.Link("")
-	
+
 	t.Run("accepts empty href", func(t *testing.T) {
 		if link == nil {
 			t.Fatal("bs.Link() with empty href should not return nil")
@@ -736,9 +736,9 @@ func TestLinkWithAttributes(t *testing.T) {
 	)
 
 	tests := []struct {
-		name      string
-		attr      string
-		expected  string
+		name     string
+		attr     string
+		expected string
 	}{
 		{"has target attribute", "target", "_blank"},
 		{"has rel attribute", "rel", "noopener noreferrer"},
