@@ -1,10 +1,13 @@
 package mvc
 
 import (
-	// Namespace imports
+	"fmt"
+	"os"
 
+	// Packages
+
+	// Namespace imports
 	. "github.com/djthorpe/go-wasmbuild"
-	"github.com/djthorpe/go-wasmbuild/pkg/dom"
 )
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,9 +39,45 @@ type View interface {
 	// Add an event listener to the view's root element
 	AddEventListener(event string, handler func(Node)) View
 
-	// Apply options to the view
-	Apply(opts ...Opt) View
+	// Set options on the view
+	Opts(opts ...Opt) View
 }
+
+// ViewWithState represents a UI component with active and disabled states
+type ViewWithState interface {
+	View
+
+	// Indicates whether the view is active
+	Active() bool
+
+	// Indicates whether the view is disabled
+	Disabled() bool
+}
+
+// ViewWithGroupState represents a UI component with a group of active and disabled states
+type ViewWithGroupState interface {
+	View
+
+	// Returns any elements which are active
+	Active() []Element
+
+	// Returns any elements which are disabled
+	Disabled() []Element
+}
+
+// ViewWithHeaderFooter represents a UI component with a header and footer
+type ViewWithHeaderFooter interface {
+	View
+
+	// Sets the header and returns the view
+	Header(...any) ViewWithHeaderFooter
+
+	// Returns the footer element
+	Footer(...any) ViewWithHeaderFooter
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PRIVATE TYPES
 
 // Implementation of View interface
 type view struct {
@@ -57,8 +96,8 @@ type ViewConstructorFunc func(Element) View
 // GLOBALS
 
 const (
-	// The attribute key which identifies a wasmbuild component
-	DataComponentAttrKey = "data-wasmbuild-component"
+	// The attribute key which identifies a wasmbuild view
+	DataComponentAttrKey = "data-wasmbuild"
 )
 
 var (
@@ -81,7 +120,7 @@ func RegisterView(name string, constructor ViewConstructorFunc) {
 // Create a new empty view, applying any options to it
 func NewView(name string, tagName string, opts ...Opt) View {
 	if _, exists := views[name]; !exists {
-		panic("View not registered: " + name)
+		panic(fmt.Sprintf("NewView: View not registered %q", name))
 	}
 
 	// Create the view
@@ -92,6 +131,29 @@ func NewView(name string, tagName string, opts ...Opt) View {
 
 	// Set the data-wasmbuild-component attribute
 	v.root.SetAttribute(DataComponentAttrKey, name)
+
+	// Apply options to the view
+	if len(opts) > 0 {
+		if err := applyOpts(v.root, opts...); err != nil {
+			panic(err)
+		}
+	}
+
+	// Return the view
+	return v
+}
+
+// Create view from an existing element, applying any options to it
+func NewViewWithElement(element Element, opts ...Opt) View {
+	if element == nil {
+		panic("NewViewWithElement: missing element")
+	}
+
+	// Create the view
+	v := &view{
+		name: element.GetAttribute(DataComponentAttrKey),
+		root: element,
+	}
 
 	// Apply options to the view
 	if len(opts) > 0 {
@@ -171,7 +233,7 @@ func (v *view) AddEventListener(event string, handler func(Node)) View {
 	return v
 }
 
-func (v *view) Apply(opts ...Opt) View {
+func (v *view) Opts(opts ...Opt) View {
 	if err := applyOpts(v.root, opts...); err != nil {
 		panic(err)
 	}
@@ -189,22 +251,41 @@ func NodeFromAny(child any) Node {
 		return textFactory(c)
 	case Element:
 		return c
+	case Node:
+		if c.NodeType() == TEXT_NODE {
+			return c
+		}
 	case View:
 		return c.Root()
-	default:
-		panic(ErrInternalAppError.Withf("NodeFromAny: unsupported: %T", child))
 	}
+	panic(ErrInternalAppError.Withf("NodeFromAny: unsupported: %T", child))
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// PRIVATE METHODS
-
-// Create a new DOM element to be attached to a view
-func elementFactory(tagName string) Element {
-	return dom.GetWindow().Document().CreateElement(tagName)
+// ViewFromNode returns a View from a Node, or nil if the type is unsupported
+func ViewFromNode(node Node) View {
+	if element, ok := node.(Element); ok {
+		if view, err := viewFromElement(element); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			return nil
+		} else if view != nil {
+			return view
+		}
+	}
+	return nil
 }
 
-// Create a new DOM text node to be attached to a view
-func textFactory(text string) Node {
-	return dom.GetWindow().Document().CreateTextNode(text)
+func viewFromElement(element Element) (View, error) {
+	if !element.HasAttribute(DataComponentAttrKey) {
+		return nil, nil
+	}
+	name := element.GetAttribute(DataComponentAttrKey)
+	if constructor, exists := views[name]; !exists {
+		return nil, ErrInternalAppError.Withf("viewFromElement: no constructor for view %q", name)
+	} else if constructor == nil {
+		return nil, ErrInternalAppError.Withf("viewFromElement: constructor for view %q is nil", name)
+	} else if view := constructor(element); view == nil {
+		return nil, ErrInternalAppError.Withf("viewFromElement: constructor for view %q returned nil", name)
+	} else {
+		return view, nil
+	}
 }

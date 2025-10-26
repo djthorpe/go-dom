@@ -5,7 +5,7 @@ import (
 )
 
 func TestViewDivConstant(t *testing.T) {
-	expected := "wasmbuild-mvc-div"
+	expected := "mvc-div"
 	if ViewDiv != expected {
 		t.Errorf("ViewDiv = %v, want %v", ViewDiv, expected)
 	}

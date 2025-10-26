@@ -1,6 +1,7 @@
 package mvc
 
 import (
+	"strings"
 	"testing"
 
 	// Namespace imports
@@ -51,7 +52,7 @@ func TestRegisterView(t *testing.T) {
 }
 
 func TestDataComponentAttrKey(t *testing.T) {
-	expected := "data-wasmbuild-component"
+	expected := "data-wasmbuild"
 	if DataComponentAttrKey != expected {
 		t.Errorf("DataComponentAttrKey = %v, want %v", DataComponentAttrKey, expected)
 	}
@@ -108,7 +109,7 @@ func TestNewView(t *testing.T) {
 				if r != nil && tt.panicMsg != "" {
 					// Check panic message contains expected text
 					if msg, ok := r.(string); ok {
-						if len(msg) < len(tt.panicMsg) || msg[:len(tt.panicMsg)] != tt.panicMsg {
+						if !strings.Contains(msg, tt.panicMsg) {
 							t.Errorf("NewView() panic message = %v, want to contain %v", msg, tt.panicMsg)
 						}
 					}
@@ -199,7 +200,7 @@ func TestViewChaining(t *testing.T) {
 		_ = func(v View) View { return v.Insert("test") }
 		_ = func(v View) View { return v.Append("test") }
 		_ = func(v View) View { return v.AddEventListener("click", nil) }
-		_ = func(v View) View { return v.Apply() }
+		_ = func(v View) View { return v.Opts() }
 
 		// Body doesn't return View, so it breaks the chain intentionally
 		_ = func(v View) { v.Body(nil) }

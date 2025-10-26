@@ -289,9 +289,9 @@ func TestOptClasses(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			o := &opt{class: tt.classes}
-			result := o.classes()
+			result := o.Classes()
 			if len(result) != len(tt.expected) {
-				t.Errorf("classes() got %d classes, want %d: got %v, want %v", len(result), len(tt.expected), result, tt.expected)
+				t.Errorf("Classes() got %d classes, want %d: got %v, want %v", len(result), len(tt.expected), result, tt.expected)
 			}
 			for i, class := range tt.expected {
 				if i >= len(result) || result[i] != class {
