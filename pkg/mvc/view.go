@@ -43,6 +43,42 @@ type View interface {
 	Opts(opts ...Opt) View
 }
 
+// VieWithState represents a UI component with active and disabled states
+type ViewWithState interface {
+	View
+
+	// Indicates whether the view is active
+	Active() bool
+
+	// Indicates whether the view is disabled
+	Disabled() bool
+}
+
+// ViewWithGroupState represents a UI component with a group of active and disabled states
+type ViewWithGroupState interface {
+	View
+
+	// Returns any elements which are active
+	Active() []Element
+
+	// Returns any elements which are disabled
+	Disabled() []Element
+}
+
+// ViewWithHeaderFooter represents a UI component with a header and footer
+type ViewWithHeaderFooter interface {
+	View
+
+	// Sets the header and returns the view
+	Header(...any) ViewWithHeaderFooter
+
+	// Returns the footer element
+	Footer(...any) ViewWithHeaderFooter
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PRIVATE TYPES
+
 // Implementation of View interface
 type view struct {
 	name string

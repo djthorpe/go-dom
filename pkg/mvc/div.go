@@ -27,8 +27,8 @@ func init() {
 ///////////////////////////////////////////////////////////////////////////////
 // LIFECYCLE
 
-func Div() *div {
-	view := &div{NewView(ViewDiv, "DIV")}
+func Div(opts ...Opt) *div {
+	view := &div{NewView(ViewDiv, "DIV", opts...)}
 	return view
 }
 

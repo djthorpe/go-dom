@@ -17,6 +17,9 @@ type buttongroup struct {
 	View
 }
 
+var _ ViewWithState = (*button)(nil)
+var _ ViewWithGroupState = (*buttongroup)(nil)
+
 ///////////////////////////////////////////////////////////////////////////////
 // GLOBALS
 
@@ -79,4 +82,34 @@ func (b *button) Disabled() bool {
 // Return true if button is active
 func (b *button) Active() bool {
 	return b.Root().ClassList().Contains("active")
+}
+
+// Return elements which are active in the button group
+func (b *buttongroup) Active() []Element {
+	var elements []Element
+
+	// Find active elements
+	child := b.Root().FirstElementChild()
+	for child != nil {
+		if child.ClassList().Contains("active") {
+			elements = append(elements, child)
+		}
+		child = child.NextElementSibling()
+	}
+	return elements
+}
+
+// Return elements which are disabled in the button group
+func (b *buttongroup) Disabled() []Element {
+	var elements []Element
+
+	// Find disabled elements
+	child := b.Root().FirstElementChild()
+	for child != nil {
+		if child.HasAttribute("disabled") {
+			elements = append(elements, child)
+		}
+		child = child.NextElementSibling()
+	}
+	return elements
 }

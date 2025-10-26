@@ -95,6 +95,8 @@ func colorPrefixForView(name string) string {
 		return "link"
 	case ViewAlert:
 		return "alert"
+	case ViewNavbar:
+		return "bg"
 	default:
 		return ""
 	}
@@ -110,6 +112,8 @@ func backgroundColorPrefixForView(name string) string {
 		return "btn"
 	case ViewAlert:
 		return "alert"
+	case ViewNavbar:
+		return "bg"
 	default:
 		return ""
 	}

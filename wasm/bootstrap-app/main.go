@@ -11,6 +11,8 @@ func main() {
 
 	// Create a heading
 	app.Append(
+		NavBar(),
+		Buttons(),
 		Alerts(),
 		Containers(),
 		Badges(),
