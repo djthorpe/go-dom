@@ -43,7 +43,7 @@ type View interface {
 	Opts(opts ...Opt) View
 }
 
-// VieWithState represents a UI component with active and disabled states
+// ViewWithState represents a UI component with active and disabled states
 type ViewWithState interface {
 	View
 
