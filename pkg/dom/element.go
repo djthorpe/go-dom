@@ -42,6 +42,11 @@ func (this *element) InnerHTML() string {
 	return buf.String()
 }
 
+func (this *element) SetInnerHTML(html string) {
+	// Clear existing children
+	this.node.children = []dom.Node{}
+}
+
 func (this *element) OuterHTML() string {
 	buf := new(bytes.Buffer)
 	this.write(buf)

@@ -43,16 +43,17 @@ type Element interface {
 	Node
 
 	// Properties
-	InnerHTML() string
-	OuterHTML() string
 	TagName() string
-	Attributes() []Attr
-	Style() Style
-	ClassList() TokenList
 	ID() string
 	SetID(string)
 	ClassName() string
 	SetClassName(string)
+	OuterHTML() string
+	InnerHTML() string
+	SetInnerHTML(string)
+	Attributes() []Attr
+	Style() Style
+	ClassList() TokenList
 
 	// Attribute Methods
 	RemoveAttribute(string)

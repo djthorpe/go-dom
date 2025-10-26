@@ -11,6 +11,9 @@ type Component interface {
 	// Return the component's root element
 	Element() Element
 
+	// Empty the component's root element
+	Empty() Component
+
 	// Insert text, Element or Component children at the top of this component
 	Insert(children ...any) Component
 
