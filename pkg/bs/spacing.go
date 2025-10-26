@@ -137,7 +137,7 @@ func borderPrefixForView(name string) string {
 // OPTIONS
 
 // WithMargin adds margin to the specified position (Top, Bottom, Start, End, X, Y or All)
-// with an optional size (-5 ... -5)
+// with an optional size (-5 ... 5)
 func WithMargin(position Position, size int) mvc.Opt {
 	return func(o mvc.OptSet) error {
 		// Remove existing margin classes for this specific position only
