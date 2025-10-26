@@ -8,7 +8,7 @@ import (
 type Employee struct {
 	Name     string
 	Position string
-	Salary   string
+	Salary   float64
 	Location string
 }
 
@@ -47,7 +47,7 @@ func (m *EmployeeModel) LoadFromWindow() bool {
 		m.employees[i] = Employee{
 			Name:     item.Get("name").String(),
 			Position: item.Get("position").String(),
-			Salary:   item.Get("salary").String(),
+			Salary:   item.Get("salary").Float(),
 			Location: item.Get("location").String(),
 		}
 	}
@@ -172,4 +172,24 @@ func (m *EmployeeModel) Update(index int, employee Employee) bool {
 // IsLoaded returns true if data has been loaded
 func (m *EmployeeModel) IsLoaded() bool {
 	return m.loaded
+}
+
+// FindByName returns the employee with the given name, or nil if not found
+func (m *EmployeeModel) FindByName(name string) *Employee {
+	for i := range m.employees {
+		if m.employees[i].Name == name {
+			return &m.employees[i]
+		}
+	}
+	return nil
+}
+
+// GetByIndex returns the employee at the given table row index (offset + index)
+// Returns nil if the index is out of bounds
+func (m *EmployeeModel) GetByIndex(index int) *Employee {
+	actualIndex := m.offset + index
+	if actualIndex < 0 || actualIndex >= len(m.employees) {
+		return nil
+	}
+	return &m.employees[actualIndex]
 }

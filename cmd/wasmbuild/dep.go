@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -153,6 +154,8 @@ func (c *DepCmd) Run(ctx *Context) error {
 
 // Return a list of dependencies
 func (d *DepContext) Dependencies() ([]string, error) {
+	var err error
+
 	// Get package information including all dependencies
 	cmd := exec.Command(d.GoCmd, "list", "-json", d.Path)
 
@@ -164,36 +167,38 @@ func (d *DepContext) Dependencies() ([]string, error) {
 	}
 
 	var pkgInfo DepPackageInfo
-	if err := json.Unmarshal(output, &pkgInfo); err != nil {
-		return nil, fmt.Errorf("failed to parse package info: %w", err)
-	}
-
-	// Check if we're in a module
-	if pkgInfo.Module == nil {
-		return nil, fmt.Errorf("not in a Go module, skipping dependency discovery")
-	}
-
-	// Find local dependencies (those that start with the module path)
 	deps := make(map[string]bool)
-	for _, dep := range pkgInfo.Deps {
-		if strings.HasPrefix(dep, pkgInfo.Module.Path) && dep != pkgInfo.ImportPath {
+	if err := json.Unmarshal(output, &pkgInfo); err != nil {
+		err = errors.Join(err, fmt.Errorf("failed to parse package info: %w", err))
+	} else if pkgInfo.Module == nil {
+		err = errors.Join(err, fmt.Errorf("not in a Go module, skipping dependency discovery"))
+	} else {
+		// Find local dependencies (those that start with the module path)
+		for _, dep := range pkgInfo.Deps {
+			var depInfo DepPackageInfo
+			if !(strings.HasPrefix(dep, pkgInfo.Module.Path) && dep != pkgInfo.ImportPath) {
+				continue
+			}
+
 			// Get the directory for this dependency
 			depCmd := exec.Command(d.GoCmd, "list", "-json", dep)
 			depOutput, err := depCmd.Output()
 			if err != nil {
-				return nil, fmt.Errorf("could not get info for dependency %s: %v", dep, err)
+				err = errors.Join(err, fmt.Errorf("could not get info for dependency %s: %v", dep, err))
+				continue
 			}
 
-			var depInfo DepPackageInfo
 			if err := json.Unmarshal(depOutput, &depInfo); err != nil {
-				return nil, fmt.Errorf("could not parse info for dependency %s: %v", dep, err)
+				err = errors.Join(err, fmt.Errorf("could not get info for dependency %s: %v", dep, err))
+				continue
 			}
 
-			if depInfo.Dir != "" {
-				absDir, err := filepath.Abs(depInfo.Dir)
-				if err == nil {
-					deps[absDir] = true
-				}
+			if depInfo.Dir == "" {
+				continue
+			}
+
+			if absDir, err := filepath.Abs(depInfo.Dir); err == nil {
+				deps[absDir] = true
 			}
 		}
 	}
@@ -248,7 +253,7 @@ func (d *DepContext) Dependencies() ([]string, error) {
 	for dep := range deps {
 		paths = append(paths, dep)
 	}
-	return paths, nil
+	return paths, err
 }
 
 // Run a watcher for dependencies using fsnotify

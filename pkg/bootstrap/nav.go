@@ -113,6 +113,7 @@ func NavBar(opt ...Opt) *navbar {
 //	navbar.Header(Icon("house-fill"), " Home")         // Brand with icon
 //	navbar.Header(Image("logo.png"), " Company Name")  // Brand with logo
 func (n *navbar) Header(children ...any) *navbar {
+	// Create the header
 	brand := dom.GetWindow().Document().CreateElement("A")
 	brand.SetAttribute("class", "navbar-brand")
 	brand.SetAttribute("href", "#")
@@ -139,146 +140,68 @@ func (n *navbar) Header(children ...any) *navbar {
 }
 
 // Append adds navigation items to the navbar body.
-// Only accepts NavItem, NavSpacer, and NavDivider components.
-// Returns Component for interface compatibility.
 func (n *navbar) Append(children ...any) Component {
 	for _, child := range children {
 		switch c := child.(type) {
-		case *navItem:
-			n.body.AppendChild(c.Element())
-		case *navDropdown:
-			n.body.AppendChild(c.Element())
 		case Component:
-			// Check if it's a NavSpacer or NavDivider by checking component name
-			elem := c.Element()
-			compName := elem.GetAttribute("data-component")
-			if compName == string(NavSpacerComponent) || compName == string(NavDividerComponent) {
-				n.body.AppendChild(elem)
-			} else {
-				panic("navbar.Append only accepts NavItem, NavDropdown, NavSpacer, and NavDivider components")
+			switch name(c.Name()) {
+			case NavItemComponent, NavDropdownComponent, NavSpacerComponent, NavDividerComponent:
+				n.body.AppendChild(c.Element())
+			default:
+				panic("navbar.append only accepts nav-item, nav-dropdown, nav-spacer and nav-divider components")
 			}
 		default:
-			panic("navbar.Append only accepts NavItem, NavDropdown, NavSpacer, and NavDivider components")
+			panic("navbar.append only accepts nav-item, nav-dropdown, nav-spacer and nav-divider components")
 		}
 	}
 	return n
 }
 
 // Insert adds navigation items to the top of the navbar body.
-// Only accepts NavItem, NavDropdown, NavSpacer, and NavDivider components.
-// Returns Component for interface compatibility.
 func (n *navbar) Insert(children ...any) Component {
 	for _, child := range children {
 		switch c := child.(type) {
-		case *navItem:
-			if n.body.FirstChild() != nil {
-				n.body.InsertBefore(c.Element(), n.body.FirstChild())
-			} else {
-				n.body.AppendChild(c.Element())
-			}
-		case *navDropdown:
-			if n.body.FirstChild() != nil {
-				n.body.InsertBefore(c.Element(), n.body.FirstChild())
-			} else {
-				n.body.AppendChild(c.Element())
-			}
 		case Component:
-			// Check if it's a NavSpacer or NavDivider by checking component name
-			elem := c.Element()
-			compName := elem.GetAttribute("data-component")
-			if compName == string(NavSpacerComponent) || compName == string(NavDividerComponent) {
-				if n.body.FirstChild() != nil {
-					n.body.InsertBefore(elem, n.body.FirstChild())
-				} else {
-					n.body.AppendChild(elem)
-				}
-			} else {
-				panic("navbar.Insert only accepts NavItem, NavDropdown, NavSpacer, and NavDivider components")
+			switch name(c.Name()) {
+			case NavItemComponent, NavDropdownComponent, NavSpacerComponent, NavDividerComponent:
+				n.body.InsertBefore(c.Element(), n.body.FirstChild())
+			default:
+				panic("navbar.append only accepts nav-item, nav-dropdown, nav-spacer and nav-divider components")
 			}
 		default:
-			panic("navbar.Insert only accepts NavItem, NavDropdown, NavSpacer, and NavDivider components")
+			panic("navbar.append only accepts nav-item, nav-dropdown, nav-spacer and nav-divider components")
 		}
 	}
 	return n
 }
 
-// NavItem creates a new bootstrap navigation link item (<a> element with class="nav-link").
-// The nav item starts in a non-active, non-disabled state. Use SetActive() and SetDisabled()
+// NavItem creates a new bootstrap navigation link item
+// The nav item starts in a non-active, non-disabled state. Use Active() and Disabled()
 // methods to change the state after creation.
-//
-// Parameters:
-//   - href: Link destination URL
-//   - children: Content for the link (strings, Components, Nodes)
-//
-// Example usage:
-//
-//	NavItem("#", "Home").SetActive(true)                    // Active link
-//	NavItem("#", "About")                                    // Regular link
-//	NavItem("#", "Disabled").SetDisabled(true)              // Disabled link
-//	NavItem("#", icon, "Dashboard")                          // Link with icon
-//	NavItem("#", "Profile ", badge)                          // Link with badge
-//
-// NavItem creates a navigation link item.
-// When used in a regular Nav or NavBar, creates: <a class="nav-link" href="...">
-// When used in a NavDropdown, creates: <li><a class="dropdown-item" href="..."></a></li>
-// The context is automatically detected when the item is appended to a dropdown.
-//
-// Parameters:
-//   - href: The link URL
-//   - children: Text, Components, or Nodes to append to the link
-//
-// Example:
-//
-//	nav := Nav().
-//	    Append(NavItem("#", "Home")).
-//	    Append(NavItem("#", "About"))
 func NavItem(href string, children ...any) *navItem {
-	return NavItemWithOpts(href, children...)
-}
-
-// NavItemWithOpts creates a navigation link item with options.
-// Separated from NavItem to maintain backwards compatibility while adding options support.
-func NavItemWithOpts(href string, children ...any) *navItem {
-	// Separate options from content
-	var opts []Opt
-	var content []any
-
-	for _, child := range children {
-		if opt, ok := child.(Opt); ok {
-			opts = append(opts, opt)
-		} else {
-			content = append(content, child)
-		}
-	}
-
 	// Create link element
-	link := dom.GetWindow().Document().CreateElement("A")
-	link.SetAttribute("href", href)
 
 	// Create component with nav-link class by default
-	// This will be adjusted to dropdown-item when appended to a dropdown
-	c := newComponent(NavItemComponent, link)
+	c := newComponent(NavItemComponent, dom.GetWindow().Document().CreateElement("A"))
 
-	// Apply options with nav-link class prepended
-	if err := c.applyTo(link, append([]Opt{WithClass("nav-link")}, opts...)...); err != nil {
+	// Apply href and nav-link class
+	if err := c.applyTo(c.root, WithAttribute("href", href), WithClass("nav-link")); err != nil {
 		panic(err)
 	}
 
 	// Append children
-	for _, child := range content {
+	for _, child := range children {
 		if component, ok := child.(Component); ok {
-			link.AppendChild(component.Element())
+			c.root.AppendChild(component.Element())
 		} else if str, ok := child.(string); ok {
-			link.AppendChild(dom.GetWindow().Document().CreateTextNode(str))
+			c.root.AppendChild(dom.GetWindow().Document().CreateTextNode(str))
 		} else if node, ok := child.(Node); ok {
-			link.AppendChild(node)
+			c.root.AppendChild(node)
 		}
 	}
 
-	c.body = link
-	return &navItem{
-		component: *c,
-	}
+	// Return the component
+	return &navItem{*c}
 }
 
 ///////////////////////////////////////////////////////////////////////////////

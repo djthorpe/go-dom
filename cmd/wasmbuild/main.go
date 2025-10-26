@@ -20,8 +20,9 @@ type Context struct {
 	Verbose  bool   `short:"v" help:"Enable verbose output"`
 
 	// Private
-	log *Logger
-	ctx context.Context
+	log    *Logger
+	ctx    context.Context
+	cancel context.CancelFunc
 }
 
 type CLI struct {
@@ -44,6 +45,8 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 	cli.Context.ctx = ctx
+	cli.Context.cancel = cancel
+	defer cancel()
 
 	// Run the selected command
 	if err := kong.Run(&cli.Context); err != nil {

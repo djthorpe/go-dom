@@ -74,6 +74,9 @@ const (
 	TableRowComponent    name = "table-row"
 	PaginationComponent  name = "pagination"
 	OffcanvasComponent   name = "offcanvas"
+	FormComponent        name = "form"
+	InputComponent       name = "input"
+	LabelComponent       name = "label"
 )
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -259,6 +262,8 @@ func ComponentFromElement(elem Element) Component {
 		return &buttonGroup{component: *c}
 	case TableComponent:
 		return &table{component: *c}
+	case TableRowComponent:
+		return &tableRow{component: *c}
 	case CardComponent:
 		return &card{component: *c}
 	case ContainerComponent:
@@ -285,6 +290,12 @@ func ComponentFromElement(elem Element) Component {
 		return &span{component: *c}
 	case OffcanvasComponent:
 		return &offcanvas{component: *c}
+	case FormComponent:
+		return &form{component: *c}
+	case InputComponent:
+		return &input{component: *c}
+	case LabelComponent:
+		return &label{component: *c}
 	// Add more specialized types as needed
 	default:
 		return c

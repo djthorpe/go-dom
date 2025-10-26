@@ -1,10 +1,9 @@
 package bootstrap
 
 import (
-
-	// Packages
 	"strings"
 
+	// Packages
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
 
 	// Namespace import for interfaces

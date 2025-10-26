@@ -7,21 +7,54 @@ import (
 	// Packages
 	bs "github.com/djthorpe/go-wasmbuild/pkg/bootstrap"
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
+	jsutil "github.com/djthorpe/go-wasmbuild/pkg/js"
 
 	// Namespace imports
 	. "github.com/djthorpe/go-wasmbuild"
 )
 
+// formatSalary converts a numeric salary to a formatted string with $ and commas
+// e.g., 95000 -> "$95,000"
+func formatSalary(salary float64) string {
+	// Convert to integer
+	salaryInt := int(salary)
+
+	// Convert to string
+	s := fmt.Sprintf("%d", salaryInt)
+
+	// Add commas
+	n := len(s)
+	if n <= 3 {
+		return "$" + s
+	}
+
+	// Build result with commas from right to left
+	result := ""
+	for i := 0; i < n; i++ {
+		if i > 0 && (n-i)%3 == 0 {
+			result += ","
+		}
+		result += string(s[i])
+	}
+
+	return "$" + result
+}
+
+// parseSalary converts a formatted salary string back to a plain number string
+// e.g., "$95,000" -> "95000"
+func parseSalary(formattedSalary string) string {
+	result := ""
+	for _, ch := range formattedSalary {
+		if ch >= '0' && ch <= '9' {
+			result += string(ch)
+		}
+	}
+	return result
+}
+
 func main() {
 	offcanvas := offcanvasComponent()
 	table, tableContainer := tableComponent(offcanvas)
-
-	// Create navbar with brand header and color dropdown
-	navbar := bs.NavBar(
-		bs.WithClass("navbar-expand-lg"),
-		bs.WithTheme(bs.DARK),
-		bs.WithClass("bg-primary"),
-	).Header(bs.Icon("people-fill"), " Employee Data Example")
 
 	// Create color dropdown items with individual click handlers
 	colorItems := []Component{
@@ -83,28 +116,52 @@ func main() {
 	// Initialize default color tick
 	updateColorTicks("default")
 
-	// Add click handler to each color item
-	for _, item := range colorItems {
-		item.AddEventListener("click", func(target Node) {
-			if component := target.Component(); component != nil {
-				colorID := component.ID()
-				switch colorID {
-				case "":
-					return
-				case "default":
-					table.Apply(bs.WithColor(bs.TRANSPARENT))
-					updateColorTicks(colorID)
-					fmt.Println(table)
-				default:
-					table.Apply(bs.WithColor(bs.Color(colorID)))
-					updateColorTicks(colorID)
-					fmt.Println(table)
-				}
+	// Create navbar with brand header and color dropdown
+	navbar := bs.NavBar(
+		bs.WithClass("navbar-expand-lg"),
+		bs.WithTheme(bs.DARK),
+		bs.WithClass("bg-primary"),
+	).Header(
+		bs.Icon("people-fill"),
+		" Employee Data Example",
+	).Append(bs.NavDropdown("Color", colorItems...).AddEventListener("click", func(target Node) {
+		if component := target.Component(); component != nil {
+			colorID := component.ID()
+			if colorID == "" {
+				return
 			}
-		})
-	}
+			switch colorID {
+			case "default":
+				table.Apply(bs.WithColor(bs.TRANSPARENT))
+				updateColorTicks(colorID)
+			default:
+				table.Apply(bs.WithColor(bs.Color(colorID)))
+				updateColorTicks(colorID)
+			}
+		}
+	}))
 
-	navbar.Append(bs.NavDropdown("Color", colorItems...))
+	// Add click handler to each color item
+	/*
+		for _, item := range colorItems {
+			item.AddEventListener("click", func(target Node) {
+				if component := target.Component(); component != nil {
+					colorID := component.ID()
+					if colorID == "" {
+						return
+					}
+					switch colorID {
+					case "default":
+						table.Apply(bs.WithColor(bs.TRANSPARENT))
+						updateColorTicks(colorID)
+					default:
+						table.Apply(bs.WithColor(bs.Color(colorID)))
+						updateColorTicks(colorID)
+					}
+				}
+			})
+		}
+	*/
 
 	// Create styling dropdown with organized sections
 	stylingItems := []Component{
@@ -327,7 +384,11 @@ func tableComponent(offcanvas Component) (Component, Component) {
 	tableElem := table.Element()
 
 	// Helper function to show employee details in offcanvas
-	showEmployeeDetails := func(name, position, salary, location string) {
+	showEmployeeDetails := func(employee *Employee) {
+		if employee == nil {
+			return
+		}
+
 		// Find the offcanvas body element and clear it
 		offcanvasElem := offcanvas.Element()
 
@@ -350,52 +411,73 @@ func tableComponent(offcanvas Component) (Component, Component) {
 				child = next
 			}
 
-			doc := dom.GetWindow().Document()
+			// Create a card with employee details
+			card := bs.Card()
 
-			// Add employee details with better formatting
-			detailsContainer := doc.CreateElement("div")
+			// Card header with employee name
+			card.Header(employee.Name) // Create a form with employee details for the card body
+			form := bs.Form()
 
-			// Name
-			nameP := doc.CreateElement("p")
-			nameP.ClassList().Add("mb-3")
-			nameStrong := doc.CreateElement("strong")
-			nameStrong.AppendChild(doc.CreateTextNode("Name:"))
-			nameP.AppendChild(nameStrong)
-			nameP.AppendChild(doc.CreateElement("br"))
-			nameP.AppendChild(doc.CreateTextNode(name))
-			detailsContainer.AppendChild(nameP)
+			// Helper to create a form field with label and input
+			createField := func(label, name, value string) Component {
+				field := bs.Container(bs.WithClass("mb-3")).Append(
+					bs.Label(label),
+					bs.Input(name, bs.WithValue(value)),
+				)
+				return field
+			}
 
-			// Position
-			posP := doc.CreateElement("p")
-			posP.ClassList().Add("mb-3")
-			posStrong := doc.CreateElement("strong")
-			posStrong.AppendChild(doc.CreateTextNode("Position:"))
-			posP.AppendChild(posStrong)
-			posP.AppendChild(doc.CreateElement("br"))
-			posP.AppendChild(doc.CreateTextNode(position))
-			detailsContainer.AppendChild(posP)
+			// Create form fields
+			posDiv := createField("Position", "position", employee.Position)
+			// Salary field - use NumberInput for numeric input
+			// Use the actual numeric salary value from the model
+			salaryValue := fmt.Sprintf("%.0f", employee.Salary)
+			fmt.Printf("Creating salary input with value: %s (from %.0f)\n", salaryValue, employee.Salary)
+			salaryInput := bs.NumberInput("salary")
+			salaryInput.Value(salaryValue)
+			salDiv := bs.Container(bs.WithClass("mb-3")).Append(
+				bs.Label("Salary"),
+				salaryInput,
+			)
+			locDiv := createField("Location", "location", employee.Location) // Append all fields to form
+			form.Append(posDiv, salDiv, locDiv)                              // Add submit event listener to form
+			form.AddEventListener("submit", func(node Node) {
+				// Get the form element as js.Value and create jsutil.Form wrapper
+				formElem := form.Element()
+				formJS := formElem.(interface{ JSValue() js.Value }).JSValue()
+				jsForm := jsutil.NewForm(formJS)
 
-			// Salary
-			salP := doc.CreateElement("p")
-			salP.ClassList().Add("mb-3")
-			salStrong := doc.CreateElement("strong")
-			salStrong.AppendChild(doc.CreateTextNode("Salary:"))
-			salP.AppendChild(salStrong)
-			salP.AppendChild(doc.CreateElement("br"))
-			salP.AppendChild(doc.CreateTextNode(salary))
-			detailsContainer.AppendChild(salP)
+				// Get form data as a map
+				formData := jsForm.FormData().Entries()
 
-			// Location
-			locP := doc.CreateElement("p")
-			locP.ClassList().Add("mb-3")
-			locStrong := doc.CreateElement("strong")
-			locStrong.AppendChild(doc.CreateTextNode("Location:"))
-			locP.AppendChild(locStrong)
-			locP.AppendChild(doc.CreateElement("br"))
-			locP.AppendChild(doc.CreateTextNode(location))
-			detailsContainer.AppendChild(locP)
+				fmt.Printf("Form submitted with data:\n")
+				fmt.Printf("  Name: %s\n", employee.Name)
+				fmt.Printf("  Position: %s\n", formData["position"])
+				fmt.Printf("  Salary: %s\n", formData["salary"])
+				fmt.Printf("  Location: %s\n", formData["location"])
 
-			bodyElem.AppendChild(detailsContainer)
+				// Hide the offcanvas
+				offcanvasJSValue := js.Global().Get("document").Call("getElementById", "employeeDetails")
+				bsOffcanvas := js.Global().Get("bootstrap").Get("Offcanvas")
+				instance := bsOffcanvas.Call("getOrCreateInstance", offcanvasJSValue)
+				instance.Call("hide")
+			}) // Add form to card body
+			card.Append(form)
+
+			// Add Save button to card footer that triggers form submit
+			saveBtn := bs.Button(bs.PRIMARY).Append("Save")
+			saveBtn.AddEventListener("click", func(node Node) {
+				// Trigger form submit event
+				formElem := form.Element()
+				// Create and dispatch a submit event
+				submitEvent := js.Global().Get("Event").New("submit")
+				formElem.(interface {
+					Call(string, ...interface{}) js.Value
+				}).Call("dispatchEvent", submitEvent)
+			})
+			card.Footer(saveBtn)
+
+			bodyElem.AppendChild(card.Element())
 		}
 
 		// Use Bootstrap's JavaScript API to properly show the offcanvas with backdrop
@@ -456,20 +538,40 @@ func tableComponent(offcanvas Component) (Component, Component) {
 	// Helper function to add click handler to a row
 	addRowClickHandlerWithUpdate := func(row Component) {
 		row.AddEventListener("click", func(node Node) {
-			// Use node.Component() to get the row component
+			// node.Component() will walk up the DOM tree to find the row component
+			// even if the click target is a TD element
 			if rowComp := node.Component(); rowComp != nil {
 				rowElem := rowComp.Element()
 
-				// Extract employee data from the row
-				cells := rowElem.Children()
-				if len(cells) >= 4 {
-					name := cells[0].TextContent()
-					position := cells[1].TextContent()
-					salary := cells[2].TextContent()
-					location := cells[3].TextContent()
+				// Find the row index by iterating through tbody children
+				parent := rowElem.ParentNode()
+				if parent == nil {
+					return
+				}
 
-					// Show employee details in offcanvas
-					showEmployeeDetails(name, position, salary, location)
+				rowIndex := -1
+				currentIndex := 0
+				for child := parent.FirstChild(); child != nil; child = child.NextSibling() {
+					if elem, ok := child.(Element); ok && elem.TagName() == "TR" {
+						if elem == rowElem {
+							rowIndex = currentIndex
+							break
+						}
+						currentIndex++
+					}
+				}
+
+				if rowIndex >= 0 {
+					// Get the employee from the model using the row index
+					employee := model.GetByIndex(rowIndex)
+					if employee != nil {
+						// Debug: print employee data
+						fmt.Printf("Row clicked: index=%d, name=%s, salary=%.0f\n", rowIndex, employee.Name, employee.Salary)
+						// Show employee details in offcanvas
+						showEmployeeDetails(employee)
+					} else {
+						fmt.Printf("Row clicked: index=%d, employee is nil\n", rowIndex)
+					}
 				}
 
 				// Toggle the active class directly on the element
@@ -492,7 +594,7 @@ func tableComponent(offcanvas Component) (Component, Component) {
 			newRow := bs.Row(
 				randomEmployee.Name,
 				randomEmployee.Position,
-				randomEmployee.Salary,
+				formatSalary(randomEmployee.Salary),
 				randomEmployee.Location,
 			)
 			addRowClickHandlerWithUpdate(newRow)
@@ -529,7 +631,7 @@ func tableComponent(offcanvas Component) (Component, Component) {
 				newRow := bs.Row(
 					randomEmployee.Name,
 					randomEmployee.Position,
-					randomEmployee.Salary,
+					formatSalary(randomEmployee.Salary),
 					randomEmployee.Location,
 				).WithActive()
 				addRowClickHandlerWithUpdate(newRow)
@@ -636,7 +738,7 @@ func tableComponent(offcanvas Component) (Component, Component) {
 
 		// Populate table with current page of employee data
 		for _, employee := range model.GetAll() {
-			row := bs.Row(employee.Name, employee.Position, employee.Salary, employee.Location)
+			row := bs.Row(employee.Name, employee.Position, formatSalary(employee.Salary), employee.Location)
 			addRowClickHandlerWithUpdate(row)
 			table.Append(row)
 		}
@@ -740,7 +842,7 @@ func tableComponent(offcanvas Component) (Component, Component) {
 
 		// Populate table with employee data
 		for _, employee := range model.GetAll() {
-			row := bs.Row(employee.Name, employee.Position, employee.Salary, employee.Location)
+			row := bs.Row(employee.Name, employee.Position, formatSalary(employee.Salary), employee.Location)
 			addRowClickHandlerWithUpdate(row)
 			table.Append(row)
 		}

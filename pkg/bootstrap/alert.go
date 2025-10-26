@@ -1,7 +1,6 @@
 package bootstrap
 
 import (
-
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild/pkg/dom"
 

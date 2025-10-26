@@ -121,8 +121,13 @@ func Row(children ...any) *tableRow {
 		tr.AppendChild(td)
 	}
 
-	// Use newComponent to set data-component attribute
+	// Use newComponent and applyTo to set data-component attribute
 	c := newComponent(TableRowComponent, tr)
+
+	// Apply to set the data-component attribute
+	if err := c.applyTo(tr); err != nil {
+		panic(err)
+	}
 
 	return &tableRow{component: *c}
 }
