@@ -12,7 +12,7 @@ import (
 // TYPES
 
 // Opt is a function which can apply options to a view
-type Opt func(*opt) error
+type Opt func(OptSet) error
 
 // opt is a private struct which holds options
 type opt struct {
@@ -21,6 +21,18 @@ type opt struct {
 	class []string
 	attr  map[string]string
 }
+
+// OptSet interface for applying options
+type OptSet interface {
+	// Return the name of the view
+	Name() string
+
+	// Return the classes of the view
+	Classes() []string
+}
+
+// Ensure that opt implements OptSet interface
+var _ OptSet = (*opt)(nil)
 
 /////////////////////////////////////////////////////////////////////////////////
 // LIFECYCLE
@@ -63,7 +75,7 @@ func applyOpts(element Element, opts ...Opt) error {
 
 	// Apply classes if set
 	if len(o.class) > 0 {
-		element.SetAttribute("class", strings.Join(o.classes(), " "))
+		element.SetAttribute("class", strings.Join(o.Classes(), " "))
 	}
 
 	// Apply attributes if set
@@ -77,17 +89,29 @@ func applyOpts(element Element, opts ...Opt) error {
 /////////////////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
 
+func (o *opt) Name() string {
+	return o.name
+}
+
+// Return array of non-empty class names
+func (o *opt) Classes() []string {
+	return slices.Compact(o.class)
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+// PUBLIC OPTIONS
+
 func WithClass(classes ...string) Opt {
-	return func(o *opt) error {
-		o.class = append(o.class, classes...)
+	return func(o OptSet) error {
+		o.(*opt).class = append(o.(*opt).class, classes...)
 		return nil
 	}
 }
 
 func WithoutClass(classes ...string) Opt {
-	return func(o *opt) error {
+	return func(o OptSet) error {
 		for _, class := range classes {
-			o.class = slices.DeleteFunc(o.class, func(c string) bool {
+			o.(*opt).class = slices.DeleteFunc(o.(*opt).class, func(c string) bool {
 				return c == class
 			})
 		}
@@ -96,38 +120,36 @@ func WithoutClass(classes ...string) Opt {
 }
 
 func WithAttr(key, value string) Opt {
-	return func(o *opt) error {
-		if o.attr == nil {
-			o.attr = make(map[string]string)
+	return func(o OptSet) error {
+		if o.(*opt).attr == nil {
+			o.(*opt).attr = make(map[string]string)
 		}
-		o.attr[key] = value
+		o.(*opt).attr[key] = value
 		return nil
 	}
 }
 
 func WithoutAttr(keys ...string) Opt {
-	return func(o *opt) error {
-		if o.attr == nil {
+	return func(o OptSet) error {
+		if o.(*opt).attr == nil {
 			return nil
 		}
 		for _, key := range keys {
-			delete(o.attr, key)
+			delete(o.(*opt).attr, key)
 		}
 		return nil
 	}
 }
 
 func WithID(id string) Opt {
-	return func(o *opt) error {
-		o.id = id
+	return func(o OptSet) error {
+		o.(*opt).id = id
 		return nil
 	}
 }
 
-/////////////////////////////////////////////////////////////////////////////////
-// PRIVATE METHODS
-
-// Return space-separated class string without duplicates
-func (o *opt) classes() []string {
-	return slices.Compact(o.class)
+func WithStyle(style string) Opt {
+	return func(o OptSet) error {
+		return WithAttr("style", style)(o)
+	}
 }

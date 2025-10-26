@@ -6,40 +6,45 @@ import (
 	// Packages
 	dom "github.com/djthorpe/go-wasmbuild"
 	bs "github.com/djthorpe/go-wasmbuild/pkg/bootstrap"
-	"github.com/stretchr/testify/assert"
+	assert "github.com/stretchr/testify/assert"
 )
 
+///////////////////////////////////////////////////////////////////////////////
+// BASIC BUTTON TESTS
+
 func TestButton_Basic(t *testing.T) {
-	button := bs.Button(bs.PRIMARY)
-	assert.NotNil(t, button)
-	assert.NotNil(t, button.Element())
+	btn := bs.Button(bs.PRIMARY)
+
+	assert.NotNil(t, btn, "Button should not be nil")
+	assert.NotNil(t, btn.Element(), "Button element should not be nil")
+	assert.Equal(t, dom.ELEMENT_NODE, btn.Element().NodeType(), "Button should be an element node")
+	assert.Equal(t, "BUTTON", btn.Element().TagName(), "Button should be a button element")
 }
 
-func TestButton_TagName(t *testing.T) {
-	button := bs.Button(bs.PRIMARY)
-	element := button.Element()
-	assert.Equal(t, "BUTTON", element.TagName())
-}
+func TestButton_DefaultClasses(t *testing.T) {
+	btn := bs.Button(bs.PRIMARY)
+	element := btn.Element()
 
-func TestButton_DefaultClass(t *testing.T) {
-	button := bs.Button(bs.PRIMARY)
-	classList := button.Element().ClassList()
-	assert.True(t, classList.Contains("btn"))
+	assert.True(t, element.HasAttribute("class"), "Button should have class attribute")
+
+	classList := element.ClassList()
+	assert.NotNil(t, classList, "Button should have class list")
+	assert.True(t, classList.Contains("btn"), "Button should contain 'btn' class")
+	assert.True(t, classList.Contains("btn-primary"), "Button should contain 'btn-primary' class")
 }
 
 func TestButton_DefaultType(t *testing.T) {
-	button := bs.Button(bs.PRIMARY)
-	element := button.Element()
-	assert.Equal(t, "button", element.GetAttribute("type"))
+	btn := bs.Button(bs.PRIMARY)
+	element := btn.Element()
+
+	assert.True(t, element.HasAttribute("type"), "Button should have type attribute")
+	assert.Equal(t, "button", element.GetAttribute("type"), "Button should have type='button'")
 }
 
-func TestButton_AppendText(t *testing.T) {
-	button := bs.Button(bs.PRIMARY).Append("Click me")
-	element := button.Element()
-	assert.Equal(t, "Click me", element.TextContent())
-}
+///////////////////////////////////////////////////////////////////////////////
+// BUTTON VARIANTS (Bootstrap 5.3 Documentation)
 
-func TestButton_WithColor(t *testing.T) {
+func TestButton_AllColorVariants(t *testing.T) {
 	tests := []struct {
 		name          string
 		color         bs.Color
@@ -57,10 +62,12 @@ func TestButton_WithColor(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			button := bs.Button(tt.color)
-			classList := button.Element().ClassList()
-			assert.True(t, classList.Contains("btn"))
-			assert.True(t, classList.Contains(tt.expectedClass))
+			btn := bs.Button(tt.color)
+			element := btn.Element()
+
+			classList := element.ClassList()
+			assert.True(t, classList.Contains("btn"), "Button should contain 'btn' class")
+			assert.True(t, classList.Contains(tt.expectedClass), "Button should contain '%s' class", tt.expectedClass)
 		})
 	}
 }

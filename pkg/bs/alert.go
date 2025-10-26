@@ -1,15 +1,15 @@
-package mvc
+package bs
 
 import (
 	// Namespace imports
 	. "github.com/djthorpe/go-wasmbuild"
+	. "github.com/djthorpe/go-wasmbuild/pkg/mvc"
 )
 
 ///////////////////////////////////////////////////////////////////////////////
 // TYPES
 
-// div is a simple div view
-type div struct {
+type alert struct {
 	View
 }
 
@@ -17,24 +17,25 @@ type div struct {
 // GLOBALS
 
 const (
-	ViewDiv = "mvc-div"
+	ViewAlert = "mvc-bs-alert"
 )
 
 func init() {
-	RegisterView(ViewDiv, newDivFromElement)
+	RegisterView(ViewAlert, newAlertFromElement)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // LIFECYCLE
 
-func Div() *div {
-	view := &div{NewView(ViewDiv, "DIV")}
+func Alert(opt ...Opt) *alert {
+	opt = append([]Opt{WithClass("alert", "alert-primary"), WithAttr("role", "alert")}, opt...)
+	view := &alert{NewView(ViewAlert, "DIV", opt...)}
 	return view
 }
 
-func newDivFromElement(element Element) View {
+func newAlertFromElement(element Element) View {
 	if element.TagName() != "DIV" {
 		return nil
 	}
-	return &div{NewViewWithElement(element)}
+	return &alert{NewViewWithElement(element)}
 }
