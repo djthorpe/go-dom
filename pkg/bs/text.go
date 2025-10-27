@@ -16,6 +16,8 @@ type text struct {
 	View
 }
 
+var _ View = (*text)(nil)
+
 ///////////////////////////////////////////////////////////////////////////////
 // GLOBALS
 
@@ -33,6 +35,7 @@ var (
 		"STRONG",
 		"EM",
 		"BLOCKQUOTE",
+		"CODE",
 	}
 )
 
@@ -87,6 +90,12 @@ func Em(children ...any) *text {
 
 func Blockquote(children ...any) *text {
 	view := &text{NewView(ViewText, "BLOCKQUOTE", WithClass("blockquote"))}
+	view.Append(children...)
+	return view
+}
+
+func Code(children ...any) *text {
+	view := &text{NewView(ViewText, "CODE")}
 	view.Append(children...)
 	return view
 }

@@ -23,6 +23,13 @@ func (opts ...mvc.Opt) OutlineButton(text string) mvc.ViewWithState {
     return bs.OutlineButton(opts...).Insert(text)
 }
 
+func (opts ...mvc.Opt) CloseButton() mvc.ViewWithState {
+    // Programmatically create a CloseButton, which has a close icon
+    // but no text
+    return bs.CloseButton(opts...)
+}
+
+
 func (opts ...mvc.Opt) ButtonGroup(buttons ...mvc.ViewWithState) mvc.ViewWithGroupState {
     // Programmatically create a ButtonGroup
     return bs.ButtonGroup(opts...).Insert(buttons...)
@@ -42,6 +49,8 @@ In addition to general options, **Button** and **ButtonGroup** support the follo
 | `bs.WithSize(Size)` | Set size, `bs.Default`, `bs.Small` and `bs.Large` are supported |
 | `bs.WithDisabled(bool)` | Set disabled state |
 | `bs.WithActive(bool)` | Set active state |
+
+These mirror options available for Bootstrap buttons and groups (see link above).
 
 ## Interactivity
 
@@ -65,4 +74,30 @@ func HandleButtonGroupClick(buttongroup mvc.ViewWithGroupState) {
         }
     })
 }
+```
+
+## Examples
+
+```go
+return bs.ButtonGroup(
+    bs.WithMargin(bs.PositionY, bs.Spacing4),
+    bs.WithSize(bs.Fluid),
+).Insert(
+    bs.Button(
+        bs.WithColor("success"),
+        bs.WithPadding(bs.PositionX, bs.Spacing3),
+        bs.WithID("save-button"),
+    ).Insert("Save"),
+    bs.OutlineButton(
+        bs.WithColor("danger"),
+        bs.WithPadding(bs.PositionX, bs.Spacing3),
+        bs.WithDisabled(true),
+    ).Insert("Delete"),
+).AddEventListener("click", func(node dom.Node) {
+    button := mvc.ViewFromNode(node).(mvc.ViewWithState)
+    if button != nil && button.ID() == "save-button" {
+        // Disabled save button until document is saved
+        button.SetDisabled(true)
+    }        
+})
 ```

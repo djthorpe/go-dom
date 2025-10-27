@@ -16,6 +16,8 @@ type icon struct {
 	View
 }
 
+var _ View = (*icon)(nil)
+
 ///////////////////////////////////////////////////////////////////////////////
 // GLOBALS
 
@@ -49,6 +51,6 @@ func (icon *icon) Append(children ...any) View {
 	panic("Append: not supported for icon")
 }
 
-func (icon *icon) Insert(children ...any) View {
-	panic("Insert: not supported for icon")
+func (icon *icon) Content(children ...any) View {
+	panic("Content: not supported for icon")
 }

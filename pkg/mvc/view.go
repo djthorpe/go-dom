@@ -27,11 +27,9 @@ type View interface {
 	// Set the view's body element
 	Body(Element)
 
-	// Empty the view's body element, and return the view
-	Empty() View
-
-	// Insert text, Element or View children at the top of the view body
-	Insert(children ...any) View
+	// Set the body's content to the given text, Element or View children
+	// If no arguments are given, the content is cleared
+	Content(children ...any) View
 
 	// Append text, Element or View children at the bottom of the view body
 	Append(children ...any) View
@@ -84,10 +82,10 @@ type ViewWithVisibility interface {
 	Visible() bool
 
 	// Sets the header and returns the view
-	Show(...any) ViewWithVisibility
+	Show() ViewWithVisibility
 
 	// Returns the footer element
-	Hide(...any) ViewWithVisibility
+	Hide() ViewWithVisibility
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -206,20 +204,20 @@ func (v *view) Body(element Element) {
 	v.body = element
 }
 
-func (v *view) Empty() View {
-	element := v.body
-	if element == nil {
-		element = v.root
-	}
-	element.SetInnerHTML("")
-	return v
-}
-
-func (v *view) Insert(children ...any) View {
+func (v *view) Content(children ...any) View {
+	// Determine target element
 	target := v.body
 	if target == nil {
 		target = v.root
 	}
+
+	// Clear the content
+	if len(children) == 0 {
+		target.SetInnerHTML("")
+		return v
+	}
+
+	// Append the children
 	firstChild := target.FirstChild()
 	for _, child := range children {
 		if firstChild == nil {
@@ -228,6 +226,8 @@ func (v *view) Insert(children ...any) View {
 			target.InsertBefore(NodeFromAny(child), firstChild)
 		}
 	}
+
+	// Return the view
 	return v
 }
 
