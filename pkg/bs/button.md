@@ -39,6 +39,9 @@ In addition to general options, **Button** and **ButtonGroup** support the follo
 | `bs.WithBorder(Position, Color)`<br>`bs.WithBorder(Position)` | Set a button border |
 | `bs.WithPadding(Position, Spacing)` | Set padding |
 | `bs.WithMargin(Position, Spacing)` | Set margin |
+| `bs.WithSize(Size)` | Set size, `bs.Default`, `bs.Small` and `bs.Large` are supported |
+| `bs.WithDisabled(bool)` | Set disabled state |
+| `bs.WithActive(bool)` | Set active state |
 
 ## Interactivity
 
