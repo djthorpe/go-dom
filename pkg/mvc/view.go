@@ -76,6 +76,20 @@ type ViewWithHeaderFooter interface {
 	Footer(...any) ViewWithHeaderFooter
 }
 
+// ViewWithHeaderFooter represents a UI component with a header and footer
+type ViewWithVisibility interface {
+	View
+
+	// Returns true if the view is visible
+	Visible() bool
+
+	// Sets the header and returns the view
+	Show(...any) ViewWithVisibility
+
+	// Returns the footer element
+	Hide(...any) ViewWithVisibility
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // PRIVATE TYPES
 
