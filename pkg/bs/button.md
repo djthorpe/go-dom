@@ -1,8 +1,8 @@
 # Button
 
-A **Button** is a clickable element that triggers an action or event. Buttons are often used to submit forms, open dialogs, or perform other interactive tasks. It implements <https://getbootstrap.com/docs/5.3/components/buttons/>.
+**Button** and **OutlineButton** are clickable views that trigger an action or event. Buttons are often used to submit forms, open dialogs, or perform other interactive tasks. They implement <https://getbootstrap.com/docs/5.3/components/buttons/>.
 
-A **ButtonGroup** is a container for grouping multiple buttons together. Button groups are useful for creating toolbars or button sets that share a common purpose. It implements <https://getbootstrap.com/docs/5.3/components/button-group/>.
+A **ButtonGroup** is a view for grouping multiple buttons together. Button groups are useful for creating toolbars or button sets that share a common purpose. It implements <https://getbootstrap.com/docs/5.3/components/button-group/>.
 
 ## Creating a Button or ButtonGroup
 
