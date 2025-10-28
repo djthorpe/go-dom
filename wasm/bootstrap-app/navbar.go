@@ -1,15 +1,14 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/djthorpe/go-wasmbuild/pkg/bs"
 	"github.com/djthorpe/go-wasmbuild/pkg/mvc"
 )
 
 func NavBar() mvc.View {
-	return bs.NavBar(bs.WithColor(bs.DANGER_SUBTLE)).Header(
-		bs.Icon("house-door-fill"),
-		" Home",
-	).Content(
+	navbar := bs.NavBar(bs.WithColor(bs.DANGER_SUBTLE)).Content(
 		bs.NavItem(
 			bs.Icon("info-circle-fill"),
 			" About",
@@ -19,4 +18,8 @@ func NavBar() mvc.View {
 			" Contact",
 		),
 	)
+
+	fmt.Println(navbar)
+
+	return navbar
 }

@@ -174,20 +174,6 @@ func (this *node) TextContent() string {
 	return data
 }
 
-func (this *node) Component() dom.Component {
-	// Walk up the DOM tree looking for an element with data-component attribute
-	current := dom.Node(this)
-	for current != nil {
-		if elem, ok := current.(dom.Element); ok {
-			if elem.HasAttribute("data-component") {
-				return componentFromElement(elem)
-			}
-		}
-		current = current.ParentNode()
-	}
-	return nil
-}
-
 /////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
 

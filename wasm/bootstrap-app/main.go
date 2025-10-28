@@ -12,9 +12,9 @@ func main() {
 	// Create a heading
 	app.Append(
 		NavBar(),
+		Alerts(),
 		Code(),
 		Buttons(),
-		Alerts(),
 		Containers(),
 		Badges(),
 		Rules(),

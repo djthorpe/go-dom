@@ -3,6 +3,7 @@ package bs
 import (
 	// Namespace imports
 	. "github.com/djthorpe/go-wasmbuild"
+	"github.com/djthorpe/go-wasmbuild/pkg/mvc"
 	. "github.com/djthorpe/go-wasmbuild/pkg/mvc"
 )
 
@@ -31,7 +32,22 @@ func init() {
 
 func Alert(opt ...Opt) *alert {
 	opt = append([]Opt{WithClass("alert", "alert-primary", "fade", "show"), WithAttr("role", "alert")}, opt...)
-	view := &alert{NewView(ViewAlert, "DIV", opt...)}
+	return &alert{NewView(ViewAlert, "DIV", opt...)}
+}
+
+func DismissableAlert(opt ...Opt) *alert {
+	opt = append([]Opt{WithClass("alert", "alert-primary", "alert-dismissible", "fade", "show"), WithAttr("role", "alert")}, opt...)
+
+	// Create a span for the body
+	body := mvc.Span()
+
+	// Set the body as the alert content
+	view := &alert{
+		NewView(ViewAlert, "DIV", opt...),
+	}
+	view.Body(body.Root())
+
+	// Return the view
 	return view
 }
 
@@ -45,7 +61,7 @@ func newAlertFromElement(element Element) View {
 ///////////////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
 
-func (alert *alert) Visibility() bool {
+func (alert *alert) Visible() bool {
 	return alert.Root().ClassList().Contains("show")
 }
 

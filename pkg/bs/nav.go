@@ -28,12 +28,14 @@ var _ View = (*navitem)(nil)
 // GLOBALS
 
 const (
-	ViewNavbar  = "mvc-bs-navbar"
-	ViewNavItem = "mvc-bs-navitem"
+	ViewNavbar     = "mvc-bs-navbar"
+	ViewNavbarBody = "mvc-bs-navbar-body"
+	ViewNavItem    = "mvc-bs-navitem"
 )
 
 func init() {
 	RegisterView(ViewNavbar, newNavbarFromElement)
+	RegisterView(ViewNavbarBody, nil)
 	RegisterView(ViewNavItem, newNavItemFromElement)
 }
 
@@ -42,20 +44,19 @@ func init() {
 
 func NavBar(opts ...Opt) *navbar {
 	opts = append([]Opt{WithClass("navbar", "bg-primary", "navbar-expand-lg")}, opts...)
-	navbar := &navbar{NewView(ViewNavbar, "NAV", opts...)}
-
-	// The body element is a UL with class navbar-nav
-	body := NewView(ViewNavbar, "UL", WithClass("navbar-nav"))
+	navbar := &navbar{
+		NewView(ViewNavbar, "NAV", opts...).Body(
+			// TODO: We don't need a view here, just a UL
+			NewView(ViewNavbarBody, "UL", WithClass("navbar-nav")),
+		),
+	}
 
 	// Within the navbar, add a container
 	navbar.Append(Div(WithClass("container-fluid")).Append(
 		Div(WithClass("collapse", "navbar-collapse")).Append(
-			Div(WithClass("navbar-nav")).Append(body),
+			Div(WithClass("navbar-nav")),
 		),
 	))
-
-	// Set the body element
-	navbar.Body(body.Root())
 
 	// Return the navbar
 	return navbar

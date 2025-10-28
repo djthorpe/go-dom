@@ -28,7 +28,6 @@ const (
 var (
 	textTagNames = []string{
 		"P",
-		"SPAN",
 		"DEL",
 		"MARK",
 		"SMALL",
@@ -48,12 +47,6 @@ func init() {
 
 func Para(children ...any) *text {
 	view := &text{NewView(ViewText, "P")}
-	view.Append(children...)
-	return view
-}
-
-func Span(children ...any) *text {
-	view := &text{NewView(ViewText, "SPAN")}
 	view.Append(children...)
 	return view
 }

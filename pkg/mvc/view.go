@@ -24,8 +24,8 @@ type View interface {
 	// Return the view's root element
 	Root() Element
 
-	// Set the view's body element
-	Body(Element)
+	// Append a view or element to the view's body, and set the body
+	Body(any) View
 
 	// Set the body's content to the given text, Element or View children
 	// If no arguments are given, the content is cleared
@@ -200,8 +200,20 @@ func (v *view) Root() Element {
 	return v.root
 }
 
-func (v *view) Body(element Element) {
-	v.body = element
+func (v *view) Body(content any) View {
+	node := NodeFromAny(content)
+	if element, ok := node.(Element); ok {
+		v.body = element
+	} else if view, ok := node.(View); ok {
+		v.body = view.Root()
+	} else {
+		panic(fmt.Sprint("view.Body: invalid content type", node.NodeType()))
+	}
+
+	// Set the content to the body, return the view
+	v.root.SetInnerHTML("")
+	v.root.AppendChild(v.body)
+	return v
 }
 
 func (v *view) Content(children ...any) View {
