@@ -81,10 +81,10 @@ type ViewWithVisibility interface {
 	// Returns true if the view is visible
 	Visible() bool
 
-	// Sets the header and returns the view
+	// Makes the view visible and returns the view
 	Show() ViewWithVisibility
 
-	// Returns the footer element
+	// Hides the view and returns the view
 	Hide() ViewWithVisibility
 }
 
