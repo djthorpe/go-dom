@@ -16,6 +16,8 @@ type image struct {
 	View
 }
 
+var _ View = (*image)(nil)
+
 ///////////////////////////////////////////////////////////////////////////////
 // GLOBALS
 
@@ -60,6 +62,6 @@ func (image *image) Append(children ...any) View {
 	panic("Append: not supported for image")
 }
 
-func (image *image) Insert(children ...any) View {
-	panic("Insert: not supported for image")
+func (image *image) Content(children ...any) View {
+	panic("Content: not supported for image")
 }

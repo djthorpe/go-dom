@@ -1,26 +1,32 @@
-package mvc
+package mvc_test
 
 import (
 	"testing"
+
+	// Packages
+	assert "github.com/stretchr/testify/assert"
+
+	// Namespace imports
+	. "github.com/djthorpe/go-wasmbuild/pkg/mvc"
 )
 
-func TestViewDivConstant(t *testing.T) {
-	expected := "mvc-div"
-	if ViewDiv != expected {
-		t.Errorf("ViewDiv = %v, want %v", ViewDiv, expected)
-	}
-}
-
-func TestDivRegistered(t *testing.T) {
-	// Check if the div view is registered during init
-	if _, exists := views[ViewDiv]; !exists {
-		t.Errorf("ViewDiv should be registered in init(), but was not found")
-	}
-}
-
-// Note: Full testing of Div() requires a WASM environment with DOM access
-// These tests verify the basic structure and registration only
 func TestDivType(t *testing.T) {
-	// Verify the div type exists
-	var _ *div = &div{}
+	assert := assert.New(t)
+
+	div := Div()
+	assert.NotNil(div)
+
+	t.Run("Properties", func(t *testing.T) {
+		assert.Equal(ViewDiv, div.Name())
+		assert.NotNil(div.Root())
+		assert.Equal("DIV", div.Root().TagName())
+	})
+
+	t.Run("NewViewWithElement", func(t *testing.T) {
+		div2 := NewViewWithElement(div.Root())
+		assert.NotNil(div2)
+		assert.Equal(ViewDiv, div2.Name())
+		assert.NotNil(div2.Root())
+		assert.Equal("DIV", div2.Root().TagName())
+	})
 }

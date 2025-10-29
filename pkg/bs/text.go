@@ -16,6 +16,8 @@ type text struct {
 	View
 }
 
+var _ View = (*text)(nil)
+
 ///////////////////////////////////////////////////////////////////////////////
 // GLOBALS
 
@@ -26,13 +28,13 @@ const (
 var (
 	textTagNames = []string{
 		"P",
-		"SPAN",
 		"DEL",
 		"MARK",
 		"SMALL",
 		"STRONG",
 		"EM",
 		"BLOCKQUOTE",
+		"CODE",
 	}
 )
 
@@ -45,12 +47,6 @@ func init() {
 
 func Para(children ...any) *text {
 	view := &text{NewView(ViewText, "P")}
-	view.Append(children...)
-	return view
-}
-
-func Span(children ...any) *text {
-	view := &text{NewView(ViewText, "SPAN")}
 	view.Append(children...)
 	return view
 }
@@ -87,6 +83,12 @@ func Em(children ...any) *text {
 
 func Blockquote(children ...any) *text {
 	view := &text{NewView(ViewText, "BLOCKQUOTE", WithClass("blockquote"))}
+	view.Append(children...)
+	return view
+}
+
+func Code(children ...any) *text {
+	view := &text{NewView(ViewText, "CODE")}
 	view.Append(children...)
 	return view
 }

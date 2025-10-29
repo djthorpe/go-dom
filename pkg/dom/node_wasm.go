@@ -199,22 +199,6 @@ func (this *node) TextContent() string {
 	return this.Get("textContent").String()
 }
 
-func (this *node) Component() dom.Component {
-	// Walk up the DOM tree looking for an element with data-component attribute
-	// Reconstruct the proper type wrapper from the underlying js.Value
-	// This is necessary because when called on *element, 'this' is the embedded *node
-	current := NewNode(this.Value)
-	for current != nil {
-		if elem, ok := current.(dom.Element); ok {
-			if elem.HasAttribute("data-component") {
-				return componentFromElement(elem)
-			}
-		}
-		current = current.ParentNode()
-	}
-	return nil
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // PUBLIC METHODS
 

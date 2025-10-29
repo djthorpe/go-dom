@@ -35,7 +35,6 @@ type Node interface {
 	InsertBefore(Node, Node) Node
 	RemoveChild(Node)
 	ReplaceChild(Node, Node)
-	Component() Component
 }
 
 // Element implements https://developer.mozilla.org/en-US/docs/Web/API/Element
@@ -108,7 +107,6 @@ type Document interface {
 	CreateAttribute(string) Attr
 	CreateComment(string) Comment
 	CreateTextNode(string) Text
-	//ActiveElement() Element
 }
 
 type Text interface {

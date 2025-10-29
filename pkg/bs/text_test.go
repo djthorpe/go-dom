@@ -69,31 +69,6 @@ func TestPara(t *testing.T) {
 	}
 }
 
-func TestSpan(t *testing.T) {
-	tests := []struct {
-		name string
-		opts []Opt
-	}{
-		{"create without options", nil},
-		{"create with badge class", []Opt{WithClass("badge", "bg-primary")}},
-		{"create with text utilities", []Opt{WithClass("text-primary", "fw-bold")}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := Span()
-			if s == nil {
-				t.Fatal("Span() returned nil")
-			}
-			if len(tt.opts) > 0 {
-				s.Opts(tt.opts...)
-			}
-			if s.Name() != ViewText {
-				t.Errorf("Span().Name() = %v, want %v", s.Name(), ViewText)
-			}
-		})
-	}
-}
-
 func TestDeleted(t *testing.T) {
 	tests := []struct {
 		name string
@@ -245,7 +220,6 @@ func TestTextViewInterface(t *testing.T) {
 		element *text
 	}{
 		{"Para", Para()},
-		{"Span", Span()},
 		{"Deleted", Deleted()},
 		{"Highlighted", Highlighted()},
 		{"Small", Small()},
@@ -292,9 +266,7 @@ func TestTextMultipleInstances(t *testing.T) {
 	p1.Opts(WithID("p1"))
 	p2 := Para()
 	p2.Opts(WithID("p2"))
-	s1 := Span()
-	s1.Opts(WithID("s1"))
-	if p1 == p2 || p1 == s1 || p2 == s1 {
+	if p1 == p2 {
 		t.Error("Each text element call should create a distinct instance")
 	}
 	if p1.ID() == p2.ID() {
@@ -337,21 +309,13 @@ func TestBootstrapTypographyClasses(t *testing.T) {
 	}{
 		{"lead paragraph", func() *text { return Para() }, []string{"lead"}},
 		{"display heading in paragraph", func() *text { return Para() }, []string{"display-1"}},
-		{"muted text", func() *text { return Span() }, []string{"text-muted"}},
 		{"font weight bold", func() *text { return Strong() }, []string{"fw-bold"}},
-		{"font weight normal", func() *text { return Span() }, []string{"fw-normal"}},
 		{"font style italic", func() *text { return Em() }, []string{"fst-italic"}},
-		{"text decoration underline", func() *text { return Span() }, []string{"text-decoration-underline"}},
 		{"text decoration line-through", func() *text { return Deleted() }, []string{"text-decoration-line-through"}},
-		{"text transform uppercase", func() *text { return Span() }, []string{"text-uppercase"}},
-		{"text transform lowercase", func() *text { return Span() }, []string{"text-lowercase"}},
-		{"text transform capitalize", func() *text { return Span() }, []string{"text-capitalize"}},
-		{"font size utilities", func() *text { return Span() }, []string{"fs-1", "fs-2", "fs-3", "fs-4", "fs-5", "fs-6"}},
 		{"line height", func() *text { return Para() }, []string{"lh-1", "lh-sm", "lh-base", "lh-lg"}},
 		{"text alignment", func() *text { return Para() }, []string{"text-start", "text-center", "text-end"}},
 		{"text wrapping", func() *text { return Para() }, []string{"text-wrap", "text-nowrap"}},
 		{"text break", func() *text { return Para() }, []string{"text-break"}},
-		{"monospace font", func() *text { return Span() }, []string{"font-monospace"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -419,7 +383,7 @@ func TestTextOpacityUtilities(t *testing.T) {
 }
 
 func TestAllTextElementsAreDistinct(t *testing.T) {
-	elements := []*text{Para(), Span(), Deleted(), Highlighted(), Small(), Strong(), Em(), Blockquote()}
+	elements := []*text{Para(), Deleted(), Highlighted(), Small(), Strong(), Em(), Blockquote()}
 	for i := 0; i < len(elements); i++ {
 		for j := i + 1; j < len(elements); j++ {
 			if elements[i] == elements[j] {

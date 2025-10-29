@@ -15,6 +15,9 @@ func Alerts() mvc.View {
 		),
 		bs.Alert(bs.WithColor(bs.LIGHT)).Append("Light"),
 		bs.Alert(bs.WithColor(bs.SUCCESS)).Append("Success"),
-		bs.Alert(bs.WithColor(bs.DANGER)).Append("Danger"),
+		bs.DismissableAlert(bs.WithColor(bs.DANGER)).Append(
+			"Dismissable Alert",
+			bs.CloseButton(mvc.WithAttr("data-bs-dismiss", "alert")),
+		),
 	)
 }

@@ -346,7 +346,7 @@ func TestFigureCaptionAtEnd(t *testing.T) {
 func TestFigureInsertImage(t *testing.T) {
 	f := bs.Figure()
 	img := bs.Image("inserted.jpg")
-	f.Insert(img)
+	f.Content(img)
 
 	classList := img.Root().ClassList()
 	if !classList.Contains("figure-img") {
@@ -359,12 +359,12 @@ func TestFigureInsertWithCaption(t *testing.T) {
 	f.Caption("Caption first")
 
 	img := bs.Image("test.jpg")
-	f.Insert(img)
+	f.Content(img)
 
 	// Caption should still be last
 	lastChild := f.Root().LastElementChild()
 	if lastChild == nil || lastChild.TagName() != "FIGCAPTION" {
-		t.Error("Caption should remain the last child after Insert")
+		t.Error("Caption should remain the last child after Content()")
 	}
 
 	// Caption text should be preserved
@@ -383,12 +383,12 @@ func TestFigureInsertWithCaption(t *testing.T) {
 func TestFigureInsertMultipleImagesWithCaption(t *testing.T) {
 	f := bs.Figure()
 	img1 := bs.Image("first.jpg")
-	f.Insert(img1)
+	f.Content(img1)
 	f.Caption("Test caption")
 
 	// Insert another image
 	img2 := bs.Image("second.jpg")
-	f.Insert(img2)
+	f.Content(img2)
 
 	// Caption should still be last
 	lastChild := f.Root().LastElementChild()
@@ -645,7 +645,7 @@ func TestFigureEdgeCases(t *testing.T) {
 		f := bs.Figure()
 		img1 := bs.Image("first.jpg")
 		img2 := bs.Image("second.jpg")
-		f.Insert(img1, img2) // Should panic
+		f.Content(img1, img2) // Should panic
 	})
 
 	t.Run("append non-image should panic", func(t *testing.T) {
@@ -669,7 +669,7 @@ func TestFigureEdgeCases(t *testing.T) {
 
 		f := bs.Figure()
 		badge := bs.Badge()
-		f.Insert(badge) // Should panic
+		f.Content(badge) // Should panic
 	})
 }
 

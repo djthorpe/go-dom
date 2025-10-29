@@ -24,14 +24,12 @@ type View interface {
 	// Return the view's root element
 	Root() Element
 
-	// Set the view's body element
-	Body(Element)
+	// Append a view or element to the view's body, and set the body
+	Body(any) View
 
-	// Empty the view's body element, and return the view
-	Empty() View
-
-	// Insert text, Element or View children at the top of the view body
-	Insert(children ...any) View
+	// Set the body's content to the given text, Element or View children
+	// If no arguments are given, the content is cleared
+	Content(children ...any) View
 
 	// Append text, Element or View children at the bottom of the view body
 	Append(children ...any) View
@@ -65,6 +63,14 @@ type ViewWithGroupState interface {
 	Disabled() []Element
 }
 
+// ViewWithCaption represents a UI component with a header and footer
+type ViewWithCaption interface {
+	View
+
+	// Sets the caption of the view and returns the view
+	Caption(...any) ViewWithCaption
+}
+
 // ViewWithHeaderFooter represents a UI component with a header and footer
 type ViewWithHeaderFooter interface {
 	View
@@ -74,6 +80,20 @@ type ViewWithHeaderFooter interface {
 
 	// Returns the footer element
 	Footer(...any) ViewWithHeaderFooter
+}
+
+// ViewWithHeaderFooter represents a UI component with a header and footer
+type ViewWithVisibility interface {
+	View
+
+	// Returns true if the view is visible
+	Visible() bool
+
+	// Makes the view visible and returns the view
+	Show() ViewWithVisibility
+
+	// Hides the view and returns the view
+	Hide() ViewWithVisibility
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -188,24 +208,40 @@ func (v *view) Root() Element {
 	return v.root
 }
 
-func (v *view) Body(element Element) {
-	v.body = element
-}
-
-func (v *view) Empty() View {
-	element := v.body
-	if element == nil {
-		element = v.root
+func (v *view) Body(content any) View {
+	node := NodeFromAny(content)
+	if element, ok := node.(Element); ok {
+		v.body = element
+	} else if view, ok := node.(View); ok {
+		v.body = view.Root()
+	} else {
+		panic(fmt.Sprint("view.Body: invalid content type", node.NodeType()))
 	}
-	element.SetInnerHTML("")
+
+	// If the body is not already a child of the root, clear the root and set it
+	if v.body.ParentNode() == nil {
+		v.root.SetInnerHTML("")
+		v.root.AppendChild(v.body)
+	}
+
+	// Return the view
 	return v
 }
 
-func (v *view) Insert(children ...any) View {
+func (v *view) Content(children ...any) View {
+	// Determine target element
 	target := v.body
 	if target == nil {
 		target = v.root
 	}
+
+	// Clear the content
+	if len(children) == 0 {
+		target.SetInnerHTML("")
+		return v
+	}
+
+	// Append the children
 	firstChild := target.FirstChild()
 	for _, child := range children {
 		if firstChild == nil {
@@ -214,6 +250,8 @@ func (v *view) Insert(children ...any) View {
 			target.InsertBefore(NodeFromAny(child), firstChild)
 		}
 	}
+
+	// Return the view
 	return v
 }
 
@@ -243,12 +281,14 @@ func (v *view) Opts(opts ...Opt) View {
 ///////////////////////////////////////////////////////////////////////////////
 // UTILITY METHODS
 
-// NodeFromAny returns a Node from a string, Element, or View
+// NodeFromAny returns a Node from a string, Element, Tag or View
 // or returns nil if the type is unsupported
 func NodeFromAny(child any) Node {
 	switch c := child.(type) {
 	case string:
 		return textFactory(c)
+	case *tag:
+		return c.Element
 	case Element:
 		return c
 	case Node:
@@ -264,12 +304,20 @@ func NodeFromAny(child any) Node {
 // ViewFromNode returns a View from a Node, or nil if the type is unsupported
 func ViewFromNode(node Node) View {
 	if element, ok := node.(Element); ok {
-		if view, err := viewFromElement(element); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			return nil
-		} else if view != nil {
-			return view
+		// Work up the chain until a view is found
+		for {
+			if view, err := viewFromElement(element); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				return nil
+			} else if view != nil {
+				return view
+			}
+			element = element.ParentElement()
+			if element == nil {
+				break
+			}
 		}
+
 	}
 	return nil
 }

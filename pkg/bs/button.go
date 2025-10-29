@@ -51,6 +51,12 @@ func OutlineButton(opt ...Opt) *button {
 	return view
 }
 
+func CloseButton(opt ...Opt) *button {
+	opts := append([]Opt{WithAttr("type", "button"), WithClass("btn-close"), WithAriaLabel("close")}, opt...)
+	view := &button{NewView(ViewButton, "BUTTON", opts...)}
+	return view
+}
+
 func ButtonGroup(opt ...Opt) *button {
 	opts := append([]Opt{WithAttr("role", "group"), WithClass("btn-group")}, opt...)
 	view := &button{NewView(ViewButtonGroup, "DIV", opts...)}

@@ -16,6 +16,8 @@ type rule struct {
 	View
 }
 
+var _ View = (*rule)(nil)
+
 ///////////////////////////////////////////////////////////////////////////////
 // GLOBALS
 
@@ -54,6 +56,6 @@ func (rule *rule) Append(children ...any) View {
 	panic("Append: not supported for rule")
 }
 
-func (rule *rule) Insert(children ...any) View {
-	panic("Insert: not supported for rule")
+func (rule *rule) Content(children ...any) View {
+	panic("Content: not supported for rule")
 }

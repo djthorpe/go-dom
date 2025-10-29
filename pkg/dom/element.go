@@ -151,8 +151,6 @@ func (this *element) GetAttributeNames() []string {
 }
 
 func (this *element) ClassList() dom.TokenList {
-	// ClassList is already initialized when element is created
-	// Just return the existing instance
 	return this.classlist
 }
 

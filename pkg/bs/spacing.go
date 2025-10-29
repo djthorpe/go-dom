@@ -116,17 +116,9 @@ func (position Position) allClassNames(prefix string) []string {
 	return append(classNames, All.className(prefix), X.className(prefix), Y.className(prefix))
 }
 
-func (position Position) allAlignClassNames(prefix string) []string {
-	classNames := make([]string, 0, 10)
-	for p := Top; p <= Middle; p = p << 1 {
-		classNames = append(classNames, p.className(prefix))
-	}
-	return classNames
-}
-
 func borderPrefixForView(name string) string {
 	switch name {
-	case ViewContainer, ViewBadge, ViewAlert:
+	case ViewContainer, ViewBadge, ViewAlert, ViewCodeBlock, ViewNavbar:
 		return "border"
 	default:
 		return ""
@@ -238,9 +230,11 @@ func WithBorder(position Position, color ...Color) mvc.Opt {
 			return err
 		}
 
-		// Add the 'border' class
-		if err := mvc.WithClass("border")(o); err != nil {
-			return err
+		// Add the 'border' class if not a NavBar
+		if o.Name() != ViewNavbar {
+			if err := mvc.WithClass("border")(o); err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -266,7 +260,7 @@ func WithBorder(position Position, color ...Color) mvc.Opt {
 }
 
 // WithAlign adds alignment to a view.
-// 
+//
 // Note: This function only supports views of type ViewFigureCaption and ViewContainer.
 // Calling WithAlign on other view types will result in an error.
 func WithAlign(position Position) mvc.Opt {

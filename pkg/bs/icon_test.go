@@ -254,7 +254,7 @@ func TestIconInsertPanics(t *testing.T) {
 	}()
 
 	icon := bs.Icon("star")
-	icon.Insert("text") // Should panic
+	icon.Content("text") // Should panic
 }
 
 ///////////////////////////////////////////////////////////////////////////////

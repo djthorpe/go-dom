@@ -180,7 +180,7 @@ func Icons() mvc.View {
 func createColoredIcon(iconName, color, label string) mvc.View {
 	icon := bs.Icon(iconName)
 	icon.Opts(mvc.WithClass("text-" + color))
-	span := bs.Span(icon, " ", label)
+	span := mvc.Span().Content(icon, " ", label)
 	span.Opts(mvc.WithClass("me-3"))
 	return span
 }
@@ -189,7 +189,7 @@ func createColoredIcon(iconName, color, label string) mvc.View {
 func createSizedIcon(iconName, size, label string) mvc.View {
 	icon := bs.Icon(iconName)
 	icon.Opts(mvc.WithClass("fs-" + size))
-	span := bs.Span(icon, " ", label)
+	span := mvc.Span().Content(icon, " ", label)
 	span.Opts(mvc.WithClass("me-3"))
 	return span
 }
@@ -212,7 +212,7 @@ func createIconList() mvc.View {
 	for _, item := range items {
 		icon := bs.Icon(item.icon)
 		icon.Opts(mvc.WithClass("me-2"))
-		span := bs.Span(icon, item.text)
+		span := mvc.Span().Content(icon, item.text)
 		span.Opts(mvc.WithClass("d-block", "mb-2"))
 		list.Append(span)
 	}

@@ -196,8 +196,7 @@ func TestViewChaining(t *testing.T) {
 		// for method chaining. We can't actually test them without a DOM.
 
 		// These should all compile - they return View for chaining
-		_ = func(v View) View { return v.Empty() }
-		_ = func(v View) View { return v.Insert("test") }
+		_ = func(v View) View { return v.Content("test") }
 		_ = func(v View) View { return v.Append("test") }
 		_ = func(v View) View { return v.AddEventListener("click", nil) }
 		_ = func(v View) View { return v.Opts() }
