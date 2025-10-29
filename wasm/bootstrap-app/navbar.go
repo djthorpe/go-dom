@@ -14,7 +14,7 @@ import (
 func NavBar() mvc.View {
 	navbar := bs.NavBar(
 		bs.WithColor(bs.LIGHT),
-		bs.WithSize(bs.SizeSmall),
+		bs.WithSize(bs.SizeMedium),
 		bs.WithBorder(bs.Bottom, bs.PRIMARY),
 		bs.WithMargin(bs.Bottom, 3),
 	).Content(

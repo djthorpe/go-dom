@@ -50,7 +50,8 @@ func NavBar(opts ...Opt) *navbar {
 		View: NewView(ViewNavbar, "NAV", opts...).Body(
 			Tag("DIV", WithClass("container-fluid")),
 		),
-		brand: Tag("SPAN"), // TODO: We should not use SPAN here
+		brand:  Tag("SPAN"), // TODO: We should not use SPAN here
+		toggle: Tag("SPAN"), // TODO: We should not use SPAN here
 	}
 
 	// The ID for this navbar
@@ -58,17 +59,7 @@ func NavBar(opts ...Opt) *navbar {
 
 	// If we have WithSize() then add a toggle control
 	if navbar.shouldToggle() {
-		navbar.toggle = Tag("BUTTON",
-			WithClass("navbar-toggler"),
-			WithAttr("type", "button"),
-			WithAttr("data-bs-toggle", "collapse"),
-			WithAttr("data-bs-target", "#"+collapseId),
-			WithAttr("aria-controls", collapseId),
-			WithAttr("aria-expanded", "false"),
-			WithAttr("aria-label", "Toggle navigation"),
-		).Append(
-			Tag("SPAN", WithClass("navbar-toggler-icon")),
-		)
+		navbar.Toggle(collapseId)
 	}
 
 	// Create the body view
@@ -90,12 +81,13 @@ func NavBar(opts ...Opt) *navbar {
 
 func NavItem(content ...any) *navitem {
 	opts := []Opt{WithClass("nav-item")}
-	view := &navitem{NewView(ViewNavItem, "LI", opts...)}
-
-	// Create the link element as the body
-	view.Body(Tag("A", WithClass("nav-link"), WithAttr("href", "#")).Append(content...))
-
-	return view
+	return &navitem{
+		NewView(
+			ViewNavItem, "LI", opts...,
+		).Body(
+			Tag("A", WithClass("nav-link"), WithAttr("href", "#")).Append(content...),
+		),
+	}
 }
 
 func newNavbarFromElement(element Element) View {
@@ -113,6 +105,7 @@ func newNavBrandFromElement(element Element) View {
 	if tagName != "A" {
 		panic(fmt.Sprintf("newNavBrandFromElement: invalid tag name %q", tagName))
 	}
+	// TODO: set body
 	return NewViewWithElement(element)
 }
 
@@ -139,8 +132,25 @@ func (n *navbar) Append(children ...any) View {
 
 func (n *navbar) Caption(content ...any) ViewWithCaption {
 	caption := NewView(ViewNavbarBrand, "A", WithClass("navbar-brand"), WithAttr("href", "#")).Content(content...)
-	n.brand.SetInnerHTML("")
-	n.brand.AppendChild(caption.Root())
+	n.brand.ReplaceWith(caption.Root())
+	n.brand = caption.Root()
+	return n
+}
+
+func (n *navbar) Toggle(id string, content ...any) ViewWithCaption {
+	toggle := Tag("BUTTON",
+		WithClass("navbar-toggler"),
+		WithAttr("type", "button"),
+		WithAttr("data-bs-toggle", "collapse"),
+		WithAttr("data-bs-target", "#"+id),
+		WithAttr("aria-controls", id),
+		WithAttr("aria-expanded", "false"),
+		WithAttr("aria-label", "Toggle navigation"),
+	).Append(
+		Tag("SPAN", WithClass("navbar-toggler-icon")),
+	)
+	n.toggle.ReplaceWith(toggle.Element)
+	n.toggle = toggle
 	return n
 }
 
