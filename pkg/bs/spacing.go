@@ -118,7 +118,7 @@ func (position Position) allClassNames(prefix string) []string {
 
 func borderPrefixForView(name string) string {
 	switch name {
-	case ViewContainer, ViewBadge, ViewAlert, ViewCodeBlock:
+	case ViewContainer, ViewBadge, ViewAlert, ViewCodeBlock, ViewNavbar:
 		return "border"
 	default:
 		return ""
@@ -230,9 +230,11 @@ func WithBorder(position Position, color ...Color) mvc.Opt {
 			return err
 		}
 
-		// Add the 'border' class
-		if err := mvc.WithClass("border")(o); err != nil {
-			return err
+		// Add the 'border' class if not a NavBar
+		if o.Name() != ViewNavbar {
+			if err := mvc.WithClass("border")(o); err != nil {
+				return err
+			}
 		}
 
 		return nil

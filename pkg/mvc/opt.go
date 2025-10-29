@@ -44,20 +44,23 @@ func applyOpts(element Element, opts ...Opt) error {
 	if element == nil {
 		return ErrBadParameter.Withf("Missing Element")
 	} else if name := element.GetAttribute(DataComponentAttrKey); name == "" {
-		return ErrBadParameter.Withf("Element does not have a valid component name")
+		o.name = element.TagName()
 	} else {
-		o.id = element.ID()
-		o.name = element.GetAttribute(DataComponentAttrKey)
-		o.class = element.ClassList().Values()
-		o.attr = make(map[string]string)
+		o.name = name
+	}
 
-		for _, attr := range element.Attributes() {
-			attrName := attr.Name()
+	// Set existing ID and class
+	o.id = element.ID()
+	o.class = element.ClassList().Values()
 
-			// Skip id, class, and data-component as they're handled separately
-			if attrName != "id" && attrName != "class" && attrName != DataComponentAttrKey {
-				o.attr[attrName] = attr.Value()
-			}
+	// Set existing attributes
+	o.attr = make(map[string]string)
+	for _, attr := range element.Attributes() {
+		attrName := attr.Name()
+
+		// Skip id, class, and data-component as they're handled separately
+		if attrName != "id" && attrName != "class" && attrName != DataComponentAttrKey {
+			o.attr[attrName] = attr.Value()
 		}
 	}
 

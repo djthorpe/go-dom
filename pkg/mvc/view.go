@@ -63,6 +63,14 @@ type ViewWithGroupState interface {
 	Disabled() []Element
 }
 
+// ViewWithCaption represents a UI component with a header and footer
+type ViewWithCaption interface {
+	View
+
+	// Sets the caption of the view and returns the view
+	Caption(...any) ViewWithCaption
+}
+
 // ViewWithHeaderFooter represents a UI component with a header and footer
 type ViewWithHeaderFooter interface {
 	View
@@ -210,9 +218,13 @@ func (v *view) Body(content any) View {
 		panic(fmt.Sprint("view.Body: invalid content type", node.NodeType()))
 	}
 
-	// Set the content to the body, return the view
-	v.root.SetInnerHTML("")
-	v.root.AppendChild(v.body)
+	// If the body is not already a child of the root, clear the root and set it
+	if v.body.ParentNode() == nil {
+		v.root.SetInnerHTML("")
+		v.root.AppendChild(v.body)
+	}
+
+	// Return the view
 	return v
 }
 
@@ -269,12 +281,14 @@ func (v *view) Opts(opts ...Opt) View {
 ///////////////////////////////////////////////////////////////////////////////
 // UTILITY METHODS
 
-// NodeFromAny returns a Node from a string, Element, or View
+// NodeFromAny returns a Node from a string, Element, Tag or View
 // or returns nil if the type is unsupported
 func NodeFromAny(child any) Node {
 	switch c := child.(type) {
 	case string:
 		return textFactory(c)
+	case *tag:
+		return c.Element
 	case Element:
 		return c
 	case Node:
@@ -290,12 +304,20 @@ func NodeFromAny(child any) Node {
 // ViewFromNode returns a View from a Node, or nil if the type is unsupported
 func ViewFromNode(node Node) View {
 	if element, ok := node.(Element); ok {
-		if view, err := viewFromElement(element); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			return nil
-		} else if view != nil {
-			return view
+		// Work up the chain until a view is found
+		for {
+			if view, err := viewFromElement(element); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				return nil
+			} else if view != nil {
+				return view
+			}
+			element = element.ParentElement()
+			if element == nil {
+				break
+			}
 		}
+
 	}
 	return nil
 }
